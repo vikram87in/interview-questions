@@ -7657,12 +7657,278 @@ function AppWithReset() {
 
 #### **📋 Beginner:**
 - **Q1:** What is automatic batching in React 18?
+<details>
+<summary>Answer</summary>
+**Automatic batching** groups multiple state updates into a single re-render for better performance.
+
+```jsx
+// React 18 - All these updates are batched automatically
+function App() {
+  const [count, setCount] = useState(0);
+  const [flag, setFlag] = useState(false);
+  
+  const handleClick = () => {
+    setCount(c => c + 1); // Doesn't re-render yet
+    setFlag(f => !f);     // Doesn't re-render yet
+    // React batches both updates - only 1 re-render
+  };
+  
+  // Even in setTimeout, Promise.then, etc.
+  const handleAsync = () => {
+    setTimeout(() => {
+      setCount(c => c + 1); // Batched
+      setFlag(f => !f);     // Batched together
+    }, 1000);
+  };
+  
+  return (
+    <div>
+      <p>Count: {count}</p>
+      <p>Flag: {flag.toString()}</p>
+      <button onClick={handleClick}>Sync Update</button>
+      <button onClick={handleAsync}>Async Update</button>
+    </div>
+  );
+}
+```
+
+**Benefits:**
+- Fewer re-renders
+- Better performance
+- More consistent behavior
+</details>
+
 - **Q2:** How does automatic batching improve performance?
+<details>
+<summary>Answer</summary>
+**Performance improvements:**
+
+```jsx
+// Without batching (React 17 behavior)
+function Component() {
+  const [name, setName] = useState('');
+  const [age, setAge] = useState(0);
+  const [email, setEmail] = useState('');
+  
+  const handleSubmit = async () => {
+    const data = await fetchUserData();
+    
+    // In React 17: 3 separate re-renders
+    setName(data.name);    // Re-render 1
+    setAge(data.age);      // Re-render 2  
+    setEmail(data.email);  // Re-render 3
+  };
+  
+  // Expensive computation runs 3 times
+  const expensiveValue = useMemo(() => {
+    console.log('Computing expensive value...');
+    return name + age + email;
+  }, [name, age, email]);
+  
+  return <div>{expensiveValue}</div>;
+}
+
+// With automatic batching (React 18)
+// Same code results in only 1 re-render and 1 computation
+```
+
+**Measurements:**
+- **3x fewer renders** in many async scenarios
+- **Reduced layout thrashing** in DOM
+- **Better frame rates** for animations
+- **Fewer effect runs** and computations
+</details>
+
 - **Q3:** What changed from React 17 to React 18 regarding batching?
+<details>
+<summary>Answer</summary>
+| Scenario | React 17 | React 18 |
+|----------|----------|----------|
+| **Event handlers** | ✅ Batched | ✅ Batched |
+| **setTimeout** | ❌ Not batched | ✅ Batched |
+| **Promise.then** | ❌ Not batched | ✅ Batched |
+| **Native events** | ❌ Not batched | ✅ Batched |
+| **fetch callbacks** | ❌ Not batched | ✅ Batched |
+
+```jsx
+// React 17 vs 18 comparison
+function Example() {
+  const [count, setCount] = useState(0);
+  const [name, setName] = useState('');
+  
+  // React 17: Batched ✅
+  // React 18: Batched ✅
+  const handleClick = () => {
+    setCount(1);
+    setName('John');
+  };
+  
+  // React 17: NOT batched ❌ (2 renders)
+  // React 18: Batched ✅ (1 render)
+  const handleTimeout = () => {
+    setTimeout(() => {
+      setCount(2);
+      setName('Jane');
+    }, 100);
+  };
+  
+  // React 17: NOT batched ❌ (2 renders)  
+  // React 18: Batched ✅ (1 render)
+  const handleFetch = () => {
+    fetch('/api/data').then(() => {
+      setCount(3);
+      setName('Bob');
+    });
+  };
+  
+  console.log('Render count:', ++renderCount);
+  return <div>{count} - {name}</div>;
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you opt out of automatic batching when needed?
+<details>
+<summary>Answer</summary>
+Use **flushSync** to force synchronous updates:
+
+```jsx
+import { flushSync } from 'react-dom';
+
+function SearchComponent() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  
+  const handleSearch = (newQuery) => {
+    // Force immediate update for query (for focus management)
+    flushSync(() => {
+      setQuery(newQuery);
+    });
+    
+    // This will be a separate render
+    setResults(searchResults(newQuery));
+  };
+  
+  // Scroll to top immediately after query updates
+  useLayoutEffect(() => {
+    if (query) {
+      document.getElementById('results').scrollTop = 0;
+    }
+  }, [query]);
+  
+  return (
+    <div>
+      <input value={query} onChange={e => handleSearch(e.target.value)} />
+      <div id="results">{results.map(r => <div key={r.id}>{r.title}</div>)}</div>
+    </div>
+  );
+}
+
+// When to use flushSync
+function FormWithValidation() {
+  const [value, setValue] = useState('');
+  const [error, setError] = useState('');
+  
+  const handleChange = (newValue) => {
+    // Update value immediately for input responsiveness
+    flushSync(() => {
+      setValue(newValue);
+    });
+    
+    // Validate in next render to avoid blocking input
+    setError(validate(newValue));
+  };
+  
+  return (
+    <div>
+      <input value={value} onChange={e => handleChange(e.target.value)} />
+      {error && <div className="error">{error}</div>}
+    </div>
+  );
+}
+```
+
+**Use flushSync sparingly** - it can hurt performance!
+</details>
+
 - **Q2:** What are the implications of automatic batching for testing?
+<details>
+<summary>Answer</summary>
+**Testing considerations:**
+
+```jsx
+// Test might need act() for async updates
+import { act, render, fireEvent } from '@testing-library/react';
+
+function AsyncComponent() {
+  const [count, setCount] = useState(0);
+  const [status, setStatus] = useState('idle');
+  
+  const handleClick = () => {
+    setTimeout(() => {
+      setCount(1);
+      setStatus('done');
+    }, 0);
+  };
+  
+  return (
+    <div>
+      <span data-testid="count">{count}</span>
+      <span data-testid="status">{status}</span>
+      <button onClick={handleClick}>Update</button>
+    </div>
+  );
+}
+
+// ✅ Correct test with act()
+test('updates are batched in async operations', async () => {
+  const { getByTestId, getByRole } = render(<AsyncComponent />);
+  
+  await act(async () => {
+    fireEvent.click(getByRole('button'));
+    
+    // Wait for timeout
+    await new Promise(resolve => setTimeout(resolve, 0));
+  });
+  
+  // Both updates happened in single batch
+  expect(getByTestId('count')).toHaveTextContent('1');
+  expect(getByTestId('status')).toHaveTextContent('done');
+});
+
+// Testing render counts
+test('automatic batching reduces renders', () => {
+  let renderCount = 0;
+  
+  function TestComponent() {
+    renderCount++;
+    const [a, setA] = useState(0);
+    const [b, setB] = useState(0);
+    
+    useEffect(() => {
+      // This would cause 2 renders in React 17, 1 in React 18
+      setTimeout(() => {
+        setA(1);
+        setB(2);
+      }, 0);
+    }, []);
+    
+    return <div>{a + b}</div>;
+  }
+  
+  render(<TestComponent />);
+  
+  act(() => {
+    jest.advanceTimersByTime(0);
+  });
+  
+  // React 18: renderCount === 2 (initial + 1 batched update)
+  // React 17: renderCount === 3 (initial + 2 separate updates)
+  expect(renderCount).toBe(2);
+});
+```
+</details>
 
 ---
 
@@ -7670,12 +7936,327 @@ function AppWithReset() {
 
 #### **📋 Beginner:**
 - **Q1:** What is useTransition and what problem does it solve?
+<details>
+<summary>Answer</summary>
+**useTransition** marks updates as non-urgent, letting React prioritize more important updates.
+
+```jsx
+import { useTransition, useState } from 'react';
+
+function SearchApp() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [isPending, startTransition] = useTransition();
+  
+  const handleSearch = (newQuery) => {
+    // Urgent: Update input immediately
+    setQuery(newQuery);
+    
+    // Non-urgent: Search results can wait
+    startTransition(() => {
+      setResults(performExpensiveSearch(newQuery));
+    });
+  };
+  
+  return (
+    <div>
+      <input 
+        value={query} 
+        onChange={e => handleSearch(e.target.value)}
+        placeholder="Search..."
+      />
+      
+      {isPending && <div>Searching...</div>}
+      
+      <div>
+        {results.map(result => (
+          <div key={result.id}>{result.title}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+```
+
+**Problems it solves:**
+- **Input lag** - Keeps UI responsive during heavy updates
+- **Blocking updates** - Prevents expensive renders from freezing app
+- **Better UX** - Users can keep typing while search happens
+</details>
+
 - **Q2:** How do you mark updates as transitions?
+<details>
+<summary>Answer</summary>
+```jsx
+function App() {
+  const [tab, setTab] = useState('home');
+  const [content, setContent] = useState('');
+  const [isPending, startTransition] = useTransition();
+  
+  const handleTabChange = (newTab) => {
+    // Urgent: Tab selection should be immediate
+    setTab(newTab);
+    
+    // Non-urgent: Content loading can be delayed
+    startTransition(() => {
+      setContent(loadHeavyContent(newTab));
+    });
+  };
+  
+  return (
+    <div>
+      <div className="tabs">
+        {['home', 'profile', 'settings'].map(tabName => (
+          <button
+            key={tabName}
+            className={tab === tabName ? 'active' : ''}
+            onClick={() => handleTabChange(tabName)}
+          >
+            {tabName}
+          </button>
+        ))}
+      </div>
+      
+      <div className={`content ${isPending ? 'loading' : ''}`}>
+        {content}
+      </div>
+    </div>
+  );
+}
+
+// Alternative: useDeferredValue
+function SearchWithDeferred() {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+  const results = useMemo(() => 
+    search(deferredQuery), [deferredQuery]
+  );
+  
+  return (
+    <div>
+      <input value={query} onChange={e => setQuery(e.target.value)} />
+      <SearchResults query={deferredQuery} results={results} />
+    </div>
+  );
+}
+```
+</details>
+
 - **Q3:** What is the isPending value in useTransition?
+<details>
+<summary>Answer</summary>
+**isPending** indicates if any transition updates are currently pending.
+
+```jsx
+function DataTable() {
+  const [filter, setFilter] = useState('');
+  const [data, setData] = useState([]);
+  const [isPending, startTransition] = useTransition();
+  
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter); // Immediate
+    
+    startTransition(() => {
+      // Heavy filtering operation
+      setData(filterLargeDataset(allData, newFilter));
+    });
+  };
+  
+  return (
+    <div>
+      <input 
+        value={filter} 
+        onChange={e => handleFilterChange(e.target.value)}
+        placeholder="Filter data..."
+      />
+      
+      {/* Show loading state during transition */}
+      {isPending && (
+        <div className="loading-overlay">
+          Processing...
+        </div>
+      )}
+      
+      <table className={isPending ? 'dimmed' : ''}>
+        <tbody>
+          {data.map(row => (
+            <tr key={row.id}>
+              <td>{row.name}</td>
+              <td>{row.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// isPending usage patterns
+function useTransitionState(initialState) {
+  const [state, setState] = useState(initialState);
+  const [isPending, startTransition] = useTransition();
+  
+  const setTransitionState = (newState) => {
+    startTransition(() => {
+      setState(newState);
+    });
+  };
+  
+  return [state, setTransitionState, isPending];
+}
+```
+
+**isPending is true when:**
+- Transition updates are being processed
+- React is working on non-urgent updates
+- Useful for showing loading states
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do transitions improve user experience in large lists?
+<details>
+<summary>Answer</summary>
+```jsx
+function ContactList() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredContacts, setFilteredContacts] = useState(contacts);
+  const [isPending, startTransition] = useTransition();
+  
+  const handleSearch = (term) => {
+    // Keep input responsive
+    setSearchTerm(term);
+    
+    // Defer expensive filtering
+    startTransition(() => {
+      const filtered = contacts.filter(contact =>
+        contact.name.toLowerCase().includes(term.toLowerCase()) ||
+        contact.email.toLowerCase().includes(term.toLowerCase())
+      );
+      setFilteredContacts(filtered);
+    });
+  };
+  
+  return (
+    <div>
+      <input
+        type="text"
+        value={searchTerm}
+        onChange={e => handleSearch(e.target.value)}
+        placeholder="Search 10,000 contacts..."
+        className={isPending ? 'searching' : ''}
+      />
+      
+      <div className="contact-count">
+        {filteredContacts.length} contacts
+        {isPending && ' (updating...)'}
+      </div>
+      
+      <VirtualizedList items={filteredContacts} />
+    </div>
+  );
+}
+
+// Optimized list rendering with transitions
+function OptimizedList({ items }) {
+  const [displayItems, setDisplayItems] = useState(items.slice(0, 50));
+  const [isPending, startTransition] = useTransition();
+  
+  useEffect(() => {
+    startTransition(() => {
+      // Gradually load more items
+      setDisplayItems(items);
+    });
+  }, [items]);
+  
+  return (
+    <div>
+      {displayItems.map(item => (
+        <ExpensiveListItem key={item.id} item={item} />
+      ))}
+      {isPending && <div>Loading more items...</div>}
+    </div>
+  );
+}
+```
+
+**Benefits:**
+- **Responsive input** - Typing never feels laggy
+- **Progressive loading** - Show partial results while processing
+- **Interruptible updates** - New searches cancel old ones
+</details>
+
 - **Q2:** When should you avoid using transitions?
+<details>
+<summary>Answer</summary>
+**Avoid transitions for:**
+
+```jsx
+// ❌ Don't use for urgent updates
+function LoginForm() {
+  const [error, setError] = useState('');
+  const [isPending, startTransition] = useTransition();
+  
+  const handleSubmit = async () => {
+    try {
+      await login();
+    } catch (err) {
+      // Don't defer error messages!
+      startTransition(() => {
+        setError(err.message); // Wrong - errors should be immediate
+      });
+    }
+  };
+  
+  return <form onSubmit={handleSubmit}>...</form>;
+}
+
+// ❌ Don't use for focus management
+function Modal({ isOpen, onClose }) {
+  const [isPending, startTransition] = useTransition();
+  
+  useEffect(() => {
+    if (isOpen) {
+      startTransition(() => {
+        // Wrong - focus should be immediate for accessibility
+        document.getElementById('modal-input')?.focus();
+      });
+    }
+  }, [isOpen]);
+  
+  return isOpen ? <div>...</div> : null;
+}
+
+// ❌ Don't use for animations
+function AnimatedButton({ onClick }) {
+  const [isPressed, setIsPressed] = useState(false);
+  const [isPending, startTransition] = useTransition();
+  
+  const handleClick = () => {
+    // Wrong - button press feedback should be immediate
+    startTransition(() => {
+      setIsPressed(true);
+    });
+    
+    setTimeout(() => setIsPressed(false), 150);
+    onClick();
+  };
+  
+  return <button onClick={handleClick}>...</button>;
+}
+```
+
+**Use transitions for:**
+- Heavy computations (filtering, sorting)
+- Non-critical UI updates
+- Background data processing
+
+**Don't use for:**
+- User feedback (errors, success messages)
+- Accessibility actions (focus, announcements)
+- Animation triggers
+- Form validation
+- Navigation responses
+</details>
 
 ---
 
@@ -7683,12 +8264,431 @@ function AppWithReset() {
 
 #### **📋 Beginner:**
 - **Q1:** What is useDeferredValue and how does it work?
+<details>
+<summary>Answer</summary>
+**useDeferredValue** lets you defer updates to a value during urgent updates.
+
+```jsx
+import { useDeferredValue, useState } from 'react';
+
+function SearchApp() {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+  
+  return (
+    <div>
+      <input 
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Search..."
+      />
+      
+      {/* This component uses the deferred value */}
+      <SearchResults query={deferredQuery} />
+    </div>
+  );
+}
+
+function SearchResults({ query }) {
+  const results = useMemo(() => {
+    // Expensive search only runs when deferredQuery changes
+    return performExpensiveSearch(query);
+  }, [query]);
+  
+  return (
+    <div>
+      {results.map(result => (
+        <div key={result.id}>{result.title}</div>
+      ))}
+    </div>
+  );
+}
+```
+
+**How it works:**
+- During typing: `query` updates immediately, `deferredQuery` stays old
+- When typing stops: `deferredQuery` updates to match `query`
+- Keeps UI responsive during rapid changes
+</details>
+
 - **Q2:** How is useDeferredValue different from useTransition?
+<details>
+<summary>Answer</summary>
+| Feature | useTransition | useDeferredValue |
+|---------|---------------|------------------|
+| **Control** | You control when to defer | React controls timing |
+| **Usage** | Wrap state updates | Defer a value |
+| **isPending** | Provides pending state | No pending indicator |
+| **Best for** | Manual optimization | Component props |
+
+```jsx
+// useTransition - you control the deferring
+function TransitionExample() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [isPending, startTransition] = useTransition();
+  
+  const handleSearch = (newQuery) => {
+    setQuery(newQuery); // Immediate
+    
+    startTransition(() => {
+      setResults(search(newQuery)); // Deferred
+    });
+  };
+  
+  return (
+    <div>
+      <input onChange={e => handleSearch(e.target.value)} />
+      {isPending && <div>Loading...</div>}
+      <Results data={results} />
+    </div>
+  );
+}
+
+// useDeferredValue - React controls the deferring
+function DeferredExample() {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+  
+  return (
+    <div>
+      <input 
+        value={query}
+        onChange={e => setQuery(e.target.value)} 
+      />
+      
+      {/* React defers this component's updates */}
+      <ExpensiveResults query={deferredQuery} />
+    </div>
+  );
+}
+```
+
+**Choose useTransition when:** You want control and loading states
+**Choose useDeferredValue when:** Optimizing child component props
+</details>
+
 - **Q3:** When would you use useDeferredValue?
+<details>
+<summary>Answer</summary>
+**Use useDeferredValue for:**
+
+```jsx
+// 1. Search/Filter inputs
+function ProductSearch() {
+  const [searchTerm, setSearchTerm] = useState('');
+  const deferredSearchTerm = useDeferredValue(searchTerm);
+  
+  return (
+    <div>
+      <input 
+        value={searchTerm}
+        onChange={e => setSearchTerm(e.target.value)}
+        placeholder="Search products..."
+      />
+      <ProductList searchTerm={deferredSearchTerm} />
+    </div>
+  );
+}
+
+// 2. Expensive visualizations
+function ChartComponent() {
+  const [data, setData] = useState([]);
+  const deferredData = useDeferredValue(data);
+  
+  return (
+    <div>
+      <DataControls onDataChange={setData} />
+      <ExpensiveChart data={deferredData} />
+    </div>
+  );
+}
+
+// 3. Large lists with filtering
+function ContactList() {
+  const [filter, setFilter] = useState('');
+  const deferredFilter = useDeferredValue(filter);
+  
+  const filteredContacts = useMemo(() => 
+    contacts.filter(c => c.name.includes(deferredFilter)),
+    [deferredFilter]
+  );
+  
+  return (
+    <div>
+      <input 
+        value={filter}
+        onChange={e => setFilter(e.target.value)}
+      />
+      <VirtualizedList items={filteredContacts} />
+    </div>
+  );
+}
+
+// 4. Third-party components you can't modify
+function MapWithSearch() {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+  
+  return (
+    <div>
+      <input onChange={e => setQuery(e.target.value)} />
+      {/* Can't modify this expensive component */}
+      <ThirdPartyMapComponent searchQuery={deferredQuery} />
+    </div>
+  );
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you implement debounced search with useDeferredValue?
+<details>
+<summary>Answer</summary>
+```jsx
+// Method 1: Pure useDeferredValue (React handles timing)
+function SearchWithDeferred() {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+  
+  const searchResults = useMemo(() => {
+    if (!deferredQuery) return [];
+    return searchAPI(deferredQuery);
+  }, [deferredQuery]);
+  
+  return (
+    <div>
+      <input 
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+        placeholder="Type to search..."
+      />
+      
+      <div>
+        {query !== deferredQuery && <div>Searching...</div>}
+        {searchResults.map(result => (
+          <div key={result.id}>{result.title}</div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Method 2: Combined with custom debounce
+function useDebounced(value, delay) {
+  const [debouncedValue, setDebouncedValue] = useState(value);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+    
+    return () => clearTimeout(timer);
+  }, [value, delay]);
+  
+  return useDeferredValue(debouncedValue);
+}
+
+function AdvancedSearch() {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDebounced(query, 300);
+  
+  const { data, isLoading } = useQuery({
+    queryKey: ['search', deferredQuery],
+    queryFn: () => searchAPI(deferredQuery),
+    enabled: !!deferredQuery
+  });
+  
+  return (
+    <div>
+      <input 
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+      />
+      
+      {isLoading && <div>Loading...</div>}
+      <SearchResults results={data} />
+    </div>
+  );
+}
+
+// Method 3: Smart search with different strategies
+function SmartSearch() {
+  const [query, setQuery] = useState('');
+  const deferredQuery = useDeferredValue(query);
+  
+  // Fast local search
+  const localResults = useMemo(() => 
+    localData.filter(item => 
+      item.title.toLowerCase().includes(query.toLowerCase())
+    ).slice(0, 5),
+    [query]
+  );
+  
+  // Slower remote search (deferred)
+  const { data: remoteResults } = useQuery({
+    queryKey: ['remoteSearch', deferredQuery],
+    queryFn: () => remoteSearch(deferredQuery),
+    enabled: deferredQuery.length > 2
+  });
+  
+  return (
+    <div>
+      <input 
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+      />
+      
+      {localResults.length > 0 && (
+        <div>
+          <h3>Quick Results</h3>
+          {localResults.map(r => <div key={r.id}>{r.title}</div>)}
+        </div>
+      )}
+      
+      {query !== deferredQuery && (
+        <div>Searching online...</div>
+      )}
+      
+      {remoteResults && (
+        <div>
+          <h3>Full Results</h3>
+          {remoteResults.map(r => <div key={r.id}>{r.title}</div>)}
+        </div>
+      )}
+    </div>
+  );
+}
+```
+</details>
+
 - **Q2:** What are the performance implications of useDeferredValue?
+<details>
+<summary>Answer</summary>
+```jsx
+// Performance monitoring with useDeferredValue
+function PerformanceExample() {
+  const [input, setInput] = useState('');
+  const deferredInput = useDeferredValue(input);
+  
+  // Track render performance
+  const renderStart = performance.now();
+  
+  const expensiveComputation = useMemo(() => {
+    console.log('Computing with:', deferredInput);
+    // Simulate heavy computation
+    return heavyCalculation(deferredInput);
+  }, [deferredInput]);
+  
+  useEffect(() => {
+    const renderTime = performance.now() - renderStart;
+    console.log(`Render took: ${renderTime}ms`);
+  });
+  
+  return (
+    <div>
+      <input 
+        value={input}
+        onChange={e => setInput(e.target.value)}
+      />
+      
+      {/* Show if values are in sync */}
+      {input !== deferredInput && (
+        <div style={{ color: 'orange' }}>
+          Processing... (input ahead of computation)
+        </div>
+      )}
+      
+      <ExpensiveVisualization data={expensiveComputation} />
+    </div>
+  );
+}
+
+// Measuring impact
+function useDeferredValueMetrics(value) {
+  const deferredValue = useDeferredValue(value);
+  const [metrics, setMetrics] = useState({
+    syncRenders: 0,
+    deferredRenders: 0,
+    totalDelay: 0
+  });
+  
+  const lastValueRef = useRef(value);
+  const lastDeferredRef = useRef(deferredValue);
+  const timestampRef = useRef(Date.now());
+  
+  useEffect(() => {
+    if (lastValueRef.current !== value) {
+      setMetrics(prev => ({
+        ...prev,
+        syncRenders: prev.syncRenders + 1
+      }));
+      timestampRef.current = Date.now();
+    }
+    lastValueRef.current = value;
+  }, [value]);
+  
+  useEffect(() => {
+    if (lastDeferredRef.current !== deferredValue) {
+      const delay = Date.now() - timestampRef.current;
+      setMetrics(prev => ({
+        ...prev,
+        deferredRenders: prev.deferredRenders + 1,
+        totalDelay: prev.totalDelay + delay
+      }));
+    }
+    lastDeferredRef.current = deferredValue;
+  }, [deferredValue]);
+  
+  return { deferredValue, metrics };
+}
+
+// Best practices for performance
+function OptimizedComponent() {
+  const [filter, setFilter] = useState('');
+  const deferredFilter = useDeferredValue(filter);
+  
+  // ✅ Memoize expensive operations
+  const filteredData = useMemo(() => 
+    largeDataset.filter(item => 
+      item.name.includes(deferredFilter)
+    ), 
+    [deferredFilter]
+  );
+  
+  // ✅ Use React.memo for expensive children
+  const MemoizedList = useMemo(() => 
+    React.memo(function List({ items }) {
+      return (
+        <div>
+          {items.map(item => (
+            <ExpensiveItem key={item.id} item={item} />
+          ))}
+        </div>
+      );
+    }),
+    []
+  );
+  
+  return (
+    <div>
+      <input 
+        value={filter}
+        onChange={e => setFilter(e.target.value)}
+      />
+      
+      <MemoizedList items={filteredData} />
+    </div>
+  );
+}
+```
+
+**Performance benefits:**
+- **Reduced frame drops** during rapid input
+- **Better responsiveness** for user interactions
+- **Smoother animations** by deferring heavy work
+- **Prevents UI blocking** during expensive computations
+</details>
 
 ---
 
@@ -7696,12 +8696,367 @@ function AppWithReset() {
 
 #### **📋 Beginner:**
 - **Q1:** What is concurrent rendering in React 18?
+<details>
+<summary>Answer</summary>
+**Concurrent rendering** allows React to pause, resume, and prioritize work to keep the app responsive.
+
+```jsx
+// Before React 18: Blocking rendering
+function App() {
+  const [count, setCount] = useState(0);
+  const [list, setList] = useState([]);
+  
+  const handleClick = () => {
+    setCount(c => c + 1);
+    
+    // This blocks everything until complete
+    setList(generateHugeList(10000));
+  };
+  
+  return (
+    <div>
+      <button onClick={handleClick}>
+        Count: {count} {/* Becomes unresponsive during list generation */}
+      </button>
+      <HugeList items={list} />
+    </div>
+  );
+}
+
+// React 18: Concurrent rendering
+function App() {
+  const [count, setCount] = useState(0);
+  const [list, setList] = useState([]);
+  const [isPending, startTransition] = useTransition();
+  
+  const handleClick = () => {
+    setCount(c => c + 1); // High priority - immediate
+    
+    startTransition(() => {
+      setList(generateHugeList(10000)); // Low priority - can be interrupted
+    });
+  };
+  
+  return (
+    <div>
+      <button onClick={handleClick}>
+        Count: {count} {/* Stays responsive! */}
+      </button>
+      {isPending && <div>Updating list...</div>}
+      <HugeList items={list} />
+    </div>
+  );
+}
+```
+
+**Key features:**
+- **Interruptible rendering** - React can pause work for urgent updates
+- **Priority-based updates** - User interactions get higher priority
+- **Time slicing** - Break work into small chunks
+</details>
+
 - **Q2:** How does concurrent rendering improve user experience?
+<details>
+<summary>Answer</summary>
+**UX improvements:**
+
+```jsx
+// Example: Responsive search
+function SearchApp() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  const [isPending, startTransition] = useTransition();
+  
+  const handleSearch = (newQuery) => {
+    // Input stays responsive
+    setQuery(newQuery);
+    
+    // Search can be interrupted by new input
+    startTransition(() => {
+      setResults(expensiveSearch(newQuery));
+    });
+  };
+  
+  return (
+    <div>
+      <input 
+        value={query}
+        onChange={e => handleSearch(e.target.value)}
+        placeholder="Type to search..." // Never lags!
+      />
+      
+      {isPending && <div>Searching...</div>}
+      <SearchResults results={results} />
+    </div>
+  );
+}
+
+// Example: Navigation that doesn't block
+function App() {
+  const [page, setPage] = useState('home');
+  const [isPending, startTransition] = useTransition();
+  
+  const navigate = (newPage) => {
+    startTransition(() => {
+      setPage(newPage); // Heavy page renders don't block navigation
+    });
+  };
+  
+  return (
+    <div>
+      <nav>
+        {['home', 'products', 'about'].map(pageName => (
+          <button
+            key={pageName}
+            onClick={() => navigate(pageName)}
+            className={page === pageName ? 'active' : ''}
+          >
+            {pageName}
+          </button>
+        ))}
+      </nav>
+      
+      {isPending && <div>Loading page...</div>}
+      <PageComponent page={page} />
+    </div>
+  );
+}
+```
+
+**Benefits:**
+- **No input lag** - Typing, clicking always feels instant
+- **Smooth animations** - Concurrent work doesn't block frame updates  
+- **Progressive loading** - Show partial results while processing
+- **Better perceived performance** - App feels faster even if total time is same
+</details>
+
 - **Q3:** Do you need to change your code to benefit from concurrent rendering?
+<details>
+<summary>Answer</summary>
+**Minimal changes needed** - Most apps benefit automatically:
+
+```jsx
+// 1. Update to React 18 and createRoot
+// Before
+import ReactDOM from 'react-dom';
+ReactDOM.render(<App />, document.getElementById('root'));
+
+// After
+import { createRoot } from 'react-dom/client';
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);
+
+// 2. Existing code works but can be optimized
+function ExistingComponent() {
+  const [data, setData] = useState([]);
+  
+  useEffect(() => {
+    // This still works, but isn't optimized
+    fetchData().then(setData);
+  }, []);
+  
+  return <div>{data.map(item => <Item key={item.id} item={item} />)}</div>;
+}
+
+// 3. Add concurrent features for better UX
+function OptimizedComponent() {
+  const [query, setQuery] = useState('');
+  const [data, setData] = useState([]);
+  const [isPending, startTransition] = useTransition();
+  
+  const handleSearch = (newQuery) => {
+    setQuery(newQuery);
+    
+    startTransition(() => {
+      setData(searchData(newQuery));
+    });
+  };
+  
+  return (
+    <div>
+      <input value={query} onChange={e => handleSearch(e.target.value)} />
+      {isPending && <div>Searching...</div>}
+      <div>{data.map(item => <Item key={item.id} item={item} />)}</div>
+    </div>
+  );
+}
+```
+
+**What's automatic:**
+- **Automatic batching** - Groups state updates
+- **Better scheduling** - React optimizes render timing
+- **Improved hydration** - SSR apps load progressively
+
+**What requires opt-in:**
+- **useTransition** - For non-urgent updates
+- **useDeferredValue** - For deferred values
+- **Suspense** - For data fetching (with compatible libraries)
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How does concurrent rendering affect component lifecycle?
+<details>
+<summary>Answer</summary>
+```jsx
+// Lifecycle methods may be called multiple times
+class MyComponent extends Component {
+  componentDidMount() {
+    console.log('Mounted'); // Called once
+  }
+  
+  componentDidUpdate() {
+    console.log('Updated'); // May be called multiple times during concurrent work
+  }
+  
+  render() {
+    console.log('Rendering'); // Can be called multiple times and interrupted
+    
+    // ❌ Side effects in render can cause issues
+    if (this.props.data) {
+      analytics.track('data-loaded'); // May fire multiple times!
+    }
+    
+    return <div>{this.props.data}</div>;
+  }
+}
+
+// Functional components with hooks
+function MyComponent({ data }) {
+  // ✅ Effects run after commit, not during render
+  useEffect(() => {
+    if (data) {
+      analytics.track('data-loaded'); // Fires once per commit
+    }
+  }, [data]);
+  
+  // ✅ Render function should be pure
+  return <div>{data}</div>;
+}
+
+// Safe patterns for concurrent rendering
+function SafeComponent() {
+  const [count, setCount] = useState(0);
+  const renderCount = useRef(0);
+  
+  // ✅ Safe - tracks commits, not renders
+  useLayoutEffect(() => {
+    renderCount.current += 1;
+  });
+  
+  // ❌ Unsafe - tracks renders, which can be interrupted
+  renderCount.current += 1;
+  
+  return (
+    <div>
+      Count: {count}
+      <button onClick={() => setCount(c => c + 1)}>+</button>
+    </div>
+  );
+}
+```
+
+**Key principles:**
+- **Render functions must be pure** - No side effects
+- **Use effects for side effects** - Not render functions
+- **Multiple renders possible** - Don't rely on render count
+</details>
+
 - **Q2:** What are the implications of concurrent rendering for third-party libraries?
+<details>
+<summary>Answer</summary>
+```jsx
+// Libraries need to be concurrent-safe
+// ❌ Problem: Library that mutates during render
+class ProblematicLibrary {
+  constructor() {
+    this.listeners = [];
+  }
+  
+  render() {
+    // Bad: Side effect during render
+    this.listeners.push(this.props.onUpdate);
+    return <div>Content</div>;
+  }
+}
+
+// ✅ Solution: Use effects for mutations
+function SafeLibraryComponent({ onUpdate }) {
+  const [listeners] = useState(() => new Set());
+  
+  useEffect(() => {
+    listeners.add(onUpdate);
+    return () => listeners.delete(onUpdate);
+  }, [onUpdate, listeners]);
+  
+  return <div>Content</div>;
+}
+
+// Example: Fixing a chart library
+function ChartWrapper({ data }) {
+  const chartRef = useRef();
+  const [chart, setChart] = useState(null);
+  
+  // ✅ Initialize chart in effect, not render
+  useEffect(() => {
+    if (chartRef.current && !chart) {
+      const newChart = new ThirdPartyChart(chartRef.current);
+      setChart(newChart);
+    }
+  }, [chart]);
+  
+  // ✅ Update chart in effect
+  useEffect(() => {
+    if (chart && data) {
+      chart.updateData(data);
+    }
+  }, [chart, data]);
+  
+  // ❌ Don't do this in render
+  // if (chartRef.current && data) {
+  //   chart.updateData(data); // Can cause issues with concurrent rendering
+  // }
+  
+  return <div ref={chartRef} />;
+}
+
+// Library compatibility checklist
+const concurrentSafeChecklist = {
+  pureRenders: "✅ Render functions have no side effects",
+  effectsForSideEffects: "✅ Use useEffect/useLayoutEffect for mutations",
+  noGlobalMutations: "✅ Don't mutate global state during render",
+  properCleanup: "✅ Clean up subscriptions and timers",
+  stableRefs: "✅ Don't create new objects/functions in render"
+};
+
+// Testing for concurrent safety
+function TestConcurrentSafety() {
+  const [, forceUpdate] = useReducer(x => x + 1, 0);
+  
+  // This should be safe to call multiple times
+  const handleMultipleRenders = () => {
+    // Simulate concurrent rendering by forcing multiple renders
+    for (let i = 0; i < 5; i++) {
+      setTimeout(forceUpdate, i * 10);
+    }
+  };
+  
+  return (
+    <div>
+      <button onClick={handleMultipleRenders}>
+        Test Multiple Renders
+      </button>
+      <ThirdPartyComponent />
+    </div>
+  );
+}
+```
+
+**Migration guidelines:**
+- **Audit render functions** - Remove side effects
+- **Use proper hooks** - Effects for subscriptions
+- **Test with concurrent features** - Enable Strict Mode
+- **Update to React 18** - Follow migration guide
+</details>
 
 ---
 
@@ -7726,12 +9081,292 @@ function AppWithReset() {
 
 #### **📋 Beginner:**
 - **Q1:** What is Webpack and why is it used in React projects?
+<details>
+<summary>Answer</summary>
+**Webpack** is a module bundler that packages JavaScript files and assets for browsers.
+
+```javascript
+// webpack.config.js
+module.exports = {
+  entry: './src/index.js',
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'bundle.js'
+  },
+  module: {
+    rules: [
+      {
+        test: /\.jsx?$/,
+        use: 'babel-loader',
+        exclude: /node_modules/
+      },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      }
+    ]
+  }
+};
+```
+
+**Why use with React:**
+- **JSX compilation** - Transform JSX to JavaScript
+- **Module bundling** - Combine multiple files
+- **Asset handling** - Process CSS, images, fonts
+- **Development server** - Hot reloading
+- **Production optimization** - Minification, code splitting
+</details>
+
 - **Q2:** What are the main concepts in Webpack (entry, output, loaders, plugins)?
+<details>
+<summary>Answer</summary>
+```javascript
+module.exports = {
+  // Entry: Starting point
+  entry: './src/index.js',
+  
+  // Output: Where to put bundled files
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: '[name].[contenthash].js'
+  },
+  
+  // Loaders: Transform files
+  module: {
+    rules: [
+      {
+        test: /\.jsx?$/,
+        use: 'babel-loader' // Transform JSX/ES6
+      },
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'] // Process CSS
+      },
+      {
+        test: /\.(png|jpg|gif)$/,
+        use: 'file-loader' // Handle images
+      }
+    ]
+  },
+  
+  // Plugins: Additional functionality
+  plugins: [
+    new HtmlWebpackPlugin({
+      template: './public/index.html'
+    }),
+    new MiniCssExtractPlugin({
+      filename: '[name].[contenthash].css'
+    })
+  ]
+};
+```
+
+**Core concepts:**
+- **Entry** - Input files to start bundling
+- **Output** - Where and how to output bundles
+- **Loaders** - Transform different file types
+- **Plugins** - Extend webpack functionality
+</details>
+
 - **Q3:** How does Webpack handle different file types?
+<details>
+<summary>Answer</summary>
+```javascript
+module.exports = {
+  module: {
+    rules: [
+      // JavaScript/JSX
+      {
+        test: /\.jsx?$/,
+        use: 'babel-loader',
+        exclude: /node_modules/
+      },
+      
+      // CSS
+      {
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader']
+      },
+      
+      // SCSS
+      {
+        test: /\.scss$/,
+        use: ['style-loader', 'css-loader', 'sass-loader']
+      },
+      
+      // Images
+      {
+        test: /\.(png|jpg|jpeg|gif|svg)$/,
+        type: 'asset/resource'
+      },
+      
+      // Fonts
+      {
+        test: /\.(woff|woff2|eot|ttf|otf)$/,
+        type: 'asset/resource'
+      },
+      
+      // JSON
+      {
+        test: /\.json$/,
+        type: 'json'
+      }
+    ]
+  }
+};
+
+// Usage in React
+import React from 'react';
+import './App.css';           // CSS loader
+import logo from './logo.png'; // File loader
+import data from './data.json'; // JSON loader
+
+function App() {
+  return (
+    <div>
+      <img src={logo} alt="Logo" />
+      <p>{data.message}</p>
+    </div>
+  );
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you optimize Webpack builds for production?
+<details>
+<summary>Answer</summary>
+```javascript
+const path = require('path');
+const TerserPlugin = require('terser-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const { BundleAnalyzerPlugin } = require('webpack-bundle-analyzer');
+
+module.exports = {
+  mode: 'production',
+  
+  optimization: {
+    minimize: true,
+    minimizer: [
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            drop_console: true, // Remove console.log
+          }
+        }
+      })
+    ],
+    
+    // Code splitting
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all'
+        }
+      }
+    }
+  },
+  
+  plugins: [
+    // Extract CSS
+    new MiniCssExtractPlugin({
+      filename: '[name].[contenthash].css'
+    }),
+    
+    // Analyze bundle size
+    new BundleAnalyzerPlugin({
+      analyzerMode: 'static',
+      openAnalyzer: false
+    })
+  ],
+  
+  // Performance budgets
+  performance: {
+    maxAssetSize: 250000,
+    maxEntrypointSize: 250000
+  }
+};
+```
+
+**Key optimizations:**
+- **Minification** - Compress JavaScript and CSS
+- **Tree shaking** - Remove unused code
+- **Code splitting** - Split bundles
+- **Asset optimization** - Compress images
+- **Caching** - Use content hashes
+</details>
+
 - **Q2:** How do you implement code splitting with Webpack?
+<details>
+<summary>Answer</summary>
+```javascript
+// 1. Dynamic imports in React
+import { lazy, Suspense } from 'react';
+
+const LazyComponent = lazy(() => import('./LazyComponent'));
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading...</div>}>
+      <LazyComponent />
+    </Suspense>
+  );
+}
+
+// 2. Route-based splitting
+import { lazy } from 'react';
+import { Routes, Route } from 'react-router-dom';
+
+const Home = lazy(() => import('./pages/Home'));
+const About = lazy(() => import('./pages/About'));
+const Contact = lazy(() => import('./pages/Contact'));
+
+function App() {
+  return (
+    <Suspense fallback={<div>Loading page...</div>}>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+      </Routes>
+    </Suspense>
+  );
+}
+
+// 3. Webpack configuration
+module.exports = {
+  optimization: {
+    splitChunks: {
+      chunks: 'all',
+      cacheGroups: {
+        // Vendor code
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all'
+        },
+        
+        // Common code
+        common: {
+          name: 'common',
+          minChunks: 2,
+          chunks: 'all',
+          enforce: true
+        }
+      }
+    }
+  }
+};
+
+// 4. Manual chunk splitting
+import(/* webpackChunkName: "lodash" */ 'lodash').then((_) => {
+  // Use lodash
+});
+```
+</details>
 
 ---
 
@@ -7739,12 +9374,236 @@ function AppWithReset() {
 
 #### **📋 Beginner:**
 - **Q1:** What is Babel and why is it needed for React?
+<details>
+<summary>Answer</summary>
+**Babel** is a JavaScript compiler that transforms modern JS/JSX into browser-compatible code.
+
+```javascript
+// Input (JSX + ES6)
+const App = () => {
+  const [count, setCount] = useState(0);
+  return <div onClick={() => setCount(count + 1)}>{count}</div>;
+};
+
+// Output (after Babel)
+const App = () => {
+  const [count, setCount] = useState(0);
+  return React.createElement(
+    "div",
+    { onClick: () => setCount(count + 1) },
+    count
+  );
+};
+```
+
+**Why needed:**
+- **JSX transformation** - Browsers don't understand JSX
+- **ES6+ features** - Arrow functions, classes, destructuring
+- **Browser compatibility** - Support older browsers
+- **Modern syntax** - async/await, optional chaining
+</details>
+
 - **Q2:** How does JSX get transformed into JavaScript?
+<details>
+<summary>Answer</summary>
+```javascript
+// JSX input
+const element = (
+  <div className="container">
+    <h1>Hello, {name}!</h1>
+    <Button onClick={handleClick}>Click me</Button>
+  </div>
+);
+
+// Classic transform (React 16 and earlier)
+const element = React.createElement(
+  "div",
+  { className: "container" },
+  React.createElement("h1", null, "Hello, ", name, "!"),
+  React.createElement(Button, { onClick: handleClick }, "Click me")
+);
+
+// New JSX transform (React 17+)
+import { jsx as _jsx, jsxs as _jsxs } from "react/jsx-runtime";
+
+const element = _jsxs("div", {
+  className: "container",
+  children: [
+    _jsxs("h1", { children: ["Hello, ", name, "!"] }),
+    _jsx(Button, { onClick: handleClick, children: "Click me" })
+  ]
+});
+```
+
+**Transformation steps:**
+1. Parse JSX syntax
+2. Transform to function calls
+3. Generate JavaScript code
+4. Optimize output
+</details>
+
 - **Q3:** What are Babel presets and plugins?
+<details>
+<summary>Answer</summary>
+```javascript
+// .babelrc or babel.config.js
+module.exports = {
+  // Presets: Collection of plugins
+  presets: [
+    '@babel/preset-env',    // ES6+ features
+    '@babel/preset-react'   // JSX transformation
+  ],
+  
+  // Individual plugins
+  plugins: [
+    '@babel/plugin-proposal-class-properties',
+    '@babel/plugin-transform-runtime'
+  ]
+};
+
+// Common React preset configuration
+module.exports = {
+  presets: [
+    [
+      '@babel/preset-env',
+      {
+        targets: {
+          browsers: ['> 1%', 'last 2 versions']
+        },
+        useBuiltIns: 'usage',
+        corejs: 3
+      }
+    ],
+    [
+      '@babel/preset-react',
+      {
+        runtime: 'automatic' // New JSX transform
+      }
+    ]
+  ]
+};
+```
+
+**Key concepts:**
+- **Presets** - Bundles of plugins for common use cases
+- **Plugins** - Individual transformations
+- **@babel/preset-env** - Smart ES6+ compilation
+- **@babel/preset-react** - JSX and React features
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you configure Babel for optimal React builds?
+<details>
+<summary>Answer</summary>
+```javascript
+// babel.config.js
+module.exports = {
+  presets: [
+    [
+      '@babel/preset-env',
+      {
+        targets: {
+          browsers: ['> 0.5%', 'last 2 versions', 'not dead']
+        },
+        useBuiltIns: 'usage',
+        corejs: 3,
+        modules: false // Let webpack handle modules
+      }
+    ],
+    [
+      '@babel/preset-react',
+      {
+        runtime: 'automatic', // New JSX transform
+        development: process.env.NODE_ENV === 'development'
+      }
+    ]
+  ],
+  
+  plugins: [
+    // Development only
+    ...(process.env.NODE_ENV === 'development' ? [
+      'react-refresh/babel'
+    ] : []),
+    
+    // Production only
+    ...(process.env.NODE_ENV === 'production' ? [
+      'babel-plugin-transform-react-remove-prop-types'
+    ] : [])
+  ],
+  
+  env: {
+    test: {
+      presets: [
+        ['@babel/preset-env', { targets: { node: 'current' } }]
+      ]
+    }
+  }
+};
+
+// Package.json
+{
+  "browserslist": [
+    "> 0.5%",
+    "last 2 versions",
+    "not dead",
+    "not ie 11"
+  ]
+}
+```
+</details>
+
 - **Q2:** What are the differences between different JSX transforms?
+<details>
+<summary>Answer</summary>
+```javascript
+// Classic JSX Transform (React 16 and earlier)
+// Requires React import
+import React from 'react';
+
+function App() {
+  return <div>Hello World</div>;
+}
+
+// Compiled to:
+function App() {
+  return React.createElement("div", null, "Hello World");
+}
+
+// New JSX Transform (React 17+)
+// No React import needed
+function App() {
+  return <div>Hello World</div>;
+}
+
+// Compiled to:
+import { jsx as _jsx } from "react/jsx-runtime";
+
+function App() {
+  return _jsx("div", { children: "Hello World" });
+}
+
+// Configuration comparison
+// Classic transform
+{
+  "presets": [
+    ["@babel/preset-react", { "runtime": "classic" }]
+  ]
+}
+
+// New transform
+{
+  "presets": [
+    ["@babel/preset-react", { "runtime": "automatic" }]
+  ]
+}
+```
+
+**Benefits of new transform:**
+- **No React import** - Smaller bundle size
+- **Better tree shaking** - Dead code elimination
+- **Future-proof** - Ready for React Server Components
+- **Smaller output** - More efficient runtime functions
+</details>
 
 ---
 
@@ -7752,12 +9611,323 @@ function AppWithReset() {
 
 #### **📋 Beginner:**
 - **Q1:** What optimizations should you apply for React production builds?
+<details>
+<summary>Answer</summary>
+```javascript
+// Essential production optimizations
+const optimizations = {
+  // 1. Environment variable
+  NODE_ENV: 'production',
+  
+  // 2. Code minification
+  minify: true,
+  
+  // 3. Remove development tools
+  removeConsole: true,
+  removePropTypes: true,
+  
+  // 4. Enable production mode
+  productionMode: true,
+  
+  // 5. Bundle splitting
+  codeSplitting: true,
+  
+  // 6. Asset optimization
+  compressImages: true,
+  optimizeCSS: true
+};
+
+// Create React App production build
+npm run build
+
+// Manual webpack configuration
+module.exports = {
+  mode: 'production',
+  
+  optimization: {
+    minimize: true,
+    sideEffects: false, // Enable tree shaking
+    splitChunks: {
+      chunks: 'all'
+    }
+  },
+  
+  plugins: [
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify('production')
+    })
+  ]
+};
+```
+
+**Key optimizations:**
+- **Set NODE_ENV=production** - Removes dev code
+- **Minify JavaScript/CSS** - Reduce file sizes
+- **Code splitting** - Split large bundles
+- **Tree shaking** - Remove unused code
+- **Image optimization** - Compress assets
+</details>
+
 - **Q2:** How do you minify and compress React applications?
+<details>
+<summary>Answer</summary>
+```javascript
+// Webpack configuration for minification
+const TerserPlugin = require('terser-webpack-plugin');
+const CssMinimizerPlugin = require('css-minimizer-webpack-plugin');
+const CompressionPlugin = require('compression-webpack-plugin');
+
+module.exports = {
+  optimization: {
+    minimizer: [
+      // JavaScript minification
+      new TerserPlugin({
+        terserOptions: {
+          compress: {
+            drop_console: true,
+            drop_debugger: true
+          },
+          mangle: true
+        }
+      }),
+      
+      // CSS minification
+      new CssMinimizerPlugin()
+    ]
+  },
+  
+  plugins: [
+    // Gzip compression
+    new CompressionPlugin({
+      algorithm: 'gzip',
+      test: /\.(js|css|html|svg)$/,
+      threshold: 8192,
+      minRatio: 0.8
+    }),
+    
+    // Brotli compression
+    new CompressionPlugin({
+      algorithm: 'brotliCompress',
+      test: /\.(js|css|html|svg)$/,
+      compressionOptions: { level: 11 },
+      threshold: 10240,
+      minRatio: 0.8,
+      deleteOriginalAssets: false
+    })
+  ]
+};
+
+// Server configuration for compression
+// Express.js example
+app.use(compression({
+  level: 6,
+  threshold: 1000,
+  filter: (req, res) => {
+    return compression.filter(req, res);
+  }
+}));
+```
+</details>
+
 - **Q3:** What is tree shaking and how does it help?
+<details>
+<summary>Answer</summary>
+**Tree shaking** removes unused code from bundles.
+
+```javascript
+// utils.js
+export const add = (a, b) => a + b;
+export const subtract = (a, b) => a - b;
+export const multiply = (a, b) => a * b; // Not used
+
+// main.js
+import { add, subtract } from './utils';
+
+console.log(add(1, 2));
+
+// After tree shaking, multiply() is removed from bundle
+
+// Enable tree shaking in webpack
+module.exports = {
+  mode: 'production',
+  optimization: {
+    usedExports: true,
+    sideEffects: false // Mark as side-effect free
+  }
+};
+
+// Package.json
+{
+  "sideEffects": false // Entire package is side-effect free
+}
+
+// Or specify which files have side effects
+{
+  "sideEffects": [
+    "*.css",
+    "./src/polyfills.js"
+  ]
+}
+
+// Import only what you need
+// ❌ Imports entire library
+import _ from 'lodash';
+
+// ✅ Import specific functions
+import { debounce } from 'lodash';
+// or
+import debounce from 'lodash/debounce';
+```
+
+**Benefits:**
+- **Smaller bundles** - Only ship used code
+- **Faster loading** - Less JavaScript to parse
+- **Better performance** - Reduced memory usage
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you analyze and optimize bundle sizes?
+<details>
+<summary>Answer</summary>
+```javascript
+// 1. Bundle analyzer
+const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
+
+module.exports = {
+  plugins: [
+    new BundleAnalyzerPlugin({
+      analyzerMode: 'static',
+      openAnalyzer: false,
+      reportFilename: 'bundle-report.html'
+    })
+  ]
+};
+
+// 2. Source map explorer (for CRA)
+npm install -g source-map-explorer
+npm run build
+npx source-map-explorer 'build/static/js/*.js'
+
+// 3. Performance budgets
+module.exports = {
+  performance: {
+    maxAssetSize: 250000,
+    maxEntrypointSize: 250000,
+    hints: 'warning'
+  }
+};
+
+// 4. Dynamic imports for code splitting
+const LazyComponent = lazy(() => 
+  import(/* webpackChunkName: "lazy-component" */ './LazyComponent')
+);
+
+// 5. Vendor splitting
+module.exports = {
+  optimization: {
+    splitChunks: {
+      cacheGroups: {
+        vendor: {
+          test: /[\\/]node_modules[\\/]/,
+          name: 'vendors',
+          chunks: 'all'
+        },
+        common: {
+          name: 'common',
+          minChunks: 2,
+          chunks: 'all'
+        }
+      }
+    }
+  }
+};
+
+// 6. Monitor with tools
+// webpack-bundle-analyzer
+// bundlephobia.com
+// Package Phobia
+```
+</details>
+
 - **Q2:** What are the best practices for caching strategies in React apps?
+<details>
+<summary>Answer</summary>
+```javascript
+// 1. Content-based hashing
+module.exports = {
+  output: {
+    filename: '[name].[contenthash].js',
+    chunkFilename: '[name].[contenthash].chunk.js'
+  },
+  
+  plugins: [
+    new MiniCssExtractPlugin({
+      filename: '[name].[contenthash].css'
+    })
+  ]
+};
+
+// 2. Long-term caching headers
+// nginx configuration
+location ~* \.(js|css|png|jpg|jpeg|gif|ico|svg)$ {
+  expires 1y;
+  add_header Cache-Control "public, immutable";
+}
+
+location /index.html {
+  expires -1;
+  add_header Cache-Control "no-cache, no-store, must-revalidate";
+}
+
+// 3. Service Worker caching
+// workbox-webpack-plugin
+const { GenerateSW } = require('workbox-webpack-plugin');
+
+module.exports = {
+  plugins: [
+    new GenerateSW({
+      runtimeCaching: [{
+        urlPattern: /^https:\/\/api\./,
+        handler: 'StaleWhileRevalidate',
+        options: {
+          cacheName: 'api-cache'
+        }
+      }]
+    })
+  ]
+};
+
+// 4. CDN optimization
+const cdn = {
+  js: 'https://cdn.example.com/js/',
+  css: 'https://cdn.example.com/css/',
+  images: 'https://cdn.example.com/images/'
+};
+
+module.exports = {
+  output: {
+    publicPath: process.env.NODE_ENV === 'production' ? cdn.js : '/'
+  }
+};
+
+// 5. Preloading critical resources
+function App() {
+  useEffect(() => {
+    // Preload critical routes
+    import('./pages/ImportantPage');
+  }, []);
+  
+  return <Router>...</Router>;
+}
+```
+
+**Caching strategies:**
+- **Immutable assets** - Long cache with content hash
+- **HTML files** - No cache or short cache
+- **API responses** - Stale-while-revalidate
+- **Static assets** - Long-term caching
+- **Critical resources** - Preload or prefetch
+</details>
 
 ---
 
@@ -7769,12 +9939,374 @@ function AppWithReset() {
 
 #### **📋 Beginner:**
 - **Q1:** What is a Higher Order Component (HOC)?
+<details>
+<summary>Answer</summary>
+**HOC** is a function that takes a component and returns a new enhanced component.
+
+```jsx
+// Basic HOC pattern
+function withLogger(WrappedComponent) {
+  return function EnhancedComponent(props) {
+    console.log('Rendering with props:', props);
+    
+    return <WrappedComponent {...props} />;
+  };
+}
+
+// Usage
+const Button = ({ label, onClick }) => (
+  <button onClick={onClick}>{label}</button>
+);
+
+const LoggedButton = withLogger(Button);
+
+// In use
+<LoggedButton label="Click me" onClick={handleClick} />
+```
+
+**Key concepts:**
+- **Higher-order function** - Function that returns function
+- **Component enhancement** - Add functionality without modifying original
+- **Props forwarding** - Pass through all props
+- **Composition over inheritance** - React pattern
+</details>
+
 - **Q2:** How do you create a simple HOC?
+<details>
+<summary>Answer</summary>
+```jsx
+// 1. Simple authentication HOC
+function withAuth(WrappedComponent) {
+  return function AuthenticatedComponent(props) {
+    const { user } = useContext(AuthContext);
+    
+    if (!user) {
+      return <div>Please log in</div>;
+    }
+    
+    return <WrappedComponent {...props} user={user} />;
+  };
+}
+
+// 2. Loading HOC
+function withLoading(WrappedComponent) {
+  return function LoadingComponent({ isLoading, ...props }) {
+    if (isLoading) {
+      return <div>Loading...</div>;
+    }
+    
+    return <WrappedComponent {...props} />;
+  };
+}
+
+// 3. Error boundary HOC
+function withErrorBoundary(WrappedComponent) {
+  return class extends Component {
+    constructor(props) {
+      super(props);
+      this.state = { hasError: false };
+    }
+    
+    static getDerivedStateFromError(error) {
+      return { hasError: true };
+    }
+    
+    render() {
+      if (this.state.hasError) {
+        return <div>Something went wrong</div>;
+      }
+      
+      return <WrappedComponent {...this.props} />;
+    }
+  };
+}
+
+// Usage
+const ProtectedProfile = withAuth(Profile);
+const LoadingProfile = withLoading(Profile);
+const SafeProfile = withErrorBoundary(Profile);
+
+// Composition
+const EnhancedProfile = withAuth(withLoading(withErrorBoundary(Profile)));
+```
+</details>
+
 - **Q3:** What problems do HOCs solve?
+<details>
+<summary>Answer</summary>
+**HOCs solve cross-cutting concerns:**
+
+```jsx
+// 1. Authentication
+function withAuth(WrappedComponent) {
+  return function(props) {
+    const { user } = useAuth();
+    return user ? <WrappedComponent {...props} /> : <Login />;
+  };
+}
+
+// 2. Data fetching
+function withData(url) {
+  return function(WrappedComponent) {
+    return function(props) {
+      const [data, setData] = useState(null);
+      const [loading, setLoading] = useState(true);
+      
+      useEffect(() => {
+        fetch(url).then(res => res.json()).then(data => {
+          setData(data);
+          setLoading(false);
+        });
+      }, []);
+      
+      return <WrappedComponent {...props} data={data} loading={loading} />;
+    };
+  };
+}
+
+// 3. Theme injection
+function withTheme(WrappedComponent) {
+  return function(props) {
+    const theme = useContext(ThemeContext);
+    return <WrappedComponent {...props} theme={theme} />;
+  };
+}
+
+// 4. Analytics tracking
+function withAnalytics(eventName) {
+  return function(WrappedComponent) {
+    return function(props) {
+      useEffect(() => {
+        analytics.track(eventName);
+      }, []);
+      
+      return <WrappedComponent {...props} />;
+    };
+  };
+}
+
+// Multiple enhancements
+const EnhancedComponent = withAuth(
+  withTheme(
+    withData('/api/user')(
+      withAnalytics('page_view')(UserProfile)
+    )
+  )
+);
+```
+
+**Benefits:**
+- **Code reuse** - Share logic across components
+- **Separation of concerns** - Keep components focused
+- **Composition** - Combine multiple behaviors
+- **Clean components** - Remove boilerplate
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What are the drawbacks of HOCs?
-- **Q2:** How do HOCs compare to hooks for code reuse?
+<details>
+<summary>Answer</summary>
+**HOC problems:**
+
+```jsx
+// 1. Wrapper hell
+const EnhancedComponent = withAuth(
+  withTheme(
+    withLoading(
+      withData(
+        withAnalytics(MyComponent)
+      )
+    )
+  )
+);
+
+// 2. Props collision
+function withUser(WrappedComponent) {
+  return function(props) {
+    return <WrappedComponent {...props} name="HOC User" />;
+  };
+}
+
+function withAdmin(WrappedComponent) {
+  return function(props) {
+    return <WrappedComponent {...props} name="Admin User" />; // Collision!
+  };
+}
+
+// 3. Ref forwarding issues
+const withLogging = (WrappedComponent) => {
+  return function LoggingComponent(props) {
+    // Ref doesn't get forwarded automatically
+    return <WrappedComponent {...props} />;
+  };
+};
+
+// Fix with forwardRef
+const withLogging = (WrappedComponent) => {
+  return React.forwardRef((props, ref) => {
+    console.log('Rendering...');
+    return <WrappedComponent {...props} ref={ref} />;
+  });
+};
+
+// 4. Static methods not copied
+class MyComponent extends Component {
+  static displayName = 'MyComponent';
+  static defaultProps = { theme: 'light' };
+}
+
+const Enhanced = withTheme(MyComponent);
+// Enhanced.displayName is undefined
+// Enhanced.defaultProps is undefined
+
+// Fix with hoist-non-react-statics
+import hoistNonReactStatics from 'hoist-non-react-statics';
+
+function withTheme(WrappedComponent) {
+  const ThemedComponent = function(props) {
+    return <WrappedComponent {...props} theme="dark" />;
+  };
+  
+  return hoistNonReactStatics(ThemedComponent, WrappedComponent);
+}
+```
+
+**Modern alternatives:**
+- **Custom hooks** - Better composition
+- **Render props** - More explicit
+- **Context** - Global state
+- **Component composition** - Children patterns
+</details>
+
+- **Q2:** How do HOCs compare to hooks and render props?
+<details>
+<summary>Answer</summary>
+```jsx
+// 1. Same functionality, different patterns
+
+// HOC approach
+function withCounter(WrappedComponent) {
+  return function(props) {
+    const [count, setCount] = useState(0);
+    return <WrappedComponent {...props} count={count} setCount={setCount} />;
+  };
+}
+
+const CounterButton = withCounter(({ count, setCount }) => (
+  <button onClick={() => setCount(count + 1)}>Count: {count}</button>
+));
+
+// Custom hook approach
+function useCounter() {
+  const [count, setCount] = useState(0);
+  return { count, setCount };
+}
+
+function CounterButton() {
+  const { count, setCount } = useCounter();
+  return <button onClick={() => setCount(count + 1)}>Count: {count}</button>;
+}
+
+// Render props approach
+function Counter({ render }) {
+  const [count, setCount] = useState(0);
+  return render({ count, setCount });
+}
+
+function App() {
+  return (
+    <Counter 
+      render={({ count, setCount }) => (
+        <button onClick={() => setCount(count + 1)}>Count: {count}</button>
+      )}
+    />
+  );
+}
+
+// 2. Comparison
+const comparison = {
+  HOCs: {
+    pros: ['Reusable', 'Clean component interface'],
+    cons: ['Wrapper hell', 'Props collision', 'Static hoisting']
+  },
+  Hooks: {
+    pros: ['Simple composition', 'No wrapper components', 'Better TypeScript'],
+    cons: ['Only in functional components', 'Rules of hooks']
+  },
+  RenderProps: {
+    pros: ['Explicit dependencies', 'No wrapper hell'],
+    cons: ['Callback hell', 'Less reusable']
+  }
+};
+```
+
+**Modern recommendation:** Use **custom hooks** for most use cases
+</details>
+
+- **Q2:** How do HOCs compare to hooks and render props?
+<details>
+<summary>Answer</summary>
+```jsx
+// 1. Same functionality, different patterns
+
+// HOC approach
+function withCounter(WrappedComponent) {
+  return function(props) {
+    const [count, setCount] = useState(0);
+    return <WrappedComponent {...props} count={count} setCount={setCount} />;
+  };
+}
+
+const CounterButton = withCounter(({ count, setCount }) => (
+  <button onClick={() => setCount(count + 1)}>Count: {count}</button>
+));
+
+// Custom hook approach
+function useCounter() {
+  const [count, setCount] = useState(0);
+  return { count, setCount };
+}
+
+function CounterButton() {
+  const { count, setCount } = useCounter();
+  return <button onClick={() => setCount(count + 1)}>Count: {count}</button>;
+}
+
+// Render props approach
+function Counter({ render }) {
+  const [count, setCount] = useState(0);
+  return render({ count, setCount });
+}
+
+function App() {
+  return (
+    <Counter 
+      render={({ count, setCount }) => (
+        <button onClick={() => setCount(count + 1)}>Count: {count}</button>
+      )}
+    />
+  );
+}
+
+// 2. Comparison
+const comparison = {
+  HOCs: {
+    pros: ['Reusable', 'Clean component interface'],
+    cons: ['Wrapper hell', 'Props collision', 'Static hoisting']
+  },
+  Hooks: {
+    pros: ['Simple composition', 'No wrapper components', 'Better TypeScript'],
+    cons: ['Only in functional components', 'Rules of hooks']
+  },
+  RenderProps: {
+    pros: ['Explicit dependencies', 'No wrapper hell'],
+    cons: ['Callback hell', 'Less reusable']
+  }
+};
+```
+
+**Modern recommendation:** Use **custom hooks** for most use cases
+</details>
 
 ---
 
@@ -7782,12 +10314,365 @@ function AppWithReset() {
 
 #### **📋 Beginner:**
 - **Q1:** What is the render props pattern?
+<details>
+<summary>Answer</summary>
+**Render props** is a pattern where a component receives a function as a prop that returns JSX.
+
+```jsx
+// Basic render props pattern
+function DataProvider({ render }) {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    fetchData().then(result => {
+      setData(result);
+      setLoading(false);
+    });
+  }, []);
+  
+  return render({ data, loading });
+}
+
+// Usage
+function App() {
+  return (
+    <DataProvider
+      render={({ data, loading }) => (
+        <div>
+          {loading ? <div>Loading...</div> : <div>{data.message}</div>}
+        </div>
+      )}
+    />
+  );
+}
+
+// Alternative: children as function
+function DataProvider({ children }) {
+  const [data, setData] = useState(null);
+  return children({ data });
+}
+
+// Usage
+<DataProvider>
+  {({ data }) => <div>{data?.message}</div>}
+</DataProvider>
+```
+
+**Key concept:** Component controls **what** to render, consumer controls **how** to render
+</details>
+
 - **Q2:** How do you implement a component using render props?
+<details>
+<summary>Answer</summary>
+```jsx
+// Mouse position tracker
+function Mouse({ render }) {
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  
+  useEffect(() => {
+    const handleMove = (e) => {
+      setPosition({ x: e.clientX, y: e.clientY });
+    };
+    
+    window.addEventListener('mousemove', handleMove);
+    return () => window.removeEventListener('mousemove', handleMove);
+  }, []);
+  
+  return render(position);
+}
+
+// Usage
+function App() {
+  return (
+    <Mouse
+      render={({ x, y }) => (
+        <div>Mouse position: {x}, {y}</div>
+      )}
+    />
+  );
+}
+
+// Toggle component
+function Toggle({ children }) {
+  const [isOn, setIsOn] = useState(false);
+  
+  return children({
+    isOn,
+    toggle: () => setIsOn(!isOn),
+    turnOn: () => setIsOn(true),
+    turnOff: () => setIsOn(false)
+  });
+}
+
+// Usage
+<Toggle>
+  {({ isOn, toggle }) => (
+    <div>
+      <button onClick={toggle}>
+        {isOn ? 'ON' : 'OFF'}
+      </button>
+      {isOn && <div>Content is visible!</div>}
+    </div>
+  )}
+</Toggle>
+
+// API data fetcher
+function Fetcher({ url, children }) {
+  const [state, setState] = useState({
+    data: null,
+    loading: true,
+    error: null
+  });
+  
+  useEffect(() => {
+    fetch(url)
+      .then(res => res.json())
+      .then(data => setState({ data, loading: false, error: null }))
+      .catch(error => setState({ data: null, loading: false, error }));
+  }, [url]);
+  
+  return children(state);
+}
+
+// Usage
+<Fetcher url="/api/users">
+  {({ data, loading, error }) => {
+    if (loading) return <div>Loading...</div>;
+    if (error) return <div>Error: {error.message}</div>;
+    return <UserList users={data} />;
+  }}
+</Fetcher>
+```
+</details>
+
 - **Q3:** What are the benefits of render props?
+<details>
+<summary>Answer</summary>
+```jsx
+// 1. Flexible rendering
+function DataList({ data, children }) {
+  return (
+    <div>
+      {data.map(item => children(item))}
+    </div>
+  );
+}
+
+// Different rendering styles
+<DataList data={users}>
+  {user => <UserCard key={user.id} user={user} />}
+</DataList>
+
+<DataList data={users}>
+  {user => <UserRow key={user.id} user={user} />}
+</DataList>
+
+// 2. Logic reuse without wrapper components
+function WindowSize({ children }) {
+  const [size, setSize] = useState({ width: 0, height: 0 });
+  
+  useEffect(() => {
+    const updateSize = () => {
+      setSize({ width: window.innerWidth, height: window.innerHeight });
+    };
+    
+    window.addEventListener('resize', updateSize);
+    updateSize();
+    
+    return () => window.removeEventListener('resize', updateSize);
+  }, []);
+  
+  return children(size);
+}
+
+// No wrapper divs!
+<WindowSize>
+  {({ width, height }) => (
+    <div>Screen: {width}x{height}</div>
+  )}
+</WindowSize>
+
+// 3. Conditional rendering
+function Permission({ role, children }) {
+  const { user } = useAuth();
+  
+  return children({
+    hasPermission: user?.role === role,
+    user
+  });
+}
+
+<Permission role="admin">
+  {({ hasPermission, user }) => (
+    hasPermission ? <AdminPanel user={user} /> : <AccessDenied />
+  )}
+</Permission>
+```
+
+**Benefits:**
+- **Flexible rendering** - Consumer controls UI
+- **Logic reuse** - Share behavior across components
+- **No wrapper hell** - Unlike HOCs
+- **Explicit dependencies** - Clear what's being passed
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do render props compare to HOCs and hooks?
+<details>
+<summary>Answer</summary>
+```jsx
+// Same counter logic, different patterns
+
+// 1. Render Props
+function Counter({ children }) {
+  const [count, setCount] = useState(0);
+  return children({ count, increment: () => setCount(c => c + 1) });
+}
+
+<Counter>
+  {({ count, increment }) => (
+    <button onClick={increment}>Count: {count}</button>
+  )}
+</Counter>
+
+// 2. HOC
+const withCounter = (Component) => (props) => {
+  const [count, setCount] = useState(0);
+  return <Component {...props} count={count} increment={() => setCount(c => c + 1)} />;
+};
+
+const CounterButton = withCounter(({ count, increment }) => (
+  <button onClick={increment}>Count: {count}</button>
+));
+
+// 3. Custom Hook
+function useCounter() {
+  const [count, setCount] = useState(0);
+  return { count, increment: () => setCount(c => c + 1) };
+}
+
+function CounterButton() {
+  const { count, increment } = useCounter();
+  return <button onClick={increment}>Count: {count}</button>;
+}
+
+// Comparison table
+const patterns = {
+  renderProps: {
+    pros: ['Explicit deps', 'Flexible UI', 'No wrapper components'],
+    cons: ['Callback hell', 'Indent nesting', 'Performance overhead']
+  },
+  hocs: {
+    pros: ['Clean usage', 'Reusable', 'Component-like'],
+    cons: ['Wrapper hell', 'Props collision', 'Ref issues']
+  },
+  hooks: {
+    pros: ['Simple', 'Composable', 'No nesting', 'Great TypeScript'],
+    cons: ['Function components only', 'Rules of hooks']
+  }
+};
+```
+
+**When to use:**
+- **Hooks** - Modern default choice
+- **Render props** - When you need flexible rendering
+- **HOCs** - Legacy codebases or specific wrapper needs
+</details>
+
 - **Q2:** How do you avoid callback hell with render props?
+<details>
+<summary>Answer</summary>
+```jsx
+// ❌ Callback hell problem
+<UserProvider>
+  {user => (
+    <ThemeProvider>
+      {theme => (
+        <DataProvider>
+          {data => (
+            <LoadingProvider>
+              {loading => (
+                <div style={{ color: theme.color }}>
+                  {loading ? 'Loading...' : `Hello ${user.name}: ${data.message}`}
+                </div>
+              )}
+            </LoadingProvider>
+          )}
+        </DataProvider>
+      )}
+    </ThemeProvider>
+  )}
+</UserProvider>
+
+// ✅ Solution 1: Compose render props
+function compose(...providers) {
+  return ({ children }) => {
+    return providers.reduceRight((acc, Provider) => (
+      <Provider>{acc}</Provider>
+    ), children);
+  };
+}
+
+const AppProviders = compose(UserProvider, ThemeProvider, DataProvider);
+
+<AppProviders>
+  {({ user, theme, data, loading }) => (
+    <div style={{ color: theme.color }}>
+      {loading ? 'Loading...' : `Hello ${user.name}: ${data.message}`}
+    </div>
+  )}
+</AppProviders>
+
+// ✅ Solution 2: Custom hook combination
+function useAppData() {
+  const user = useUser();
+  const theme = useTheme();
+  const { data, loading } = useData();
+  
+  return { user, theme, data, loading };
+}
+
+function App() {
+  const { user, theme, data, loading } = useAppData();
+  
+  return (
+    <div style={{ color: theme.color }}>
+      {loading ? 'Loading...' : `Hello ${user.name}: ${data.message}`}
+    </div>
+  );
+}
+
+// ✅ Solution 3: Render prop composer
+function RenderPropComposer({ providers, children }) {
+  const renderNext = (index, accumulated = {}) => {
+    if (index >= providers.length) {
+      return children(accumulated);
+    }
+    
+    const Provider = providers[index];
+    return (
+      <Provider>
+        {(props) => renderNext(index + 1, { ...accumulated, ...props })}
+      </Provider>
+    );
+  };
+  
+  return renderNext(0);
+}
+
+// Usage
+<RenderPropComposer
+  providers={[UserProvider, ThemeProvider, DataProvider]}
+>
+  {({ user, theme, data, loading }) => (
+    <div style={{ color: theme.color }}>
+      {loading ? 'Loading...' : `Hello ${user.name}: ${data.message}`}
+    </div>
+  )}
+</RenderPropComposer>
+```
+</details>
 
 ---
 
@@ -7795,12 +10680,392 @@ function AppWithReset() {
 
 #### **📋 Beginner:**
 - **Q1:** What are React Portals and when would you use them?
+<details>
+<summary>Answer</summary>
+**Portals** render children into a DOM node outside the parent component's hierarchy.
+
+```jsx
+import { createPortal } from 'react-dom';
+
+function Modal({ children, isOpen }) {
+  if (!isOpen) return null;
+  
+  return createPortal(
+    <div className="modal-overlay">
+      <div className="modal">
+        {children}
+      </div>
+    </div>,
+    document.getElementById('modal-root') // Render outside React tree
+  );
+}
+
+// HTML
+<div id="root">
+  <div id="modal-root"></div>
+</div>
+
+// Usage
+function App() {
+  const [showModal, setShowModal] = useState(false);
+  
+  return (
+    <div style={{ overflow: 'hidden' }}>
+      <button onClick={() => setShowModal(true)}>Open Modal</button>
+      
+      <Modal isOpen={showModal}>
+        <h2>Modal Content</h2>
+        <button onClick={() => setShowModal(false)}>Close</button>
+      </Modal>
+    </div>
+  );
+}
+```
+
+**Use cases:**
+- **Modals** - Above page content
+- **Tooltips** - Escape overflow constraints
+- **Dropdowns** - Avoid z-index issues
+- **Notifications** - Fixed positioning
+</details>
+
 - **Q2:** How do you create a portal?
+<details>
+<summary>Answer</summary>
+```jsx
+import { createPortal } from 'react-dom';
+
+// Basic portal
+function Portal({ children, container }) {
+  return createPortal(children, container);
+}
+
+// Custom hook for portal
+function usePortal(id) {
+  const [container, setContainer] = useState(null);
+  
+  useEffect(() => {
+    let element = document.getElementById(id);
+    
+    if (!element) {
+      element = document.createElement('div');
+      element.id = id;
+      document.body.appendChild(element);
+    }
+    
+    setContainer(element);
+    
+    return () => {
+      if (element.parentNode) {
+        element.parentNode.removeChild(element);
+      }
+    };
+  }, [id]);
+  
+  return container;
+}
+
+// Usage
+function Tooltip({ children, content, isVisible }) {
+  const portalContainer = usePortal('tooltip-root');
+  
+  if (!isVisible || !portalContainer) return children;
+  
+  return (
+    <>
+      {children}
+      {createPortal(
+        <div className="tooltip">{content}</div>,
+        portalContainer
+      )}
+    </>
+  );
+}
+
+// Notification system
+function NotificationProvider({ children }) {
+  const [notifications, setNotifications] = useState([]);
+  const portalContainer = usePortal('notifications');
+  
+  const addNotification = (message) => {
+    const id = Date.now();
+    setNotifications(prev => [...prev, { id, message }]);
+    
+    setTimeout(() => {
+      setNotifications(prev => prev.filter(n => n.id !== id));
+    }, 3000);
+  };
+  
+  return (
+    <NotificationContext.Provider value={{ addNotification }}>
+      {children}
+      {portalContainer && createPortal(
+        <div className="notifications">
+          {notifications.map(n => (
+            <div key={n.id} className="notification">
+              {n.message}
+            </div>
+          ))}
+        </div>,
+        portalContainer
+      )}
+    </NotificationContext.Provider>
+  );
+}
+```
+</details>
+
 - **Q3:** Do portals affect event propagation?
+<details>
+<summary>Answer</summary>
+**Events bubble through React tree, not DOM tree.**
+
+```jsx
+function App() {
+  const handleClick = (e) => {
+    console.log('App clicked'); // This will fire!
+  };
+  
+  return (
+    <div onClick={handleClick}>
+      <PortalModal />
+    </div>
+  );
+}
+
+function PortalModal() {
+  return createPortal(
+    <div onClick={() => console.log('Modal clicked')}>
+      <button>Click me</button>
+      {/* Clicking button triggers both modal and app handlers */}
+    </div>,
+    document.body // Rendered in body, not in app div
+  );
+}
+
+// Prevent event bubbling
+function PortalModal() {
+  const handleModalClick = (e) => {
+    e.stopPropagation(); // Stops React event bubbling
+    console.log('Modal clicked');
+  };
+  
+  return createPortal(
+    <div onClick={handleModalClick}>
+      <button>Click me</button>
+    </div>,
+    document.body
+  );
+}
+
+// Context still works through portals
+function App() {
+  return (
+    <ThemeProvider>
+      <PortalComponent /> {/* Can access ThemeContext */}
+    </ThemeProvider>
+  );
+}
+
+function PortalComponent() {
+  const theme = useContext(ThemeContext); // Works!
+  
+  return createPortal(
+    <div style={{ color: theme.color }}>Portal content</div>,
+    document.body
+  );
+}
+```
+
+**Key points:**
+- Events bubble through **React component tree**
+- Context is preserved through portals
+- DOM structure doesn't affect React event system
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you handle portal cleanup and memory leaks?
+<details>
+<summary>Answer</summary>
+```jsx
+// Custom portal hook with cleanup
+function usePortal(elementId) {
+  const [portalElement, setPortalElement] = useState(null);
+  
+  useEffect(() => {
+    // Create or find element
+    let element = document.getElementById(elementId);
+    let shouldRemove = false;
+    
+    if (!element) {
+      element = document.createElement('div');
+      element.id = elementId;
+      document.body.appendChild(element);
+      shouldRemove = true;
+    }
+    
+    setPortalElement(element);
+    
+    // Cleanup function
+    return () => {
+      if (shouldRemove && element.parentNode) {
+        element.parentNode.removeChild(element);
+      }
+    };
+  }, [elementId]);
+  
+  return portalElement;
+}
+
+// Portal manager for multiple portals
+class PortalManager {
+  constructor() {
+    this.portals = new Map();
+  }
+  
+  getPortal(id) {
+    if (!this.portals.has(id)) {
+      const element = document.createElement('div');
+      element.id = id;
+      document.body.appendChild(element);
+      this.portals.set(id, element);
+    }
+    return this.portals.get(id);
+  }
+  
+  removePortal(id) {
+    const element = this.portals.get(id);
+    if (element && element.parentNode) {
+      element.parentNode.removeChild(element);
+      this.portals.delete(id);
+    }
+  }
+  
+  cleanup() {
+    this.portals.forEach((element, id) => {
+      this.removePortal(id);
+    });
+  }
+}
+
+const portalManager = new PortalManager();
+
+// Portal with ref forwarding
+const Portal = forwardRef(({ children, containerId }, ref) => {
+  const [container, setContainer] = useState(null);
+  
+  useEffect(() => {
+    const element = portalManager.getPortal(containerId);
+    setContainer(element);
+    
+    return () => {
+      // Only remove if no other components using it
+      if (element && element.children.length === 0) {
+        portalManager.removePortal(containerId);
+      }
+    };
+  }, [containerId]);
+  
+  if (!container) return null;
+  
+  return createPortal(
+    <div ref={ref}>{children}</div>,
+    container
+  );
+});
+
+// Global cleanup on app unmount
+function App() {
+  useEffect(() => {
+    return () => {
+      portalManager.cleanup();
+    };
+  }, []);
+  
+  return <div>App content</div>;
+}
+```
+</details>
+
 - **Q2:** How do portals work with SSR?
+<details>
+<summary>Answer</summary>
+```jsx
+// Portals don't work with SSR - they're client-only
+function Modal({ children, isOpen }) {
+  const [isMounted, setIsMounted] = useState(false);
+  
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+  
+  // Don't render portal on server
+  if (!isMounted || !isOpen) return null;
+  
+  return createPortal(
+    <div className="modal">{children}</div>,
+    document.body
+  );
+}
+
+// SSR-safe portal hook
+function useSSRSafePortal(elementId) {
+  const [portalElement, setPortalElement] = useState(null);
+  
+  useEffect(() => {
+    // Only run on client
+    if (typeof window !== 'undefined') {
+      let element = document.getElementById(elementId);
+      
+      if (!element) {
+        element = document.createElement('div');
+        element.id = elementId;
+        document.body.appendChild(element);
+      }
+      
+      setPortalElement(element);
+    }
+  }, [elementId]);
+  
+  return portalElement;
+}
+
+// Alternative: Use div with fixed positioning
+function SSRModal({ children, isOpen }) {
+  if (!isOpen) return null;
+  
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        width: '100%',
+        height: '100%',
+        zIndex: 1000,
+        backgroundColor: 'rgba(0,0,0,0.5)'
+      }}
+    >
+      <div className="modal">{children}</div>
+    </div>
+  );
+}
+
+// Next.js dynamic import for client-only portals
+import dynamic from 'next/dynamic';
+
+const ClientOnlyPortal = dynamic(
+  () => import('./Portal'),
+  { ssr: false }
+);
+```
+
+**SSR considerations:**
+- Portals are **client-only** features
+- Use `useEffect` to detect client-side
+- Consider CSS alternatives for SSR
+- Use dynamic imports in Next.js
+</details>
 
 ---
 
@@ -7808,12 +11073,411 @@ function AppWithReset() {
 
 #### **📋 Beginner:**
 - **Q1:** What are React Fragments and why are they useful?
+<details>
+<summary>Answer</summary>
+**Fragments** let you group elements without adding extra DOM nodes.
+
+```jsx
+// ❌ Without Fragments - adds unnecessary div
+function UserInfo() {
+  return (
+    <div> {/* Extra wrapper div */}
+      <h1>John Doe</h1>
+      <p>Software Engineer</p>
+    </div>
+  );
+}
+
+// ✅ With Fragments - no extra wrapper
+function UserInfo() {
+  return (
+    <React.Fragment>
+      <h1>John Doe</h1>
+      <p>Software Engineer</p>
+    </React.Fragment>
+  );
+}
+
+// ✅ Short syntax
+function UserInfo() {
+  return (
+    <>
+      <h1>John Doe</h1>
+      <p>Software Engineer</p>
+    </>
+  );
+}
+
+// Before Fragments, this would break
+function Table() {
+  return (
+    <table>
+      <tbody>
+        <TableRow /> {/* Must return <tr> elements, not wrapped in div */}
+      </tbody>
+    </table>
+  );
+}
+
+function TableRow() {
+  return (
+    <>
+      <tr><td>Row 1</td></tr>
+      <tr><td>Row 2</td></tr>
+    </>
+  );
+}
+```
+
+**Benefits:**
+- **Cleaner DOM** - No wrapper elements
+- **Better performance** - Fewer DOM nodes
+- **Valid HTML** - Proper table/list structure
+- **CSS compatibility** - No layout interference
+</details>
+
 - **Q2:** What are the different ways to use Fragments?
+<details>
+<summary>Answer</summary>
+```jsx
+// 1. React.Fragment syntax
+function Component() {
+  return (
+    <React.Fragment>
+      <div>Item 1</div>
+      <div>Item 2</div>
+    </React.Fragment>
+  );
+}
+
+// 2. Short syntax (most common)
+function Component() {
+  return (
+    <>
+      <div>Item 1</div>
+      <div>Item 2</div>
+    </>
+  );
+}
+
+// 3. Fragment with key (for lists)
+function TodoList({ todos }) {
+  return (
+    <ul>
+      {todos.map(todo => (
+        <React.Fragment key={todo.id}>
+          <li>{todo.title}</li>
+          <li>{todo.description}</li>
+        </React.Fragment>
+      ))}
+    </ul>
+  );
+}
+
+// 4. Nested Fragments
+function App() {
+  return (
+    <>
+      <Header />
+      <>
+        <nav>Navigation</nav>
+        <main>Content</main>
+      </>
+      <Footer />
+    </>
+  );
+}
+
+// 5. Conditional Fragments
+function ConditionalComponent({ showExtra }) {
+  return (
+    <>
+      <div>Always shown</div>
+      {showExtra && (
+        <>
+          <div>Extra item 1</div>
+          <div>Extra item 2</div>
+        </>
+      )}
+    </>
+  );
+}
+```
+</details>
+
 - **Q3:** When should you use Fragments vs div wrappers?
+<details>
+<summary>Answer</summary>
+```jsx
+// ✅ Use Fragments when:
+
+// 1. HTML structure matters
+function TableRows() {
+  return (
+    <>
+      <tr><td>Row 1</td></tr>
+      <tr><td>Row 2</td></tr>
+    </>
+  ); // div would break table structure
+}
+
+// 2. CSS layout would be affected
+function FlexItems() {
+  return (
+    <>
+      <div className="flex-item">Item 1</div>
+      <div className="flex-item">Item 2</div>
+    </>
+  ); // div wrapper would interfere with flex layout
+}
+
+// 3. Avoiding unnecessary DOM nesting
+function SimpleGroup() {
+  return (
+    <>
+      <h1>Title</h1>
+      <p>Description</p>
+    </>
+  ); // No need for extra wrapper
+}
+
+// ✅ Use div wrappers when:
+
+// 1. You need styling or event handling
+function StyledGroup() {
+  return (
+    <div className="card" onClick={handleClick}>
+      <h1>Title</h1>
+      <p>Description</p>
+    </div>
+  );
+}
+
+// 2. Semantic grouping
+function Article() {
+  return (
+    <article>
+      <h1>Article Title</h1>
+      <p>Article content</p>
+    </article>
+  );
+}
+
+// 3. Layout containers
+function Layout() {
+  return (
+    <div className="container">
+      <Header />
+      <Main />
+    </div>
+  );
+}
+
+// Comparison
+const guidelines = {
+  useFragments: [
+    'HTML structure integrity',
+    'CSS layout preservation',
+    'Performance (fewer DOM nodes)',
+    'Clean markup'
+  ],
+  useDivs: [
+    'Need styling/classes',
+    'Event handling on container',
+    'Semantic meaning',
+    'Layout positioning'
+  ]
+};
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** Can Fragments have keys? When is this useful?
+<details>
+<summary>Answer</summary>
+```jsx
+// ✅ React.Fragment can have keys (short syntax cannot)
+function CommentList({ comments }) {
+  return (
+    <div>
+      {comments.map(comment => (
+        <React.Fragment key={comment.id}>
+          <h3>{comment.author}</h3>
+          <p>{comment.text}</p>
+          <time>{comment.date}</time>
+          <hr />
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+// ❌ Short syntax doesn't support keys
+function BadExample({ items }) {
+  return (
+    <div>
+      {items.map(item => (
+        <> {/* Error: Cannot have key */}
+          <div>{item.title}</div>
+          <div>{item.description}</div>
+        </>
+      ))}
+    </div>
+  );
+}
+
+// ✅ Use React.Fragment for keyed lists
+function ProductList({ products }) {
+  return (
+    <div className="product-grid">
+      {products.map(product => (
+        <React.Fragment key={product.id}>
+          <img src={product.image} alt={product.name} />
+          <h3>{product.name}</h3>
+          <p>${product.price}</p>
+          <button>Add to Cart</button>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+// Complex example with nested fragments
+function ChatMessage({ message }) {
+  return (
+    <React.Fragment key={message.id}>
+      <div className="message-header">
+        <span className="author">{message.author}</span>
+        <span className="time">{message.timestamp}</span>
+      </div>
+      <div className="message-body">
+        {message.text}
+      </div>
+      {message.attachments.map(attachment => (
+        <React.Fragment key={attachment.id}>
+          <div className="attachment">
+            <img src={attachment.url} alt={attachment.name} />
+          </div>
+        </React.Fragment>
+      ))}
+    </React.Fragment>
+  );
+}
+```
+
+**When keyed Fragments are useful:**
+- **List items with multiple elements** - Group related elements
+- **Complex list rendering** - Maintain React's reconciliation
+- **Dynamic content** - Items can be reordered
+</details>
+
 - **Q2:** How do Fragments affect CSS styling and layout?
+<details>
+<summary>Answer</summary>
+```jsx
+// CSS Grid example
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+// ❌ Wrapper div breaks grid layout
+function GridItems() {
+  return (
+    <div className="grid-container">
+      <div> {/* This wrapper breaks the grid! */}
+        <div className="grid-item">Item 1</div>
+        <div className="grid-item">Item 2</div>
+      </div>
+      <div className="grid-item">Item 3</div>
+    </div>
+  );
+}
+
+// ✅ Fragment preserves grid layout
+function GridItems() {
+  return (
+    <div className="grid-container">
+      <>
+        <div className="grid-item">Item 1</div>
+        <div className="grid-item">Item 2</div>
+      </>
+      <div className="grid-item">Item 3</div>
+    </div>
+  );
+}
+
+// Flexbox example
+.flex-container {
+  display: flex;
+  justify-content: space-between;
+}
+
+// ❌ Wrapper interferes with flex
+function FlexExample() {
+  return (
+    <div className="flex-container">
+      <div> {/* Wrapper changes flex behavior */}
+        <div>Flex item 1</div>
+        <div>Flex item 2</div>
+      </div>
+    </div>
+  );
+}
+
+// ✅ Fragment preserves flex layout
+function FlexExample() {
+  return (
+    <div className="flex-container">
+      <>
+        <div>Flex item 1</div>
+        <div>Flex item 2</div>
+      </>
+    </div>
+  );
+}
+
+// Table structure preservation
+function DataTable({ rows }) {
+  return (
+    <table>
+      <tbody>
+        {rows.map(row => (
+          <React.Fragment key={row.id}>
+            <tr>
+              <td>{row.name}</td>
+              <td>{row.value}</td>
+            </tr>
+            {row.hasDetails && (
+              <tr>
+                <td colSpan="2">{row.details}</td>
+              </tr>
+            )}
+          </React.Fragment>
+        ))}
+      </tbody>
+    </table>
+  );
+}
+
+// CSS selector considerations
+// Fragments don't create DOM nodes, so CSS selectors work as expected
+.parent > .child {
+  /* This works with Fragments */
+}
+
+.parent .nested {
+  /* Fragment doesn't interrupt descendant selectors */
+}
+```
+
+**CSS impact:**
+- **No DOM nodes** - Fragments don't appear in rendered HTML
+- **Layout preservation** - CSS Grid, Flexbox work correctly
+- **Selector behavior** - No interference with CSS selectors
+- **Performance** - Fewer DOM nodes to style
+</details>
 
 ---
 
@@ -7821,12 +11485,482 @@ function AppWithReset() {
 
 #### **📋 Beginner:**
 - **Q1:** Why are keys required when rendering lists in React?
+<details>
+<summary>Answer</summary>
+**Keys** help React identify which items have changed, been added, or removed in lists.
+
+```jsx
+// ❌ Without keys - performance issues and bugs
+function UserList({ users }) {
+  return (
+    <ul>
+      {users.map(user => (
+        <li>{user.name}</li> // No key - React warning
+      ))}
+    </ul>
+  );
+}
+
+// ✅ With keys - proper reconciliation
+function UserList({ users }) {
+  return (
+    <ul>
+      {users.map(user => (
+        <li key={user.id}>{user.name}</li>
+      ))}
+    </ul>
+  );
+}
+
+// State preservation example
+function TodoList({ todos }) {
+  return (
+    <div>
+      {todos.map(todo => (
+        <TodoItem 
+          key={todo.id} // ✅ Stable key preserves component state
+          todo={todo}
+        />
+      ))}
+    </div>
+  );
+}
+
+function TodoItem({ todo }) {
+  const [isEditing, setIsEditing] = useState(false);
+  
+  return (
+    <div>
+      {isEditing ? (
+        <input defaultValue={todo.text} />
+      ) : (
+        <span>{todo.text}</span>
+      )}
+      <button onClick={() => setIsEditing(!isEditing)}>
+        {isEditing ? 'Save' : 'Edit'}
+      </button>
+    </div>
+  );
+}
+```
+
+**Why keys matter:**
+- **Performance** - Efficient reconciliation
+- **State preservation** - Component state maintained
+- **Correct behavior** - No unexpected side effects
+- **Animation** - Smooth transitions
+</details>
+
 - **Q2:** What happens if you use array indices as keys?
+<details>
+<summary>Answer</summary>
+```jsx
+// ❌ Using index as key - problematic for dynamic lists
+function BadTodoList({ todos, onDelete }) {
+  return (
+    <div>
+      {todos.map((todo, index) => (
+        <div key={index}> {/* Bad! Index changes when items removed */}
+          <input type="checkbox" defaultChecked={todo.completed} />
+          <span>{todo.text}</span>
+          <button onClick={() => onDelete(index)}>Delete</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Problem demonstration:
+// Initial: [A, B, C] with indices [0, 1, 2]
+// Delete B: [A, C] but indices are now [0, 1]
+// React thinks item at index 1 changed from B to C!
+
+// ✅ Using stable unique keys
+function GoodTodoList({ todos, onDelete }) {
+  return (
+    <div>
+      {todos.map(todo => (
+        <div key={todo.id}> {/* Good! Stable unique key */}
+          <input type="checkbox" defaultChecked={todo.completed} />
+          <span>{todo.text}</span>
+          <button onClick={() => onDelete(todo.id)}>Delete</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Index key problems:
+const indexKeyIssues = {
+  reordering: 'Items appear to change when list reordered',
+  stateCorruption: 'Form inputs keep wrong values',
+  performance: 'Unnecessary re-renders and DOM updates',
+  animations: 'Incorrect element transitions'
+};
+
+// When index keys are OK:
+const okayToUseIndex = [
+  'Static lists that never change',
+  'Lists that only append items',
+  'No user interaction with list items',
+  'No sorting, filtering, or reordering'
+];
+```
+</details>
+
 - **Q3:** What makes a good key for list items?
+<details>
+<summary>Answer</summary>
+```jsx
+// ✅ GOOD: Stable unique identifiers
+function ProductList({ products }) {
+  return (
+    <div>
+      {products.map(product => (
+        <ProductCard key={product.id} product={product} />
+      ))}
+    </div>
+  );
+}
+
+// ✅ GOOD: Composite keys when needed
+function OrderItems({ order }) {
+  return (
+    <div>
+      {order.items.map(item => (
+        <div key={`${order.id}-${item.productId}`}>
+          {item.name} x {item.quantity}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ✅ GOOD: Content-based keys when no ID
+function MessageList({ messages }) {
+  return (
+    <div>
+      {messages.map(message => (
+        <div key={`${message.timestamp}-${message.userId}`}>
+          {message.text}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// ❌ BAD: Non-unique or unstable keys
+function BadExamples({ items }) {
+  return (
+    <div>
+      {/* ❌ Random values - new key every render */}
+      {items.map(item => (
+        <div key={Math.random()}>{item.name}</div>
+      ))}
+      
+      {/* ❌ Non-unique values */}
+      {items.map(item => (
+        <div key={item.category}>{item.name}</div>
+      ))}
+      
+      {/* ❌ Object reference - changes every render */}
+      {items.map(item => (
+        <div key={item}>{item.name}</div>
+      ))}
+    </div>
+  );
+}
+
+// Key selection criteria
+const goodKeyTraits = {
+  unique: 'No two items have same key',
+  stable: 'Key doesn\'t change between renders',
+  predictable: 'Key doesn\'t change with data updates',
+  meaningful: 'Key represents item identity'
+};
+
+// Key generation strategies
+function generateKeys(items) {
+  // If items have IDs
+  if (items[0]?.id) {
+    return items.map(item => item.id);
+  }
+  
+  // Composite key from multiple fields
+  if (items[0]?.userId && items[0]?.timestamp) {
+    return items.map(item => `${item.userId}-${item.timestamp}`);
+  }
+  
+  // Hash content if no natural key
+  return items.map(item => 
+    btoa(JSON.stringify(item)).substring(0, 10)
+  );
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do keys affect component state during list reordering?
+<details>
+<summary>Answer</summary>
+```jsx
+// Demonstration of key impact on component state
+
+function EditableItem({ item }) {
+  const [isEditing, setIsEditing] = useState(false);
+  const [value, setValue] = useState(item.text);
+  
+  return (
+    <div>
+      {isEditing ? (
+        <input 
+          value={value}
+          onChange={e => setValue(e.target.value)}
+        />
+      ) : (
+        <span>{item.text}</span>
+      )}
+      <button onClick={() => setIsEditing(!isEditing)}>
+        {isEditing ? 'Save' : 'Edit'}
+      </button>
+    </div>
+  );
+}
+
+// ❌ Bad keys - state gets mixed up during reordering
+function BadReorderExample({ items, onReorder }) {
+  return (
+    <div>
+      {items.map((item, index) => (
+        <EditableItem key={index} item={item} />
+      ))}
+      <button onClick={() => onReorder([1, 0, 2])}>
+        Move first item to second position
+      </button>
+    </div>
+  );
+}
+
+/*
+Problem:
+- User starts editing first item (index 0)
+- Items get reordered: [A, B, C] → [B, A, C]  
+- Component at index 0 now shows item B but keeps editing state from A
+- User's editing session is lost or applied to wrong item!
+*/
+
+// ✅ Good keys - state follows the correct item
+function GoodReorderExample({ items, onReorder }) {
+  return (
+    <div>
+      {items.map(item => (
+        <EditableItem key={item.id} item={item} />
+      ))}
+      <button onClick={() => onReorder([1, 0, 2])}>
+        Move first item to second position
+      </button>
+    </div>
+  );
+}
+
+// Advanced example: Drag and drop list
+function DragDropList({ items, onReorder }) {
+  const [draggedItem, setDraggedItem] = useState(null);
+  
+  return (
+    <div>
+      {items.map(item => (
+        <DraggableItem
+          key={item.id} // State preserved during drag operations
+          item={item}
+          onDrag={setDraggedItem}
+        />
+      ))}
+    </div>
+  );
+}
+
+function DraggableItem({ item, onDrag }) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [position, setPosition] = useState({ x: 0, y: 0 });
+  
+  // Component state is preserved because of stable key
+  return (
+    <div
+      draggable
+      style={{ transform: `translate(${position.x}px, ${position.y}px)` }}
+      onDragStart={() => {
+        setIsDragging(true);
+        onDrag(item);
+      }}
+      onDragEnd={() => setIsDragging(false)}
+    >
+      {item.text}
+    </div>
+  );
+}
+
+// State preservation comparison
+const statePreservation = {
+  withGoodKeys: [
+    'Component state stays with correct item',
+    'Form inputs maintain values',
+    'Focus state preserved',
+    'Animation state continues'
+  ],
+  withBadKeys: [
+    'State attached to wrong items',
+    'Form data gets mixed up',
+    'Focus jumps to wrong elements',
+    'Animations break or restart'
+  ]
+};
+```
+</details>
+
 - **Q2:** How do you handle keys in dynamic lists?
+<details>
+<summary>Answer</summary>
+```jsx
+// Dynamic list with filtering, sorting, and CRUD operations
+
+function DynamicUserList() {
+  const [users, setUsers] = useState([
+    { id: 1, name: 'Alice', role: 'admin', active: true },
+    { id: 2, name: 'Bob', role: 'user', active: false },
+    { id: 3, name: 'Charlie', role: 'user', active: true }
+  ]);
+  
+  const [filter, setFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('name');
+  
+  // Filter users
+  const filteredUsers = users.filter(user => {
+    if (filter === 'active') return user.active;
+    if (filter === 'inactive') return !user.active;
+    return true;
+  });
+  
+  // Sort users
+  const sortedUsers = [...filteredUsers].sort((a, b) => {
+    if (sortBy === 'name') return a.name.localeCompare(b.name);
+    if (sortBy === 'role') return a.role.localeCompare(b.role);
+    return 0;
+  });
+  
+  const addUser = () => {
+    const newUser = {
+      id: Date.now(), // Simple ID generation
+      name: `User ${users.length + 1}`,
+      role: 'user',
+      active: true
+    };
+    setUsers(prev => [...prev, newUser]);
+  };
+  
+  const removeUser = (id) => {
+    setUsers(prev => prev.filter(user => user.id !== id));
+  };
+  
+  return (
+    <div>
+      <div>
+        <button onClick={addUser}>Add User</button>
+        <select value={filter} onChange={e => setFilter(e.target.value)}>
+          <option value="all">All Users</option>
+          <option value="active">Active</option>
+          <option value="inactive">Inactive</option>
+        </select>
+        <select value={sortBy} onChange={e => setSortBy(e.target.value)}>
+          <option value="name">Sort by Name</option>
+          <option value="role">Sort by Role</option>
+        </select>
+      </div>
+      
+      <div>
+        {sortedUsers.map(user => (
+          <UserCard
+            key={user.id} // Stable key through all operations
+            user={user}
+            onRemove={removeUser}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// Nested dynamic lists
+function NestedDynamicList({ categories }) {
+  return (
+    <div>
+      {categories.map(category => (
+        <div key={category.id}>
+          <h3>{category.name}</h3>
+          {category.items.map(item => (
+            <div key={`${category.id}-${item.id}`}>
+              {item.name}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Optimistic updates with temporary IDs
+function OptimisticList() {
+  const [items, setItems] = useState([]);
+  const [nextTempId, setNextTempId] = useState(-1);
+  
+  const addItemOptimistically = async (text) => {
+    const tempId = nextTempId;
+    setNextTempId(prev => prev - 1);
+    
+    // Add with temporary ID immediately
+    const tempItem = { id: tempId, text, pending: true };
+    setItems(prev => [...prev, tempItem]);
+    
+    try {
+      // API call
+      const savedItem = await saveItem(text);
+      
+      // Replace temp item with real item
+      setItems(prev => 
+        prev.map(item => 
+          item.id === tempId ? savedItem : item
+        )
+      );
+    } catch (error) {
+      // Remove temp item on error
+      setItems(prev => prev.filter(item => item.id !== tempId));
+    }
+  };
+  
+  return (
+    <div>
+      {items.map(item => (
+        <div 
+          key={item.id} // Works with both temp and real IDs
+          style={{ opacity: item.pending ? 0.5 : 1 }}
+        >
+          {item.text}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Key strategies for different scenarios
+const keyStrategies = {
+  simpleList: 'Use item.id',
+  nestedList: 'Use composite keys: `${parentId}-${childId}`',
+  tempItems: 'Use negative numbers for temp IDs',
+  contentBased: 'Use hash of content when no ID available',
+  timestamp: 'Use timestamp + userId for messages/logs'
+};
+```
+</details>
 
 ---
 
