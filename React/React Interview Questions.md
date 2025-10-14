@@ -9064,12 +9064,606 @@ function TestConcurrentSafety() {
 
 #### **📋 Beginner:**
 - **Q1:** What is streaming server rendering?
+<details>
+<summary>Answer</summary>
+**Streaming SSR** sends HTML to the browser in chunks as it's generated, rather than waiting for the entire page:
+
+**Traditional SSR:**
+1. Server generates complete HTML
+2. Sends entire response at once
+3. Browser waits for full HTML before showing anything
+
+**Streaming SSR:**
+1. Server starts sending HTML immediately
+2. Sends chunks as components render
+3. Browser displays content progressively
+
+```jsx
+// React 18 streaming with renderToPipeableStream
+import { renderToPipeableStream } from 'react-dom/server';
+
+function handleRequest(req, res) {
+  const { pipe } = renderToPipeableStream(<App />, {
+    bootstrapScripts: ['/client.js'],
+    onShellReady() {
+      // Send initial shell (navigation, loading states)
+      res.statusCode = 200;
+      res.setHeader('Content-Type', 'text/html');
+      pipe(res);
+    },
+    onAllReady() {
+      // All content including suspense boundaries resolved
+      console.log('All content ready');
+    },
+    onError(error) {
+      console.error('Streaming error:', error);
+    }
+  });
+}
+
+// App with streaming boundaries
+function App() {
+  return (
+    <html>
+      <head>
+        <title>Streaming App</title>
+      </head>
+      <body>
+        <Header /> {/* Renders immediately */}
+        <Suspense fallback={<div>Loading posts...</div>}>
+          <BlogPosts /> {/* Streams when data ready */}
+        </Suspense>
+        <Footer /> {/* Renders immediately */}
+      </body>
+    </html>
+  );
+}
+
+async function BlogPosts() {
+  const posts = await fetchPosts(); // Async data fetching
+  return (
+    <div>
+      {posts.map(post => (
+        <article key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.excerpt}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+```
+</details>
+
 - **Q2:** How does streaming SSR improve performance?
+<details>
+<summary>Answer</summary>
+**Performance improvements:**
+
+1. **Faster Time to First Byte (TTFB)**:
+```jsx
+// Traditional SSR timeline:
+// 0ms: Request received
+// 500ms: All data fetched, HTML generated
+// 500ms: First byte sent
+
+// Streaming SSR timeline:
+// 0ms: Request received
+// 50ms: Shell HTML sent (TTFB)
+// 200ms: Header content streamed
+// 500ms: Async content streamed
+```
+
+2. **Progressive rendering**:
+```jsx
+function StreamingApp() {
+  return (
+    <div>
+      {/* Immediate: Shell renders first */}
+      <Navigation />
+      <main>
+        {/* Fast: Synchronous content */}
+        <Hero />
+        
+        {/* Streams when ready */}
+        <Suspense fallback={<ProductsSkeleton />}>
+          <ProductList /> {/* Async data */}
+        </Suspense>
+        
+        {/* Streams independently */}
+        <Suspense fallback={<ReviewsSkeleton />}>
+          <ReviewSection /> {/* Different async data */}
+        </Suspense>
+      </main>
+      <Footer />
+    </div>
+  );
+}
+```
+
+3. **Better user experience**:
+- **Immediate visual feedback** - Users see content sooner
+- **Progressive enhancement** - Page builds up incrementally
+- **Perceived performance** - Feels faster even if total time is same
+- **Reduced layout shift** - Skeletons prevent content jumping
+
+4. **Parallel data fetching**:
+```jsx
+// Multiple Suspense boundaries fetch in parallel
+function Dashboard() {
+  return (
+    <div>
+      <Suspense fallback={<UserSkeleton />}>
+        <UserProfile /> {/* Fetches user data */}
+      </Suspense>
+      
+      <Suspense fallback={<StatsSkeleton />}>
+        <UserStats /> {/* Fetches stats data in parallel */}
+      </Suspense>
+      
+      <Suspense fallback={<ActivitySkeleton />}>
+        <RecentActivity /> {/* Fetches activity data in parallel */}
+      </Suspense>
+    </div>
+  );
+}
+```
+
+**Performance metrics impact:**
+- **TTFB**: Significantly improved (shell sent immediately)
+- **FCP**: Faster First Contentful Paint
+- **LCP**: May improve if main content streams early
+- **CLS**: Better with proper skeleton layouts
+</details>
+
 - **Q3:** What role does Suspense play in streaming SSR?
+<details>
+<summary>Answer</summary>
+**Suspense enables streaming** by defining boundaries where rendering can be paused and resumed:
+
+```jsx
+// Suspense boundaries create streaming chunks
+function App() {
+  return (
+    <div>
+      {/* Chunk 1: Shell (renders immediately) */}
+      <nav>Navigation</nav>
+      <main>
+        {/* Chunk 2: Streams when UserProfile resolves */}
+        <Suspense fallback={<div>Loading profile...</div>}>
+          <UserProfile />
+        </Suspense>
+        
+        {/* Chunk 3: Streams when Posts resolves */}
+        <Suspense fallback={<div>Loading posts...</div>}>
+          <PostsList />
+        </Suspense>
+      </main>
+    </div>
+  );
+}
+
+// Async components that trigger Suspense
+async function UserProfile() {
+  const user = await fetchUser(); // Suspends here
+  return <div>Welcome, {user.name}!</div>;
+}
+
+async function PostsList() {
+  const posts = await fetchPosts(); // Suspends here
+  return (
+    <div>
+      {posts.map(post => (
+        <article key={post.id}>{post.title}</article>
+      ))}
+    </div>
+  );
+}
+```
+
+**Streaming process with Suspense:**
+
+1. **Initial render**: Non-suspended components render to shell
+2. **Suspense hit**: Rendering pauses, fallback shown
+3. **Shell sent**: Browser receives and displays initial content
+4. **Async resolves**: Component renders, content streams to browser
+5. **Client hydrates**: JavaScript makes streamed content interactive
+
+```jsx
+// Advanced Suspense patterns for streaming
+function BlogPage() {
+  return (
+    <article>
+      <header>
+        <h1>Blog Post Title</h1> {/* Shell content */}
+        <Suspense fallback={<AuthorSkeleton />}>
+          <AuthorInfo /> {/* Streams when author data ready */}
+        </Suspense>
+      </header>
+      
+      <Suspense fallback={<ContentSkeleton />}>
+        <BlogContent /> {/* Streams when content ready */}
+      </Suspense>
+      
+      <aside>
+        <Suspense fallback={<SidebarSkeleton />}>
+          <RelatedPosts /> {/* Streams independently */}
+        </Suspense>
+      </aside>
+      
+      <section>
+        <h3>Comments</h3>
+        <Suspense fallback={<CommentsSkeleton />}>
+          <CommentsList /> {/* Streams when comments ready */}
+        </Suspense>
+      </section>
+    </article>
+  );
+}
+```
+
+**Key Suspense patterns for streaming:**
+- **Granular boundaries** - Small, focused Suspense boundaries
+- **Skeleton fallbacks** - Prevent layout shift during streaming
+- **Independent data** - Each boundary can resolve at different times
+- **Nested Suspense** - Fine-grained control over streaming chunks
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you implement selective hydration with streaming SSR?
+<details>
+<summary>Answer</summary>
+**Selective hydration** allows parts of the page to become interactive before the entire page has hydrated:
+
+```jsx
+// React 18 automatically enables selective hydration
+import { hydrateRoot } from 'react-dom/client';
+
+// Client-side hydration
+hydrateRoot(document.getElementById('root'), <App />);
+
+// App structure with selective hydration
+function App() {
+  return (
+    <div>
+      <Header /> {/* Hydrates first */}
+      
+      {/* This will hydrate when user interactions are detected */}
+      <Suspense fallback={<SearchSkeleton />}>
+        <SearchComponent />
+      </Suspense>
+      
+      {/* This can hydrate independently */}
+      <Suspense fallback={<ProductsSkeleton />}>
+        <ProductList />
+      </Suspense>
+      
+      {/* Lower priority - hydrates last */}
+      <Suspense fallback={<FooterSkeleton />}>
+        <Footer />
+      </Suspense>
+    </div>
+  );
+}
+
+// Priority-based hydration
+function PriorityApp() {
+  return (
+    <div>
+      {/* High priority - hydrates immediately */}
+      <CriticalNavigation />
+      
+      {/* Medium priority - hydrates on interaction */}
+      <Suspense fallback={<div>Loading...</div>}>
+        <InteractiveWidget />
+      </Suspense>
+      
+      {/* Low priority - hydrates when idle */}
+      <Suspense fallback={<div>Loading...</div>}>
+        <AnalyticsWidget />
+      </Suspense>
+    </div>
+  );
+}
+
+// Custom hook for controlling hydration priority
+function useHydrationPriority(priority = 'normal') {
+  const [shouldHydrate, setShouldHydrate] = useState(false);
+  
+  useEffect(() => {
+    const timeouts = {
+      immediate: 0,
+      high: 100,
+      normal: 500,
+      low: 2000
+    };
+    
+    const timer = setTimeout(() => {
+      setShouldHydrate(true);
+    }, timeouts[priority]);
+    
+    return () => clearTimeout(timer);
+  }, [priority]);
+  
+  return shouldHydrate;
+}
+
+// Component with controlled hydration
+function LazyHydratedComponent({ children, priority = 'normal' }) {
+  const shouldHydrate = useHydrationPriority(priority);
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    if (shouldHydrate) {
+      setMounted(true);
+    }
+  }, [shouldHydrate]);
+  
+  if (!mounted) {
+    return <div suppressHydrationWarning={true}>Loading...</div>;
+  }
+  
+  return children;
+}
+
+// Usage with priority control
+function Dashboard() {
+  return (
+    <div>
+      <LazyHydratedComponent priority="immediate">
+        <CriticalUserInfo />
+      </LazyHydratedComponent>
+      
+      <LazyHydratedComponent priority="normal">
+        <DashboardCharts />
+      </LazyHydratedComponent>
+      
+      <LazyHydratedComponent priority="low">
+        <RecommendationsWidget />
+      </LazyHydratedComponent>
+    </div>
+  );
+}
+
+// Interaction-based hydration
+function InteractionBasedHydration({ children, triggerEvents = ['click', 'focus'] }) {
+  const [shouldHydrate, setShouldHydrate] = useState(false);
+  const ref = useRef();
+  
+  useEffect(() => {
+    const element = ref.current;
+    if (!element) return;
+    
+    const handleInteraction = () => {
+      setShouldHydrate(true);
+    };
+    
+    triggerEvents.forEach(event => {
+      element.addEventListener(event, handleInteraction, { once: true });
+    });
+    
+    return () => {
+      triggerEvents.forEach(event => {
+        element.removeEventListener(event, handleInteraction);
+      });
+    };
+  }, [triggerEvents]);
+  
+  return (
+    <div ref={ref}>
+      {shouldHydrate ? children : <div>Click to activate</div>}
+    </div>
+  );
+}
+```
+
+**Benefits of selective hydration:**
+- **Faster initial interactivity** - Critical parts hydrate first
+- **Better user experience** - Page responds to user interactions sooner
+- **Reduced main thread blocking** - Hydration work distributed over time
+- **Smart prioritization** - React prioritizes based on user behavior
+</details>
+
 - **Q2:** What are the challenges of streaming SSR implementation?
+<details>
+<summary>Answer</summary>
+**Implementation challenges:**
+
+1. **Error handling in streams**:
+```jsx
+// Robust error handling for streaming
+function handleRequest(req, res) {
+  let didError = false;
+  
+  const { pipe } = renderToPipeableStream(<App />, {
+    onShellError(error) {
+      // Shell failed - send error page
+      res.statusCode = 500;
+      res.setHeader('Content-Type', 'text/html');
+      res.send('<h1>Something went wrong</h1>');
+    },
+    onError(error) {
+      didError = true;
+      console.error('Streaming error:', error);
+      
+      // Log error but continue streaming
+      trackError(error);
+    },
+    onAllReady() {
+      // Set status based on whether errors occurred
+      res.statusCode = didError ? 500 : 200;
+    }
+  });
+  
+  pipe(res);
+}
+
+// Component-level error boundaries for streaming
+class StreamingErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    // Log error but don't break the stream
+    console.error('Boundary caught error:', error, errorInfo);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return <div>Failed to load this section</div>;
+    }
+    
+    return this.props.children;
+  }
+}
+```
+
+2. **SEO and crawlers**:
+```jsx
+// Detect crawlers and use traditional SSR
+function handleRequest(req, res) {
+  const userAgent = req.headers['user-agent'] || '';
+  const isCrawler = /googlebot|bingbot|slurp|duckduckbot/i.test(userAgent);
+  
+  if (isCrawler) {
+    // Use traditional SSR for crawlers
+    const html = renderToString(<App />);
+    res.send(html);
+  } else {
+    // Use streaming for users
+    const { pipe } = renderToPipeableStream(<App />, {
+      onShellReady() {
+        pipe(res);
+      }
+    });
+  }
+}
+
+// Ensure critical content is in shell for SEO
+function App() {
+  return (
+    <html>
+      <head>
+        <title>Page Title</title> {/* Critical for SEO */}
+        <meta name="description" content="Page description" />
+      </head>
+      <body>
+        <h1>Main Heading</h1> {/* In shell - crawlers see it */}
+        
+        <Suspense fallback={<div>Loading...</div>}>
+          <DynamicContent /> {/* May not be seen by crawlers */}
+        </Suspense>
+      </body>
+    </html>
+  );
+}
+```
+
+3. **Data fetching complexity**:
+```jsx
+// Coordinating multiple data sources
+function ComplexPage() {
+  return (
+    <div>
+      {/* Fast data - in shell */}
+      <UserGreeting />
+      
+      {/* Slow data - streamed */}
+      <Suspense fallback={<ReportsSkeleton />}>
+        <AsyncReports />
+      </Suspense>
+      
+      {/* Very slow data - streamed separately */}
+      <Suspense fallback={<AnalyticsSkeleton />}>
+        <AsyncAnalytics />
+      </Suspense>
+    </div>
+  );
+}
+
+// Data dependency management
+async function AsyncReports() {
+  // Multiple dependent API calls
+  const user = await fetchUser();
+  const permissions = await fetchPermissions(user.id);
+  const reports = await fetchReports(permissions.reportIds);
+  
+  return <ReportsDisplay reports={reports} />;
+}
+
+// Timeout handling for streaming components
+function withTimeout(Component, timeoutMs = 5000) {
+  return function TimeoutWrapper(props) {
+    const [timedOut, setTimedOut] = useState(false);
+    
+    useEffect(() => {
+      const timer = setTimeout(() => {
+        setTimedOut(true);
+      }, timeoutMs);
+      
+      return () => clearTimeout(timer);
+    }, [timeoutMs]);
+    
+    if (timedOut) {
+      return <div>Content taking too long to load</div>;
+    }
+    
+    return <Component {...props} />;
+  };
+}
+
+const TimeoutAwareComponent = withTimeout(SlowComponent, 3000);
+```
+
+4. **State management challenges**:
+```jsx
+// Hydration mismatches with streaming
+function StreamingCounter() {
+  const [count, setCount] = useState(0);
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  // Prevent hydration mismatches
+  if (!isClient) {
+    return <div suppressHydrationWarning>Loading counter...</div>;
+  }
+  
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      Count: {count}
+    </button>
+  );
+}
+
+// Server state vs client state coordination
+function useServerState(initialState) {
+  const [state, setState] = useState(initialState);
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  useEffect(() => {
+    setIsHydrated(true);
+  }, []);
+  
+  return [isHydrated ? state : initialState, setState];
+}
+```
+
+**Common pitfalls:**
+- **Not handling streaming errors** - Can break the entire response
+- **SEO content in suspended boundaries** - Crawlers may not see it
+- **Complex data dependencies** - Can cause waterfalls even with streaming
+- **Hydration mismatches** - Server and client state differences
+- **Timeout management** - Slow components can hang indefinitely
+</details>
 
 ---
 
@@ -11968,12 +12562,326 @@ const keyStrategies = {
 
 #### **📋 Beginner:**
 - **Q1:** What is hydration in the context of SSR?
+<details>
+<summary>Answer</summary>
+**Hydration** is the process of attaching React event handlers and state to server-rendered HTML:
+- **Server renders** static HTML for fast initial display
+- **Client downloads** JavaScript bundle
+- **React "hydrates"** the static HTML, making it interactive
+- **Event listeners attached**, state restored, components become functional
+
+```jsx
+// Server renders this HTML
+<div id="root">
+  <button>Click me</button>
+  <p>Count: 0</p>
+</div>
+
+// Client hydrates with React
+function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <div>
+      <button onClick={() => setCount(count + 1)}>Click me</button>
+      <p>Count: {count}</p>
+    </div>
+  );
+}
+
+// React 18 hydration
+import { hydrateRoot } from 'react-dom/client';
+hydrateRoot(document.getElementById('root'), <App />);
+```
+</details>
+
 - **Q2:** What happens during the hydration process?
+<details>
+<summary>Answer</summary>
+**Hydration process steps:**
+
+1. **HTML already rendered** by server and displayed to user
+2. **JavaScript bundle downloads** and executes
+3. **React recreates** virtual DOM from components
+4. **Compares** server HTML with client virtual DOM
+5. **Attaches event listeners** to existing DOM nodes
+6. **Initializes state** and makes components interactive
+7. **Reports mismatches** if server/client don't match
+
+```jsx
+// During hydration React does:
+function HydrationExample() {
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true); // This runs only after hydration
+  }, []);
+  
+  return (
+    <div>
+      <h1>Server-rendered content</h1>
+      {isClient && <p>This appears after hydration</p>}
+    </div>
+  );
+}
+
+// Hydration timeline:
+// 1. Server HTML shows: "Server-rendered content"
+// 2. Client hydrates and useEffect runs
+// 3. Component re-renders with: "This appears after hydration"
+```
+</details>
+
 - **Q3:** What are hydration mismatches?
+<details>
+<summary>Answer</summary>
+**Hydration mismatches** occur when server-rendered HTML differs from client-rendered HTML:
+
+**Common causes:**
+- **Different data** between server and client
+- **Date/time differences** (server vs client timezone)
+- **Random values** (Math.random(), Date.now())
+- **Browser-only APIs** used during SSR
+- **Conditional rendering** based on client-only state
+
+```jsx
+// ❌ Causes hydration mismatch
+function BadComponent() {
+  const timestamp = new Date().toLocaleString(); // Different on server/client
+  return <div>Current time: {timestamp}</div>;
+}
+
+// ❌ Browser API on server
+function BadComponent() {
+  const width = window.innerWidth; // window undefined on server
+  return <div>Width: {width}</div>;
+}
+
+// ✅ Fix: Suppress hydration warning for dynamic content
+function FixedComponent() {
+  const [timestamp, setTimestamp] = useState('');
+  
+  useEffect(() => {
+    setTimestamp(new Date().toLocaleString());
+  }, []);
+  
+  return (
+    <div suppressHydrationWarning={true}>
+      Current time: {timestamp || 'Loading...'}
+    </div>
+  );
+}
+
+// ✅ Fix: Use client-only rendering
+function ClientOnlyComponent() {
+  const [isClient, setIsClient] = useState(false);
+  
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+  
+  if (!isClient) {
+    return <div>Loading...</div>; // Server and initial client render
+  }
+  
+  return <div>Width: {window.innerWidth}</div>; // Only after hydration
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you debug hydration issues?
+<details>
+<summary>Answer</summary>
+**Debugging hydration issues:**
+
+1. **Enable detailed warnings**:
+```jsx
+// React 18 - more detailed hydration errors
+import { hydrateRoot } from 'react-dom/client';
+
+const root = hydrateRoot(document.getElementById('root'), <App />);
+// Console will show specific mismatch details
+```
+
+2. **Use development tools**:
+```jsx
+// Add debug logging
+function DebugComponent() {
+  console.log('Rendering on:', typeof window === 'undefined' ? 'server' : 'client');
+  
+  const [mounted, setMounted] = useState(false);
+  
+  useEffect(() => {
+    console.log('Component hydrated');
+    setMounted(true);
+  }, []);
+  
+  return <div data-mounted={mounted}>Content</div>;
+}
+```
+
+3. **Compare server vs client output**:
+```jsx
+// Custom hook to detect hydration
+function useHydrated() {
+  const [hydrated, setHydrated] = useState(false);
+  
+  useEffect(() => {
+    setHydrated(true);
+  }, []);
+  
+  return hydrated;
+}
+
+function DebuggingComponent() {
+  const isHydrated = useHydrated();
+  const serverData = getServerData();
+  const clientData = getClientData();
+  
+  if (process.env.NODE_ENV === 'development') {
+    console.log('Server data:', serverData);
+    console.log('Client data:', clientData);
+    console.log('Hydrated:', isHydrated);
+  }
+  
+  return <div>{isHydrated ? clientData : serverData}</div>;
+}
+```
+
+4. **Use suppressHydrationWarning strategically**:
+```jsx
+// Only suppress when you know why there's a mismatch
+function TimestampComponent() {
+  const [time, setTime] = useState(() => 
+    typeof window === 'undefined' ? '' : new Date().toISOString()
+  );
+  
+  useEffect(() => {
+    setTime(new Date().toISOString());
+  }, []);
+  
+  return (
+    <div suppressHydrationWarning={true}>
+      Last updated: {time}
+    </div>
+  );
+}
+```
+</details>
+
 - **Q2:** How do you implement progressive hydration?
+<details>
+<summary>Answer</summary>
+**Progressive hydration** loads and hydrates components incrementally:
+
+```jsx
+// Custom hook for intersection-based hydration
+function useIntersectionHydration(threshold = 0.1) {
+  const [isVisible, setIsVisible] = useState(false);
+  const ref = useRef();
+  
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect();
+        }
+      },
+      { threshold }
+    );
+    
+    if (ref.current) {
+      observer.observe(ref.current);
+    }
+    
+    return () => observer.disconnect();
+  }, [threshold]);
+  
+  return [ref, isVisible];
+}
+
+// Component with progressive hydration
+function LazyHydratedComponent({ children, fallback }) {
+  const [ref, isVisible] = useIntersectionHydration();
+  const [isHydrated, setIsHydrated] = useState(false);
+  
+  useEffect(() => {
+    if (isVisible) {
+      // Trigger hydration when visible
+      setIsHydrated(true);
+    }
+  }, [isVisible]);
+  
+  return (
+    <div ref={ref}>
+      {isHydrated ? children : fallback}
+    </div>
+  );
+}
+
+// Usage
+function App() {
+  return (
+    <div>
+      <Header /> {/* Hydrates immediately */}
+      
+      <LazyHydratedComponent fallback={<div>Loading widget...</div>}>
+        <ExpensiveWidget /> {/* Hydrates when scrolled into view */}
+      </LazyHydratedComponent>
+      
+      <Footer />
+    </div>
+  );
+}
+
+// Time-based progressive hydration
+function TimeBasedHydration({ delay = 1000, children, fallback }) {
+  const [shouldHydrate, setShouldHydrate] = useState(false);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setShouldHydrate(true);
+    }, delay);
+    
+    return () => clearTimeout(timer);
+  }, [delay]);
+  
+  return shouldHydrate ? children : fallback;
+}
+
+// Priority-based hydration
+const HydrationPriority = {
+  IMMEDIATE: 0,
+  HIGH: 1,
+  NORMAL: 2,
+  LOW: 3
+};
+
+function PriorityHydration({ priority, children, fallback }) {
+  const [isHydrated, setIsHydrated] = useState(priority === HydrationPriority.IMMEDIATE);
+  
+  useEffect(() => {
+    if (priority === HydrationPriority.IMMEDIATE) return;
+    
+    const delays = [0, 100, 500, 2000];
+    const timer = setTimeout(() => {
+      setIsHydrated(true);
+    }, delays[priority]);
+    
+    return () => clearTimeout(timer);
+  }, [priority]);
+  
+  return isHydrated ? children : fallback;
+}
+```
+
+**Benefits of progressive hydration:**
+- **Faster initial interactivity** - Critical components hydrate first
+- **Reduced main thread blocking** - Spreads hydration work over time
+- **Better user experience** - Above-the-fold content interactive sooner
+- **Bandwidth optimization** - Can defer non-critical component JS
+</details>
 
 ---
 
@@ -11981,12 +12889,394 @@ const keyStrategies = {
 
 #### **📋 Beginner:**
 - **Q1:** What is Next.js and what features does it provide?
+<details>
+<summary>Answer</summary>
+**Next.js** is a React framework that provides production-ready features:
+
+**Core features:**
+- **Server-Side Rendering (SSR)** - Dynamic server rendering
+- **Static Site Generation (SSG)** - Pre-built static pages
+- **API Routes** - Backend API endpoints
+- **File-based routing** - Automatic routing from file structure
+- **Code splitting** - Automatic bundle optimization
+- **Image optimization** - Built-in image component with optimization
+- **TypeScript support** - First-class TypeScript integration
+
+```jsx
+// File structure creates routes automatically
+pages/
+  index.js          // Route: /
+  about.js          // Route: /about
+  blog/
+    index.js        // Route: /blog
+    [slug].js       // Route: /blog/[slug]
+  api/
+    users.js        // API: /api/users
+
+// Basic Next.js page
+function HomePage() {
+  return (
+    <div>
+      <h1>Welcome to Next.js</h1>
+      <Link href="/about">About</Link>
+    </div>
+  );
+}
+
+export default HomePage;
+```
+</details>
+
 - **Q2:** What's the difference between SSR, SSG, and CSR?
+<details>
+<summary>Answer</summary>
+| Rendering Method | When | Where | Performance | SEO | Use Case |
+|------------------|------|-------|-------------|-----|----------|
+| **SSR** | Request time | Server | Good | Excellent | Dynamic content |
+| **SSG** | Build time | CDN | Excellent | Excellent | Static content |
+| **CSR** | Runtime | Browser | Poor initial | Poor | Interactive apps |
+
+```jsx
+// SSG - getStaticProps (build time)
+export async function getStaticProps() {
+  const posts = await fetchPosts();
+  return {
+    props: { posts },
+    revalidate: 3600 // ISR: revalidate every hour
+  };
+}
+
+function BlogPage({ posts }) {
+  return (
+    <div>
+      {posts.map(post => (
+        <article key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.excerpt}</p>
+        </article>
+      ))}
+    </div>
+  );
+}
+
+// SSR - getServerSideProps (request time)
+export async function getServerSideProps(context) {
+  const { userId } = context.params;
+  const user = await fetchUser(userId);
+  
+  return {
+    props: { user }
+  };
+}
+
+function UserProfile({ user }) {
+  return (
+    <div>
+      <h1>{user.name}</h1>
+      <p>Last login: {user.lastLogin}</p>
+    </div>
+  );
+}
+
+// CSR - Client-side rendering
+function Dashboard() {
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    fetchDashboardData().then(setData);
+  }, []);
+  
+  if (!data) return <div>Loading...</div>;
+  
+  return <div>{/* Render dashboard */}</div>;
+}
+```
+</details>
+
 - **Q3:** What is ISR (Incremental Static Regeneration)?
+<details>
+<summary>Answer</summary>
+**ISR** combines benefits of SSG and SSR by regenerating static pages on-demand:
+
+**How ISR works:**
+1. **Initial request** serves stale static page immediately
+2. **Background regeneration** triggered if page is stale
+3. **New version** replaces old static page
+4. **Subsequent requests** get updated version
+
+```jsx
+// ISR with revalidate
+export async function getStaticProps() {
+  const posts = await fetchPosts();
+  
+  return {
+    props: { posts },
+    revalidate: 60 // Regenerate at most once every 60 seconds
+  };
+}
+
+// ISR with on-demand revalidation (Next.js 12.2+)
+// pages/api/revalidate.js
+export default async function handler(req, res) {
+  if (req.secret !== process.env.REVALIDATE_TOKEN) {
+    return res.status(401).json({ message: 'Invalid token' });
+  }
+  
+  try {
+    await res.revalidate('/blog');
+    await res.revalidate('/blog/[slug]');
+    return res.json({ revalidated: true });
+  } catch (err) {
+    return res.status(500).send('Error revalidating');
+  }
+}
+
+// ISR with fallback pages
+export async function getStaticPaths() {
+  const posts = await fetchPopularPosts();
+  const paths = posts.map(post => ({ params: { slug: post.slug } }));
+  
+  return {
+    paths,
+    fallback: 'blocking' // Generate missing pages on first request
+  };
+}
+
+export async function getStaticProps({ params }) {
+  const post = await fetchPost(params.slug);
+  
+  if (!post) {
+    return { notFound: true };
+  }
+  
+  return {
+    props: { post },
+    revalidate: 3600 // Regenerate once per hour
+  };
+}
+```
+
+**ISR benefits:**
+- **Fast initial load** - Serves cached static page
+- **Fresh content** - Updates automatically when stale
+- **Scalability** - CDN caching + dynamic updates
+- **Cost-effective** - Less server compute than full SSR
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you choose between getStaticProps, getServerSideProps, and getStaticPaths?
+<details>
+<summary>Answer</summary>
+**Decision matrix:**
+
+```jsx
+// Use getStaticProps when:
+// - Data doesn't change often
+// - Same data for all users
+// - SEO is important
+// - Performance is critical
+export async function getStaticProps() {
+  const products = await fetchProducts();
+  return {
+    props: { products },
+    revalidate: 3600 // ISR for occasional updates
+  };
+}
+
+// Use getServerSideProps when:
+// - Data changes frequently
+// - User-specific data
+// - Request-time data needed
+// - Real-time requirements
+export async function getServerSideProps(context) {
+  const { req } = context;
+  const user = await getCurrentUser(req);
+  const notifications = await fetchUserNotifications(user.id);
+  
+  return {
+    props: { user, notifications }
+  };
+}
+
+// Use getStaticPaths when:
+// - Dynamic routes with known possible values
+// - Want to pre-generate popular pages
+// - Combine with getStaticProps for ISR
+export async function getStaticPaths() {
+  const categories = await fetchCategories();
+  
+  return {
+    paths: categories.map(cat => ({ params: { category: cat.slug } })),
+    fallback: 'blocking' // Handle unknown categories
+  };
+}
+
+// Decision flowchart:
+const chooseDataFetching = (requirements) => {
+  if (requirements.userSpecific) {
+    return 'getServerSideProps';
+  }
+  
+  if (requirements.dynamicRoutes) {
+    return ['getStaticPaths', 'getStaticProps'];
+  }
+  
+  if (requirements.frequentUpdates) {
+    return requirements.seoImportant 
+      ? 'getStaticProps with ISR'
+      : 'client-side fetching';
+  }
+  
+  return 'getStaticProps';
+};
+
+// Hybrid approach example
+function ProductPage({ product, relatedProducts }) {
+  const [reviews, setReviews] = useState([]);
+  
+  // Static: product data (SSG)
+  // Client-side: reviews (real-time updates)
+  useEffect(() => {
+    fetchProductReviews(product.id).then(setReviews);
+  }, [product.id]);
+  
+  return (
+    <div>
+      <ProductDetails product={product} />
+      <RelatedProducts products={relatedProducts} />
+      <ProductReviews reviews={reviews} />
+    </div>
+  );
+}
+```
+</details>
+
 - **Q2:** How do you implement API routes in Next.js?
+<details>
+<summary>Answer</summary>
+**API routes** in Next.js create serverless functions:
+
+```jsx
+// pages/api/users.js - Basic API route
+export default function handler(req, res) {
+  if (req.method === 'GET') {
+    const users = await getUsers();
+    res.status(200).json(users);
+  } else if (req.method === 'POST') {
+    const newUser = await createUser(req.body);
+    res.status(201).json(newUser);
+  } else {
+    res.setHeader('Allow', ['GET', 'POST']);
+    res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+}
+
+// pages/api/users/[id].js - Dynamic API route
+export default async function handler(req, res) {
+  const { id } = req.query;
+  
+  switch (req.method) {
+    case 'GET':
+      const user = await getUserById(id);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+      res.status(200).json(user);
+      break;
+      
+    case 'PUT':
+      const updatedUser = await updateUser(id, req.body);
+      res.status(200).json(updatedUser);
+      break;
+      
+    case 'DELETE':
+      await deleteUser(id);
+      res.status(204).end();
+      break;
+      
+    default:
+      res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
+      res.status(405).end(`Method ${req.method} Not Allowed`);
+  }
+}
+
+// pages/api/auth/[...nextauth].js - Catch-all API route
+import NextAuth from 'next-auth';
+import GoogleProvider from 'next-auth/providers/google';
+
+export default NextAuth({
+  providers: [
+    GoogleProvider({
+      clientId: process.env.GOOGLE_CLIENT_ID,
+      clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+    }),
+  ],
+  // Additional NextAuth configuration
+});
+
+// Middleware for API routes
+export default function withAuth(handler) {
+  return async (req, res) => {
+    const token = req.headers.authorization?.replace('Bearer ', '');
+    
+    if (!token) {
+      return res.status(401).json({ message: 'No token provided' });
+    }
+    
+    try {
+      const user = await verifyToken(token);
+      req.user = user;
+      return handler(req, res);
+    } catch (error) {
+      return res.status(401).json({ message: 'Invalid token' });
+    }
+  };
+}
+
+// Usage with middleware
+export default withAuth(async function handler(req, res) {
+  // req.user is available here
+  const userPosts = await getUserPosts(req.user.id);
+  res.status(200).json(userPosts);
+});
+
+// File upload API route
+import formidable from 'formidable';
+
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
+
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ message: 'Method not allowed' });
+  }
+  
+  const form = formidable();
+  
+  try {
+    const [fields, files] = await form.parse(req);
+    const file = files.file[0];
+    
+    // Process file upload
+    const uploadedFile = await uploadToS3(file);
+    
+    res.status(200).json({ url: uploadedFile.url });
+  } catch (error) {
+    res.status(500).json({ message: 'Upload failed' });
+  }
+}
+```
+
+**API route features:**
+- **Serverless functions** - Auto-scaling backend endpoints
+- **File-based routing** - URL structure matches file structure
+- **Built-in middleware** - CORS, body parsing, etc.
+- **Environment variables** - Secure configuration
+- **Edge runtime** - Fast global execution
+</details>
 
 ---
 
@@ -11994,11 +13284,470 @@ const keyStrategies = {
 
 #### **📋 Beginner:**
 - **Q1:** What are React Server Components?
+<details>
+<summary>Answer</summary>
+**React Server Components** run on the server and render to a special format that's sent to the client:
+
+**Key characteristics:**
+- **Run on server** - Execute during build time or request time
+- **No client bundle** - Code doesn't ship to browser
+- **Direct backend access** - Can access databases, file system, etc.
+- **Zero client JavaScript** - Reduces bundle size
+- **Seamless integration** - Work with client components
+
+```jsx
+// Server Component (runs on server)
+import { db } from './database';
+
+async function BlogPosts() {
+  // Direct database access - no API needed
+  const posts = await db.posts.findMany({
+    orderBy: { createdAt: 'desc' }
+  });
+  
+  return (
+    <div>
+      <h1>Latest Posts</h1>
+      {posts.map(post => (
+        <article key={post.id}>
+          <h2>{post.title}</h2>
+          <p>{post.excerpt}</p>
+          <PostInteractions postId={post.id} /> {/* Client Component */}
+        </article>
+      ))}
+    </div>
+  );
+}
+
+// Client Component (runs in browser)
+'use client';
+
+import { useState } from 'react';
+
+function PostInteractions({ postId }) {
+  const [liked, setLiked] = useState(false);
+  
+  return (
+    <div>
+      <button onClick={() => setLiked(!liked)}>
+        {liked ? '❤️' : '🤍'} Like
+      </button>
+      <button>Share</button>
+    </div>
+  );
+}
+```
+</details>
+
 - **Q2:** How do Server Components differ from traditional SSR?
+<details>
+<summary>Answer</summary>
+| Feature | Server Components | Traditional SSR |
+|---------|-------------------|-----------------|
+| **Execution** | Server only | Server + Client |
+| **Bundle size** | No client JS | Full component JS |
+| **Hydration** | Selective | Full page |
+| **Data access** | Direct backend | API calls |
+| **Re-rendering** | Server re-render | Client re-render |
+| **State** | No client state | Full client state |
+
+```jsx
+// Traditional SSR
+function SSRComponent({ posts }) {
+  const [filter, setFilter] = useState(''); // Client state
+  
+  // This entire component ships to client
+  useEffect(() => {
+    // Client-side effect
+  }, []);
+  
+  return (
+    <div>
+      <input 
+        value={filter} 
+        onChange={e => setFilter(e.target.value)}
+      />
+      {posts.filter(post => 
+        post.title.includes(filter)
+      ).map(post => (
+        <PostCard key={post.id} post={post} />
+      ))}
+    </div>
+  );
+}
+
+// Server Component approach
+async function ServerPostList() {
+  const posts = await fetchPosts(); // Server-only
+  
+  return (
+    <div>
+      <PostFilter /> {/* Client Component for interactivity */}
+      <PostsList posts={posts} /> {/* Server Component for rendering */}
+    </div>
+  );
+}
+
+'use client';
+function PostFilter() {
+  const [filter, setFilter] = useState('');
+  // Only this small component ships to client
+  
+  return (
+    <input 
+      value={filter}
+      onChange={e => setFilter(e.target.value)}
+    />
+  );
+}
+```
+
+**SSR process:**
+1. Server renders HTML
+2. Client downloads full component JS
+3. Hydration makes entire page interactive
+
+**Server Components process:**
+1. Server renders components to special format
+2. Client receives minimal JS for interactive parts
+3. Only client components hydrate
+</details>
+
 - **Q3:** What are the benefits of Server Components?
+<details>
+<summary>Answer</summary>
+**Server Components benefits:**
+
+1. **Reduced bundle size**:
+```jsx
+// Before: Large chart library ships to client
+import { LargeChartLibrary } from 'heavy-charts';
+
+function Dashboard({ data }) {
+  return <LargeChartLibrary data={data} />;
+}
+
+// After: Chart renders on server, no client JS
+async function ServerDashboard() {
+  const data = await fetchAnalytics();
+  return <ServerChart data={data} />; // Renders to HTML/SVG
+}
+```
+
+2. **Direct backend access**:
+```jsx
+// Before: Need API routes
+function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+  
+  useEffect(() => {
+    fetch(`/api/users/${userId}`)
+      .then(res => res.json())
+      .then(setUser);
+  }, [userId]);
+  
+  return user ? <div>{user.name}</div> : <div>Loading...</div>;
+}
+
+// After: Direct database access
+async function ServerUserProfile({ userId }) {
+  const user = await db.users.findById(userId);
+  return <div>{user.name}</div>;
+}
+```
+
+3. **Better performance**:
+- **Faster initial load** - Less JavaScript to download
+- **Reduced waterfalls** - Data fetched in parallel on server
+- **Better Core Web Vitals** - Smaller bundles, faster interaction
+
+4. **Improved security**:
+- **Server-only secrets** - API keys, database credentials
+- **Sensitive logic** - Business rules stay on server
+- **Reduced attack surface** - Less client-side code
+
+5. **Simplified data fetching**:
+```jsx
+// Complex client-side data fetching
+function ComplexComponent() {
+  const [posts, setPosts] = useState([]);
+  const [authors, setAuthors] = useState([]);
+  const [categories, setCategories] = useState([]);
+  
+  useEffect(() => {
+    Promise.all([
+      fetchPosts(),
+      fetchAuthors(),
+      fetchCategories()
+    ]).then(([posts, authors, categories]) => {
+      setPosts(posts);
+      setAuthors(authors);
+      setCategories(categories);
+    });
+  }, []);
+  
+  // Complex loading states, error handling...
+}
+
+// Simple server component
+async function ServerComponent() {
+  const [posts, authors, categories] = await Promise.all([
+    fetchPosts(),
+    fetchAuthors(),
+    fetchCategories()
+  ]);
+  
+  return <ComplexUI posts={posts} authors={authors} categories={categories} />;
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do Server and Client Components work together?
+<details>
+<summary>Answer</summary>
+**Server and Client Components composition patterns:**
+
+```jsx
+// Server Component (default)
+async function BlogPage() {
+  const posts = await fetchPosts();
+  
+  return (
+    <div>
+      <Header /> {/* Server Component */}
+      <SearchBar /> {/* Client Component - needs interactivity */}
+      <PostList posts={posts}> {/* Server Component */}
+        {posts.map(post => (
+          <PostCard key={post.id} post={post}> {/* Server Component */}
+            <LikeButton postId={post.id} /> {/* Client Component */}
+            <CommentSection postId={post.id} /> {/* Client Component */}
+          </PostCard>
+        ))}
+      </PostList>
+    </div>
+  );
+}
+
+// Client Component boundary
+'use client';
+
+function SearchBar() {
+  const [query, setQuery] = useState('');
+  const [results, setResults] = useState([]);
+  
+  const handleSearch = async () => {
+    const results = await searchPosts(query);
+    setResults(results);
+  };
+  
+  return (
+    <div>
+      <input 
+        value={query}
+        onChange={e => setQuery(e.target.value)}
+      />
+      <button onClick={handleSearch}>Search</button>
+      <SearchResults results={results} /> {/* Client Component */}
+    </div>
+  );
+}
+
+// Passing props between Server and Client Components
+async function ServerParent() {
+  const data = await fetchData();
+  
+  return (
+    <ClientChild 
+      data={data} // ✅ Serializable props
+      timestamp={new Date().toISOString()} // ✅ Serializable
+      // onCallback={() => {}} // ❌ Functions not serializable
+      // complexObject={new Map()} // ❌ Non-serializable objects
+    />
+  );
+}
+
+'use client';
+function ClientChild({ data, timestamp }) {
+  return <div>{data.title} - {timestamp}</div>;
+}
+
+// Pattern: Server Component wrapping Client Component
+async function ProductPage({ productId }) {
+  const product = await fetchProduct(productId);
+  const reviews = await fetchReviews(productId);
+  
+  return (
+    <div>
+      <ProductInfo product={product} /> {/* Server Component */}
+      
+      {/* Client Component with server-fetched data */}
+      <InteractiveReviews 
+        initialReviews={reviews}
+        productId={productId}
+      />
+    </div>
+  );
+}
+
+'use client';
+function InteractiveReviews({ initialReviews, productId }) {
+  const [reviews, setReviews] = useState(initialReviews);
+  const [newReview, setNewReview] = useState('');
+  
+  const addReview = async () => {
+    const review = await submitReview(productId, newReview);
+    setReviews(prev => [review, ...prev]);
+    setNewReview('');
+  };
+  
+  return (
+    <div>
+      <ReviewForm 
+        value={newReview}
+        onChange={setNewReview}
+        onSubmit={addReview}
+      />
+      <ReviewsList reviews={reviews} />
+    </div>
+  );
+}
+```
+</details>
+
 - **Q2:** What are the limitations of Server Components?
+<details>
+<summary>Answer</summary>
+**Server Component limitations:**
+
+1. **No client-side state**:
+```jsx
+// ❌ Can't use useState, useEffect, etc.
+function ServerComponent() {
+  const [count, setCount] = useState(0); // Error!
+  
+  useEffect(() => {
+    // Error! No client effects
+  }, []);
+  
+  return <div>{count}</div>;
+}
+
+// ✅ Use Client Components for state
+'use client';
+function ClientCounter() {
+  const [count, setCount] = useState(0);
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      Count: {count}
+    </button>
+  );
+}
+```
+
+2. **No browser APIs**:
+```jsx
+// ❌ No access to window, document, localStorage
+function ServerComponent() {
+  const width = window.innerWidth; // Error!
+  const stored = localStorage.getItem('key'); // Error!
+  
+  return <div>{width}</div>;
+}
+
+// ✅ Use Client Components for browser APIs
+'use client';
+function ClientComponent() {
+  const [width, setWidth] = useState(0);
+  
+  useEffect(() => {
+    setWidth(window.innerWidth);
+  }, []);
+  
+  return <div>{width}</div>;
+}
+```
+
+3. **No event handlers**:
+```jsx
+// ❌ No onClick, onChange, etc.
+function ServerComponent() {
+  const handleClick = () => console.log('clicked'); // Error!
+  
+  return <button onClick={handleClick}>Click</button>;
+}
+
+// ✅ Wrap interactive parts in Client Components
+function ServerWrapper() {
+  return (
+    <div>
+      <h1>Server Content</h1>
+      <ClientButton />
+    </div>
+  );
+}
+
+'use client';
+function ClientButton() {
+  return (
+    <button onClick={() => console.log('clicked')}>
+      Click me
+    </button>
+  );
+}
+```
+
+4. **Serialization constraints**:
+```jsx
+// ❌ Can't pass functions, classes, or complex objects
+async function ServerParent() {
+  const callback = () => console.log('hello'); // Error!
+  const date = new Date(); // Error!
+  const map = new Map(); // Error!
+  
+  return (
+    <ClientChild 
+      callback={callback}
+      date={date}
+      map={map}
+    />
+  );
+}
+
+// ✅ Pass serializable data only
+async function ServerParent() {
+  const data = await fetchData();
+  
+  return (
+    <ClientChild 
+      title={data.title} // ✅ String
+      count={data.count} // ✅ Number
+      items={data.items} // ✅ Array
+      meta={{ id: data.id, timestamp: data.createdAt }} // ✅ Plain object
+    />
+  );
+}
+```
+
+5. **No context consumption**:
+```jsx
+// ❌ Can't use useContext in Server Components
+function ServerComponent() {
+  const theme = useContext(ThemeContext); // Error!
+  return <div className={theme}>Content</div>;
+}
+
+// ✅ Pass context values as props or use Client Components
+function ServerWithTheme({ theme }) {
+  return <div className={theme}>Content</div>;
+}
+```
+
+**Working around limitations:**
+- **Compose strategically** - Server for data, Client for interaction
+- **Pass serializable props** - Convert complex objects to plain data
+- **Use children pattern** - Server Components can render Client Components
+- **Lift state up** - Manage state in Client Components, pass to Server Components
+</details>
 
 ---
