@@ -81,6 +81,7 @@ const element = <h1 className="greeting">Hello, world!</h1>;
 ```
 <details>
 <summary>Answer</summary>
+
 ```javascript
 const element = React.createElement(
   'h1',
@@ -94,6 +95,7 @@ const element = React.createElement(
 <details>
 <summary>Answer</summary>
 Events in JSX are handled using camelCase event handlers like `onClick`. Synthetic events are React's wrapper around native events that provide consistent behavior across different browsers. They have the same interface as native events but are cross-browser compatible.
+
 ```jsx
 <button onClick={(e) => console.log(e)}>Click me</button>
 ```
@@ -115,6 +117,7 @@ A React component is a reusable piece of UI that accepts inputs (props) and retu
 - **Q2:** How do you create a simple functional component?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 function Welcome(props) {
   return <h1>Hello, {props.name}!</h1>;
@@ -130,6 +133,7 @@ const Welcome = (props) => {
 - **Q3:** What is the basic structure of a class component?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 class Welcome extends React.Component {
   render() {
@@ -450,12 +454,63 @@ Examples: database IDs, UUIDs, or stable combinations of data fields.
 ### 🎯 **Class component lifecycle methods**
 #### **📋 Beginner:**
 - **Q1:** What are the three main phases of a component lifecycle?
+<details>
+<summary>Answer</summary>
+1. **Mounting**: Component is being created and inserted into the DOM
+2. **Updating**: Component is being re-rendered as a result of changes to props or state
+3. **Unmounting**: Component is being removed from the DOM
+</details>
+
 - **Q2:** When does componentDidMount() execute and what is it commonly used for?
+<details>
+<summary>Answer</summary>
+`componentDidMount()` executes immediately after a component is mounted (inserted into the DOM tree). It's commonly used for:
+- Making API calls
+- Setting up subscriptions
+- Initializing timers
+- Accessing DOM elements
+</details>
+
 - **Q3:** What is componentWillUnmount() used for?
+<details>
+<summary>Answer</summary>
+`componentWillUnmount()` is called just before a component is unmounted and destroyed. It's used for cleanup:
+- Cancelling network requests
+- Removing event listeners
+- Clearing timers/intervals
+- Unsubscribing from subscriptions
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What's the difference between componentDidUpdate() and componentDidMount()?
+<details>
+<summary>Answer</summary>
+- **componentDidMount()**: Called once after initial render (mounting phase)
+- **componentDidUpdate()**: Called after every re-render (updating phase), receives prevProps and prevState as parameters
+```jsx
+componentDidUpdate(prevProps, prevState) {
+  if (prevProps.userId !== this.props.userId) {
+    this.fetchUserData(this.props.userId);
+  }
+}
+```
+</details>
+
 - **Q2:** How do you prevent unnecessary re-renders using lifecycle methods?
+<details>
+<summary>Answer</summary>
+Use `shouldComponentUpdate()` or `React.PureComponent`:
+```jsx
+shouldComponentUpdate(nextProps, nextState) {
+  return nextProps.id !== this.props.id;
+}
+
+// Or extend PureComponent for shallow comparison
+class MyComponent extends React.PureComponent {
+  // Automatically prevents re-renders if props/state haven't changed
+}
+```
+</details>
 
 ---
 
@@ -467,8 +522,50 @@ Examples: database IDs, UUIDs, or stable combinations of data fields.
 
 #### **📋 Beginner:**
 - **Q1:** What is the useState hook and how do you use it?
+<details>
+<summary>Answer</summary>
+`useState` is a Hook that lets you add state to functional components. It returns an array with the current state value and a setter function.
+```jsx
+import { useState } from 'react';
+
+function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <button onClick={() => setCount(count + 1)}>
+      Count: {count}
+    </button>
+  );
+}
+```
+</details>
+
 - **Q2:** What does useState return?
+<details>
+<summary>Answer</summary>
+`useState` returns an array with exactly two elements:
+1. **Current state value**: The current value of the state
+2. **Setter function**: A function to update the state value
+```jsx
+const [state, setState] = useState(initialValue);
+```
+</details>
+
 - **Q3:** How do you update state using useState?
+<details>
+<summary>Answer</summary>
+Call the setter function with the new value:
+```jsx
+const [name, setName] = useState('');
+const [count, setCount] = useState(0);
+
+// Direct value
+setName('John');
+setCount(42);
+
+// Function update (for previous state)
+setCount(prevCount => prevCount + 1);
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What will happen when this button is clicked?
@@ -480,7 +577,27 @@ const handleClick = () => {
   console.log(count);
 };
 ```
+<details>
+<summary>Answer</summary>
+- `count` will only increase by 1 (not 2)
+- Console will log `0` (current value, not updated value)
+- Both `setCount` calls use the same `count` value (0), so both set it to 1
+- State updates are batched and asynchronous
+</details>
+
 - **Q2:** How do you update state based on previous state correctly?
+<details>
+<summary>Answer</summary>
+Use the functional update pattern:
+```jsx
+// Correct way
+setCount(prevCount => prevCount + 1);
+setCount(prevCount => prevCount + 1); // Now count increases by 2
+
+// For objects
+setUser(prevUser => ({ ...prevUser, name: 'John' }));
+```
+</details>
 
 ---
 
@@ -488,11 +605,62 @@ const handleClick = () => {
 
 #### **📋 Beginner:**
 - **Q1:** What is useEffect and when does it run?
+<details>
+<summary>Answer</summary>
+`useEffect` is a Hook that lets you perform side effects in functional components. It runs:
+- After every render by default
+- After initial render (like componentDidMount)
+- After updates (like componentDidUpdate)
+```jsx
+useEffect(() => {
+  console.log('Component rendered');
+});
+```
+</details>
+
 - **Q2:** How do you make useEffect run only once?
+<details>
+<summary>Answer</summary>
+Pass an empty dependency array `[]` as the second argument:
+```jsx
+useEffect(() => {
+  console.log('Runs only once after initial render');
+}, []); // Empty dependency array
+```
+</details>
+
 - **Q3:** What is the purpose of the dependency array in useEffect?
+<details>
+<summary>Answer</summary>
+The dependency array controls when the effect runs:
+- **No array**: Runs after every render
+- **Empty array `[]`**: Runs only once after initial render
+- **With dependencies `[dep1, dep2]`**: Runs when any dependency changes
+```jsx
+useEffect(() => {
+  fetchUser(userId);
+}, [userId]); // Runs when userId changes
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you clean up effects (like event listeners or subscriptions)?
+<details>
+<summary>Answer</summary>
+Return a cleanup function from the effect:
+```jsx
+useEffect(() => {
+  const handleScroll = () => console.log('scrolling');
+  window.addEventListener('scroll', handleScroll);
+  
+  // Cleanup function
+  return () => {
+    window.removeEventListener('scroll', handleScroll);
+  };
+}, []);
+```
+</details>
+
 - **Q2:** What will happen in this useEffect?
 ```jsx
 useEffect(() => {
@@ -500,6 +668,16 @@ useEffect(() => {
   setCount(count + 1);
 }, [count]);
 ```
+<details>
+<summary>Answer</summary>
+This creates an **infinite loop**:
+1. Effect runs and updates `count`
+2. `count` change triggers effect again
+3. Effect runs and updates `count` again
+4. Process repeats infinitely
+
+**Fix**: Use functional update or different dependency.
+</details>
 
 ---
 
@@ -509,12 +687,76 @@ useEffect(() => {
 
 #### **📋 Beginner:**
 - **Q1:** What is useContext and how do you use it?
+<details>
+<summary>Answer</summary>
+`useContext` is a Hook that lets you consume context values in functional components without nesting:
+```jsx
+const ThemeContext = React.createContext();
+
+function MyComponent() {
+  const theme = useContext(ThemeContext);
+  return <div className={theme}>Content</div>;
+}
+```
+</details>
+
 - **Q2:** How do you create a context in React?
+<details>
+<summary>Answer</summary>
+Use `React.createContext()`:
+```jsx
+// Create context
+const UserContext = React.createContext();
+
+// Provide context
+function App() {
+  const user = { name: 'John', id: 1 };
+  return (
+    <UserContext.Provider value={user}>
+      <ChildComponent />
+    </UserContext.Provider>
+  );
+}
+```
+</details>
+
 - **Q3:** What is a Context Provider?
+<details>
+<summary>Answer</summary>
+A Context Provider is a component that supplies context values to all its descendant components. It accepts a `value` prop that will be available to all consuming components:
+```jsx
+<ThemeContext.Provider value="dark">
+  <App /> {/* All children can access "dark" theme */}
+</ThemeContext.Provider>
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you avoid unnecessary re-renders when using Context?
+<details>
+<summary>Answer</summary>
+- **Split contexts**: Separate frequently changing data
+- **Memoize context value**: Use `useMemo` for object values
+- **Memoize components**: Use `React.memo` for consumers
+```jsx
+const value = useMemo(() => ({ user, settings }), [user, settings]);
+<UserContext.Provider value={value}>
+```
+</details>
+
 - **Q2:** When should you split contexts instead of using one large context?
+<details>
+<summary>Answer</summary>
+Split contexts when:
+- Different parts of data change at different frequencies
+- Different components need different subsets of data
+- You want to avoid unnecessary re-renders
+```jsx
+// Instead of one large context
+<UserContext.Provider> // Split into
+<ThemeContext.Provider> // multiple focused contexts
+```
+</details>
 
 ---
 
@@ -522,12 +764,90 @@ useEffect(() => {
 
 #### **📋 Beginner:**
 - **Q1:** What is useReducer and when would you use it instead of useState?
+<details>
+<summary>Answer</summary>
+`useReducer` is a Hook for managing complex state logic. Use it instead of `useState` when:
+- State has multiple sub-values
+- Next state depends on the previous one
+- You want predictable state transitions
+```jsx
+const [state, dispatch] = useReducer(reducer, initialState);
+```
+</details>
+
 - **Q2:** What are the arguments that useReducer takes?
+<details>
+<summary>Answer</summary>
+`useReducer` takes two required arguments and one optional:
+1. **reducer function**: `(state, action) => newState`
+2. **initial state**: The initial state value
+3. **init function** (optional): For lazy initialization
+```jsx
+const [state, dispatch] = useReducer(reducer, initialState, init);
+```
+</details>
+
 - **Q3:** What is a reducer function?
+<details>
+<summary>Answer</summary>
+A reducer is a pure function that takes current state and an action, then returns a new state:
+```jsx
+function reducer(state, action) {
+  switch (action.type) {
+    case 'increment':
+      return { count: state.count + 1 };
+    case 'decrement':
+      return { count: state.count - 1 };
+    default:
+      return state;
+  }
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you implement useReducer for a counter with increment, decrement, and reset actions?
+<details>
+<summary>Answer</summary>
+```jsx
+const initialState = { count: 0 };
+
+function counterReducer(state, action) {
+  switch (action.type) {
+    case 'increment':
+      return { count: state.count + 1 };
+    case 'decrement':
+      return { count: state.count - 1 };
+    case 'reset':
+      return initialState;
+    default:
+      throw new Error();
+  }
+}
+
+function Counter() {
+  const [state, dispatch] = useReducer(counterReducer, initialState);
+  return (
+    <>
+      Count: {state.count}
+      <button onClick={() => dispatch({ type: 'increment' })}>+</button>
+      <button onClick={() => dispatch({ type: 'decrement' })}>-</button>
+      <button onClick={() => dispatch({ type: 'reset' })}>Reset</button>
+    </>
+  );
+}
+```
+</details>
+
 - **Q2:** What are the benefits of using useReducer for complex state logic?
+<details>
+<summary>Answer</summary>
+- **Predictable**: All state changes go through the reducer
+- **Testable**: Reducer is a pure function, easy to test
+- **Scalable**: Better for complex state with multiple actions
+- **Debugging**: Easier to track state changes
+- **Performance**: Can optimize by avoiding inline object creation
+</details>
 
 ---
 
@@ -535,12 +855,82 @@ useEffect(() => {
 
 #### **📋 Beginner:**
 - **Q1:** What is useRef and what are its common use cases?
+<details>
+<summary>Answer</summary>
+`useRef` is a Hook that returns a mutable ref object. Common use cases:
+- **Accessing DOM elements**: Focus inputs, scroll to elements
+- **Storing mutable values**: Previous values, timers, any mutable data
+- **Persisting values**: Across renders without causing re-renders
+```jsx
+const inputRef = useRef(null);
+const countRef = useRef(0);
+```
+</details>
+
 - **Q2:** How do you access DOM elements using useRef?
+<details>
+<summary>Answer</summary>
+Assign the ref to an element's `ref` attribute:
+```jsx
+function MyComponent() {
+  const inputRef = useRef(null);
+  
+  const focusInput = () => {
+    inputRef.current.focus();
+  };
+  
+  return (
+    <>
+      <input ref={inputRef} />
+      <button onClick={focusInput}>Focus Input</button>
+    </>
+  );
+}
+```
+</details>
+
 - **Q3:** Does changing a ref's current value cause a re-render?
+<details>
+<summary>Answer</summary>
+**No**, changing `ref.current` does not cause a re-render. This is the key difference between refs and state:
+```jsx
+const countRef = useRef(0);
+countRef.current = 5; // No re-render triggered
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How can you use useRef to store previous values?
+<details>
+<summary>Answer</summary>
+Use `useRef` with `useEffect` to track previous values:
+```jsx
+function usePrevious(value) {
+  const ref = useRef();
+  useEffect(() => {
+    ref.current = value;
+  });
+  return ref.current;
+}
+
+function MyComponent({ count }) {
+  const prevCount = usePrevious(count);
+  return <div>Current: {count}, Previous: {prevCount}</div>;
+}
+```
+</details>
+
 - **Q2:** What's the difference between useRef and useState for storing values?
+<details>
+<summary>Answer</summary>
+| useRef | useState |
+|--------|----------|
+| Mutable | Immutable |
+| No re-render on change | Triggers re-render |
+| `.current` property | Direct value |
+| Persists across renders | Persists across renders |
+| Synchronous updates | Asynchronous updates |
+</details>
 
 ---
 
@@ -548,12 +938,62 @@ useEffect(() => {
 
 #### **📋 Beginner:**
 - **Q1:** What is useMemo and when should you use it?
+<details>
+<summary>Answer</summary>
+`useMemo` is a Hook that memoizes (caches) the result of expensive calculations. Use it when:
+- You have expensive computations
+- You want to avoid recalculating on every render
+- The calculation depends on specific values
+```jsx
+const expensiveValue = useMemo(() => {
+  return someExpensiveCalculation(a, b);
+}, [a, b]);
+```
+</details>
+
 - **Q2:** How does useMemo help with performance?
+<details>
+<summary>Answer</summary>
+`useMemo` helps performance by:
+- **Skipping expensive calculations** when dependencies haven't changed
+- **Preventing unnecessary object creation** that could trigger child re-renders
+- **Caching results** between renders
+- Only recalculating when dependencies in the array change
+</details>
+
 - **Q3:** What happens if you don't provide a dependency array to useMemo?
+<details>
+<summary>Answer</summary>
+**Error**: `useMemo` requires a dependency array as the second argument. Without it, React will throw an error. The dependency array determines when to recalculate the memoized value.
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** When can useMemo be an anti-pattern?
+<details>
+<summary>Answer</summary>
+`useMemo` can hurt performance when:
+- **Overused on cheap calculations**: The memoization overhead exceeds the benefit
+- **Dependencies change frequently**: Defeats the purpose of memoization
+- **Used everywhere**: Creates unnecessary complexity and memory usage
+```jsx
+// Anti-pattern - too simple
+const sum = useMemo(() => a + b, [a, b]);
+```
+</details>
+
 - **Q2:** How do you decide what to include in useMemo's dependency array?
+<details>
+<summary>Answer</summary>
+Include all values from component scope that are used inside `useMemo`:
+- **Props** used in the calculation
+- **State variables** used in the calculation
+- **Other computed values** used in the calculation
+```jsx
+const result = useMemo(() => {
+  return calculate(prop1, state1, localVar);
+}, [prop1, state1, localVar]); // All used variables
+```
+</details>
 
 ---
 
@@ -561,8 +1001,48 @@ useEffect(() => {
 
 #### **📋 Beginner:**
 - **Q1:** What is useCallback and how is it related to useMemo?
+<details>
+<summary>Answer</summary>
+`useCallback` is a Hook that memoizes functions. It's related to `useMemo` but specifically for functions:
+- **useCallback**: Returns a memoized function
+- **useMemo**: Returns a memoized value
+```jsx
+const memoizedCallback = useCallback(() => {
+  doSomething(a, b);
+}, [a, b]);
+
+// Equivalent to:
+const memoizedCallback = useMemo(() => {
+  return () => doSomething(a, b);
+}, [a, b]);
+```
+</details>
+
 - **Q2:** When should you use useCallback?
+<details>
+<summary>Answer</summary>
+Use `useCallback` when:
+- Passing functions to memoized child components
+- Functions are dependencies of other hooks
+- Preventing unnecessary re-renders of child components
+```jsx
+const Child = React.memo(({ onClick }) => <button onClick={onClick} />);
+
+function Parent() {
+  const handleClick = useCallback(() => {
+    console.log('clicked');
+  }, []);
+  
+  return <Child onClick={handleClick} />;
+}
+```
+</details>
+
 - **Q3:** What does useCallback return?
+<details>
+<summary>Answer</summary>
+`useCallback` returns a **memoized version of the function** that only changes if one of the dependencies has changed. It returns the same function reference between renders when dependencies don't change.
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** Why doesn't this optimization work?
@@ -578,7 +1058,25 @@ const Parent = () => {
   return <Child onClick={handleClick} data={data} />;
 };
 ```
+<details>
+<summary>Answer</summary>
+The optimization doesn't work because `data` is a **new object on every render**. Even though `onClick` is memoized, the `data` prop changes, causing `Child` to re-render.
+
+**Fix**: Memoize the data object too:
+```jsx
+const data = useMemo(() => ({ name: 'Button' }), []);
+```
+</details>
+
 - **Q2:** How can overusing useCallback hurt performance?
+<details>
+<summary>Answer</summary>
+Overusing `useCallback` can hurt performance by:
+- **Creating unnecessary closures**: Memory overhead for each memoized function
+- **Comparison overhead**: React must compare dependencies on each render
+- **Complexity without benefit**: When child components aren't memoized
+- **Stale closures**: Capturing outdated values in dependencies
+</details>
 
 ---
 
