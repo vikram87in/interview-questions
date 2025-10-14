@@ -210,7 +210,3 @@ They add **variables**, **nesting**, and **mixins** to CSS, compiled into plain 
 
 ---
 
-### ✅ Summary
-Intermediate CSS knowledge includes **layout techniques (Flexbox, Grid)**, **selectors**, **specificity**, **media queries**, and **animation concepts** — essential for modern UI development.
-
----

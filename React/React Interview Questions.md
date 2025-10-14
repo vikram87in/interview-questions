@@ -10,12 +10,42 @@
 
 #### **📋 Beginner:**
 - **Q1:** What is React and what problem does it solve?
+<details>
+<summary>Answer</summary>
+React is a JavaScript library for building user interfaces, particularly web applications. It solves the problem of efficiently updating and managing the UI when data changes. React uses a component-based architecture and virtual DOM to make UI updates predictable and performant.
+</details>
+
 - **Q2:** What are the main advantages of using React over vanilla JavaScript?
+<details>
+<summary>Answer</summary>
+- **Reusable Components**: Write once, use anywhere
+- **Virtual DOM**: Efficient updates and better performance
+- **Declarative**: Describe what UI should look like, not how to achieve it
+- **Large Ecosystem**: Rich community and third-party libraries
+- **Developer Tools**: Excellent debugging and development experience
+</details>
+
 - **Q3:** What is the difference between a library and a framework? Where does React fit?
+<details>
+<summary>Answer</summary>
+- **Library**: You call its functions when you need them (you control the flow)
+- **Framework**: It calls your code when needed (framework controls the flow)
+React is a **library** because you import and use React functions in your code, maintaining control over the application structure and flow.
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How does React's virtual DOM improve performance compared to direct DOM manipulation?
+<details>
+<summary>Answer</summary>
+The Virtual DOM is a JavaScript representation of the real DOM. React compares (diffs) the new virtual DOM with the previous version, calculates the minimum changes needed, and updates only those specific DOM nodes. This batch updating is much faster than frequent direct DOM manipulation, which triggers layout recalculations and repaints.
+</details>
+
 - **Q2:** What are the trade-offs of using React in a project?
+<details>
+<summary>Answer</summary>
+**Pros**: Component reusability, large ecosystem, good performance, strong community
+**Cons**: Steep learning curve, frequent updates, additional build complexity, larger bundle size for simple projects, JSX learning curve
+</details>
 
 ---
 
@@ -23,15 +53,51 @@
 
 #### **📋 Beginner:**
 - **Q1:** What is JSX and why is it used in React?
+<details>
+<summary>Answer</summary>
+JSX (JavaScript XML) is a syntax extension that allows you to write HTML-like code in JavaScript. It makes React code more readable and allows you to write UI components in a familiar HTML-like syntax while maintaining the full power of JavaScript.
+</details>
+
 - **Q2:** Can browsers understand JSX directly? If not, how is it processed?
+<details>
+<summary>Answer</summary>
+No, browsers cannot understand JSX directly. JSX is transpiled (converted) to regular JavaScript function calls using tools like Babel. For example, `<h1>Hello</h1>` becomes `React.createElement('h1', null, 'Hello')`.
+</details>
+
 - **Q3:** What are the basic rules for writing JSX?
+<details>
+<summary>Answer</summary>
+- Must return a single parent element (or use React.Fragment)
+- Use `className` instead of `class`
+- Use `htmlFor` instead of `for`
+- Close all tags (including self-closing tags like `<br />`)
+- Use camelCase for event handlers (`onClick`, not `onclick`)
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What does this JSX code compile to?
 ```jsx
 const element = <h1 className="greeting">Hello, world!</h1>;
 ```
+<details>
+<summary>Answer</summary>
+```javascript
+const element = React.createElement(
+  'h1',
+  { className: 'greeting' },
+  'Hello, world!'
+);
+```
+</details>
+
 - **Q2:** How do you handle events in JSX and what are synthetic events?
+<details>
+<summary>Answer</summary>
+Events in JSX are handled using camelCase event handlers like `onClick`. Synthetic events are React's wrapper around native events that provide consistent behavior across different browsers. They have the same interface as native events but are cross-browser compatible.
+```jsx
+<button onClick={(e) => console.log(e)}>Click me</button>
+```
+</details>
 
 ---
 
@@ -39,11 +105,51 @@ const element = <h1 className="greeting">Hello, world!</h1>;
 
 #### **📋 Beginner:**
 - **Q1:** What is a React component and what are the two main types?
+<details>
+<summary>Answer</summary>
+A React component is a reusable piece of UI that accepts inputs (props) and returns JSX describing what should appear on screen. The two main types are:
+- **Functional components**: JavaScript functions that return JSX
+- **Class components**: ES6 classes that extend React.Component
+</details>
+
 - **Q2:** How do you create a simple functional component?
+<details>
+<summary>Answer</summary>
+```jsx
+function Welcome(props) {
+  return <h1>Hello, {props.name}!</h1>;
+}
+
+// Or as an arrow function
+const Welcome = (props) => {
+  return <h1>Hello, {props.name}!</h1>;
+};
+```
+</details>
+
 - **Q3:** What is the basic structure of a class component?
+<details>
+<summary>Answer</summary>
+```jsx
+class Welcome extends React.Component {
+  render() {
+    return <h1>Hello, {this.props.name}!</h1>;
+  }
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What are the advantages of functional components over class components?
+<details>
+<summary>Answer</summary>
+- **Simpler syntax**: Less boilerplate code
+- **Hooks support**: Can use state and lifecycle features with hooks
+- **Better performance**: Slightly better optimization in React
+- **Easier testing**: Functions are easier to test than classes
+- **Future-proof**: React team focuses on functional components
+</details>
+
 - **Q2:** Convert this class component to a functional component:
 ```jsx
 class Welcome extends React.Component {
@@ -52,6 +158,19 @@ class Welcome extends React.Component {
   }
 }
 ```
+<details>
+<summary>Answer</summary>
+```jsx
+function Welcome({ name }) {
+  return <h1>Hello, {name}</h1>;
+}
+
+// Or as arrow function
+const Welcome = ({ name }) => {
+  return <h1>Hello, {name}</h1>;
+};
+```
+</details>
 
 ---
 
@@ -59,12 +178,65 @@ class Welcome extends React.Component {
 
 #### **📋 Beginner:**
 - **Q1:** What are props in React and how do you pass them to components?
+<details>
+<summary>Answer</summary>
+Props (properties) are read-only inputs passed from parent to child components. They are passed as attributes:
+```jsx
+// Parent component
+<Welcome name="John" age={25} />
+
+// Child component receives them
+function Welcome(props) {
+  return <h1>Hello, {props.name}! You are {props.age} years old.</h1>;
+}
+```
+</details>
+
 - **Q2:** What is state and how is it different from props?
+<details>
+<summary>Answer</summary>
+State is mutable data that belongs to a component and can change over time. 
+- **Props**: Immutable, passed from parent, read-only
+- **State**: Mutable, owned by component, can be updated
+```jsx
+const [count, setCount] = useState(0); // State
+<Counter initialValue={10} /> // Props
+```
+</details>
+
 - **Q3:** Can you modify props inside a component? Why or why not?
+<details>
+<summary>Answer</summary>
+No, props are **read-only** and should never be modified. This ensures:
+- **Predictable data flow**: Data flows down from parent to child
+- **Pure components**: Same props always produce same output
+- **Debugging**: Easier to track where data changes occur
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What happens when you try to modify props directly in a component?
+<details>
+<summary>Answer</summary>
+React will throw an error in development mode: "Cannot assign to read only property". In production, it may silently fail or cause unexpected behavior. Props are frozen in development to enforce immutability.
+</details>
+
 - **Q2:** Explain the concept of "lifting state up" with an example scenario.
+<details>
+<summary>Answer</summary>
+When multiple child components need to share state, move the state to their closest common parent. The parent manages the state and passes it down as props.
+```jsx
+// Parent manages shared state
+function App() {
+  const [count, setCount] = useState(0);
+  return (
+    <>
+      <Counter count={count} setCount={setCount} />
+      <Display count={count} />
+    </>
+  );
+}
+```
+</details>
 
 ---
 
@@ -72,12 +244,67 @@ class Welcome extends React.Component {
 
 #### **📋 Beginner:**
 - **Q1:** How do you render a React element to the DOM?
+<details>
+<summary>Answer</summary>
+```jsx
+// React 18+
+import { createRoot } from 'react-dom/client';
+const root = createRoot(document.getElementById('root'));
+root.render(<App />);
+
+// React 17 and earlier
+import ReactDOM from 'react-dom';
+ReactDOM.render(<App />, document.getElementById('root'));
+```
+</details>
+
 - **Q2:** What is the root element in a React application?
+<details>
+<summary>Answer</summary>
+The root element is the DOM element where React mounts and manages the entire application. It's typically a div with id "root" in the HTML file:
+```html
+<div id="root"></div>
+```
+</details>
+
 - **Q3:** Can you have multiple React apps on the same page?
+<details>
+<summary>Answer</summary>
+Yes, you can have multiple React roots on the same page by creating multiple root elements and rendering different applications to each:
+```jsx
+const root1 = createRoot(document.getElementById('app1'));
+const root2 = createRoot(document.getElementById('app2'));
+root1.render(<App1 />);
+root2.render(<App2 />);
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What is the difference between ReactDOM.render() and ReactDOM.createRoot()?
+<details>
+<summary>Answer</summary>
+- **ReactDOM.render()**: Legacy API (React 17 and earlier), synchronous rendering
+- **createRoot()**: New API (React 18+), enables concurrent features like automatic batching, transitions, and Suspense
+```jsx
+// Old way
+ReactDOM.render(<App />, container);
+
+// New way
+const root = createRoot(container);
+root.render(<App />);
+```
+</details>
+
 - **Q2:** How does React decide when to re-render components?
+<details>
+<summary>Answer</summary>
+React re-renders components when:
+- **State changes** (via setState or hooks)
+- **Props change** from parent
+- **Parent re-renders** (child components re-render by default)
+- **Context value changes** (for components consuming context)
+- **Force update** is called (not recommended)
+</details>
 
 ---
 
@@ -85,15 +312,71 @@ class Welcome extends React.Component {
 
 #### **📋 Beginner:**
 - **Q1:** How do you conditionally render elements in React?
+<details>
+<summary>Answer</summary>
+You can conditionally render elements using JavaScript expressions:
+```jsx
+// Using && operator
+{isLoggedIn && <WelcomeMessage />}
+
+// Using ternary operator
+{isLoggedIn ? <WelcomeMessage /> : <LoginButton />}
+
+// Using if-else (outside JSX)
+if (isLoggedIn) {
+  return <WelcomeMessage />;
+} else {
+  return <LoginButton />;
+}
+```
+</details>
+
 - **Q2:** What are three different ways to implement conditional rendering?
+<details>
+<summary>Answer</summary>
+1. **Logical AND (&&)**: `{condition && <Component />}`
+2. **Ternary operator**: `{condition ? <ComponentA /> : <ComponentB />}`
+3. **If-else statements**: Outside JSX, return different components
+</details>
+
 - **Q3:** What will this code render if `isLoggedIn` is false?
 ```jsx
 {isLoggedIn && <WelcomeMessage />}
 ```
+<details>
+<summary>Answer</summary>
+It will render nothing (no element). The logical AND operator returns `false` when the condition is false, and React doesn't render boolean values.
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What's the difference between using `&&` operator and ternary operator for conditional rendering?
+<details>
+<summary>Answer</summary>
+- **&& operator**: Renders component or nothing
+  ```jsx
+  {isTrue && <Component />} // Renders Component or nothing
+  ```
+- **Ternary operator**: Always renders something
+  ```jsx
+  {isTrue ? <ComponentA /> : <ComponentB />} // Always renders one component
+  ```
+</details>
+
 - **Q2:** How do you handle multiple conditions in JSX efficiently?
+<details>
+<summary>Answer</summary>
+Use helper functions or switch statements for complex conditions:
+```jsx
+const renderContent = () => {
+  if (loading) return <Spinner />;
+  if (error) return <ErrorMessage />;
+  if (data.length === 0) return <EmptyState />;
+  return <DataList />;
+};
+
+return <div>{renderContent()}</div>;
+```
+</details>
 
 ---
 
@@ -101,12 +384,62 @@ class Welcome extends React.Component {
 
 #### **📋 Beginner:**
 - **Q1:** How do you render a list of items in React?
+<details>
+<summary>Answer</summary>
+Use the `map()` method to transform an array into JSX elements:
+```jsx
+const items = ['apple', 'banana', 'orange'];
+const listItems = items.map((item, index) => 
+  <li key={index}>{item}</li>
+);
+return <ul>{listItems}</ul>;
+```
+</details>
+
 - **Q2:** What are keys in React and why are they important?
+<details>
+<summary>Answer</summary>
+Keys are unique identifiers for list elements that help React identify which items have changed, been added, or removed. They improve performance by enabling efficient list updates and maintaining component state correctly during re-renders.
+```jsx
+{users.map(user => <User key={user.id} data={user} />)}
+```
+</details>
+
 - **Q3:** What happens if you don't provide keys when rendering lists?
+<details>
+<summary>Answer</summary>
+React will show a warning in the console. Without keys, React can't efficiently update the DOM when list items change, potentially causing:
+- Poor performance
+- Incorrect component state preservation
+- UI bugs when items are reordered
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** Why should you avoid using array indices as keys?
+<details>
+<summary>Answer</summary>
+Using array indices as keys can cause issues when the list order changes:
+- React might incorrectly preserve component state
+- Performance degradation during reordering
+- Input focus and scroll position bugs
+```jsx
+// Bad - can cause issues
+{items.map((item, index) => <Item key={index} />)}
+
+// Good - stable unique identifier
+{items.map(item => <Item key={item.id} />)}
+```
+</details>
+
 - **Q2:** What makes a good key for list items?
+<details>
+<summary>Answer</summary>
+A good key should be:
+- **Unique**: Among siblings in the list
+- **Stable**: Doesn't change between renders
+- **Predictable**: Same item always has same key
+Examples: database IDs, UUIDs, or stable combinations of data fields.
+</details>
 
 ---
 
