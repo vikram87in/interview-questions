@@ -1084,12 +1084,75 @@ Overusing `useCallback` can hurt performance by:
 
 #### **📋 Beginner:**
 - **Q1:** What's the difference between useEffect and useLayoutEffect?
+<details>
+<summary>Answer</summary>
+- **useEffect**: Runs **asynchronously** after DOM mutations and browser paint
+- **useLayoutEffect**: Runs **synchronously** after DOM mutations but before browser paint
+```jsx
+useEffect(() => {
+  // Runs after paint - won't block visual updates
+});
+
+useLayoutEffect(() => {
+  // Runs before paint - can block visual updates
+});
+```
+</details>
+
 - **Q2:** When should you use useLayoutEffect?
+<details>
+<summary>Answer</summary>
+Use `useLayoutEffect` when you need to:
+- **Measure DOM elements** before the browser paints
+- **Make DOM mutations** that users should not see
+- **Prevent visual flicker** during DOM updates
+- **Synchronously update** based on DOM measurements
+</details>
+
 - **Q3:** What are the performance implications of useLayoutEffect?
+<details>
+<summary>Answer</summary>
+`useLayoutEffect` can hurt performance because:
+- **Blocks browser painting** until effect completes
+- **Synchronous execution** can delay visual updates
+- **Should be used sparingly** - prefer `useEffect` when possible
+- Can cause **jank** if heavy computations are performed
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How would you measure DOM elements before the browser paints?
+<details>
+<summary>Answer</summary>
+```jsx
+function MyComponent() {
+  const [height, setHeight] = useState(0);
+  const elementRef = useRef(null);
+  
+  useLayoutEffect(() => {
+    if (elementRef.current) {
+      const rect = elementRef.current.getBoundingClientRect();
+      setHeight(rect.height);
+    }
+  });
+  
+  return (
+    <div ref={elementRef}>
+      <p>Element height: {height}px</p>
+    </div>
+  );
+}
+```
+</details>
+
 - **Q2:** Why might useLayoutEffect cause issues in SSR?
+<details>
+<summary>Answer</summary>
+`useLayoutEffect` can cause SSR hydration mismatches because:
+- **Server doesn't have DOM**: No layout information available
+- **Client-server differences**: Different measurements between server and client
+- **Hydration warnings**: React detects content differences
+**Solution**: Use `useEffect` for SSR or conditionally render based on `typeof window !== 'undefined'`
+</details>
 
 ---
 
@@ -1097,12 +1160,109 @@ Overusing `useCallback` can hurt performance by:
 
 #### **📋 Beginner:**
 - **Q1:** What is useImperativeHandle and with which hook is it typically used?
+<details>
+<summary>Answer</summary>
+`useImperativeHandle` is a Hook that customizes the instance value exposed to parent components when using `ref`. It's typically used with `forwardRef`:
+```jsx
+const MyInput = forwardRef((props, ref) => {
+  useImperativeHandle(ref, () => ({
+    focus: () => inputRef.current.focus(),
+    clear: () => inputRef.current.value = ''
+  }));
+  
+  return <input ref={inputRef} />;
+});
+```
+</details>
+
 - **Q2:** When would you need to use useImperativeHandle?
+<details>
+<summary>Answer</summary>
+Use `useImperativeHandle` when you need to:
+- **Expose specific methods** from child to parent component
+- **Create reusable components** with imperative APIs
+- **Control what gets exposed** through refs
+- **Provide custom functionality** beyond basic DOM access
+</details>
+
 - **Q3:** How do you expose methods from a child component to its parent?
+<details>
+<summary>Answer</summary>
+```jsx
+// Child component
+const CustomInput = forwardRef((props, ref) => {
+  const inputRef = useRef();
+  
+  useImperativeHandle(ref, () => ({
+    focus() {
+      inputRef.current.focus();
+    },
+    getValue() {
+      return inputRef.current.value;
+    }
+  }));
+  
+  return <input ref={inputRef} {...props} />;
+});
+
+// Parent component
+function Parent() {
+  const childRef = useRef();
+  
+  return (
+    <>
+      <CustomInput ref={childRef} />
+      <button onClick={() => childRef.current.focus()}>Focus</button>
+    </>
+  );
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** Why should useImperativeHandle be used sparingly?
+<details>
+<summary>Answer</summary>
+`useImperativeHandle` should be used sparingly because:
+- **Breaks React's declarative paradigm** - makes code more imperative
+- **Tight coupling** between parent and child components
+- **Harder to test and reason about** than props-based communication
+- **Alternative solutions** often exist using props and callbacks
+- **Can make components less reusable**
+</details>
+
 - **Q2:** How do you create a custom input component that exposes a focus method?
+<details>
+<summary>Answer</summary>
+```jsx
+const FocusableInput = forwardRef(({ placeholder, ...props }, ref) => {
+  const inputRef = useRef();
+  
+  useImperativeHandle(ref, () => ({
+    focus() {
+      inputRef.current.focus();
+    },
+    blur() {
+      inputRef.current.blur();
+    },
+    getValue() {
+      return inputRef.current.value;
+    },
+    clear() {
+      inputRef.current.value = '';
+    }
+  }), []); // Empty dependency array since methods don't change
+  
+  return (
+    <input 
+      ref={inputRef} 
+      placeholder={placeholder} 
+      {...props} 
+    />
+  );
+});
+```
+</details>
 
 ---
 
@@ -1110,12 +1270,107 @@ Overusing `useCallback` can hurt performance by:
 
 #### **📋 Beginner:**
 - **Q1:** What are custom hooks and what naming convention must they follow?
+<details>
+<summary>Answer</summary>
+Custom hooks are JavaScript functions that:
+- **Start with "use"** (naming convention)
+- **Can call other hooks** inside them
+- **Allow sharing stateful logic** between components
+```jsx
+function useCounter(initialValue = 0) {
+  const [count, setCount] = useState(initialValue);
+  const increment = () => setCount(c => c + 1);
+  return { count, increment };
+}
+```
+</details>
+
 - **Q2:** Why would you create a custom hook?
+<details>
+<summary>Answer</summary>
+Create custom hooks to:
+- **Share stateful logic** between multiple components
+- **Abstract complex logic** into reusable functions
+- **Keep components clean** by extracting side effects
+- **Create reusable patterns** for common use cases
+- **Separate concerns** and improve code organization
+</details>
+
 - **Q3:** Can custom hooks use other hooks?
+<details>
+<summary>Answer</summary>
+**Yes**, custom hooks can use any built-in hooks or other custom hooks:
+```jsx
+function useApi(url) {
+  const [data, setData] = useState(null); // useState
+  const [loading, setLoading] = useState(true); // useState
+  
+  useEffect(() => { // useEffect
+    fetch(url).then(res => res.json()).then(setData);
+  }, [url]);
+  
+  return { data, loading };
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** Create a custom hook called useLocalStorage that manages localStorage state.
+<details>
+<summary>Answer</summary>
+```jsx
+function useLocalStorage(key, initialValue) {
+  const [storedValue, setStoredValue] = useState(() => {
+    try {
+      const item = window.localStorage.getItem(key);
+      return item ? JSON.parse(item) : initialValue;
+    } catch (error) {
+      return initialValue;
+    }
+  });
+  
+  const setValue = (value) => {
+    try {
+      const valueToStore = value instanceof Function ? value(storedValue) : value;
+      setStoredValue(valueToStore);
+      window.localStorage.setItem(key, JSON.stringify(valueToStore));
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  };
+  
+  return [storedValue, setValue];
+}
+
+// Usage
+function App() {
+  const [name, setName] = useLocalStorage('name', '');
+  return <input value={name} onChange={e => setName(e.target.value)} />;
+}
+```
+</details>
+
 - **Q2:** How do you test custom hooks?
+<details>
+<summary>Answer</summary>
+Use React Testing Library's `renderHook`:
+```jsx
+import { renderHook, act } from '@testing-library/react';
+import { useCounter } from './useCounter';
+
+test('should increment counter', () => {
+  const { result } = renderHook(() => useCounter(0));
+  
+  expect(result.current.count).toBe(0);
+  
+  act(() => {
+    result.current.increment();
+  });
+  
+  expect(result.current.count).toBe(1);
+});
+```
+</details>
 
 ---
 
@@ -1127,12 +1382,70 @@ Overusing `useCallback` can hurt performance by:
 
 #### **📋 Beginner:**
 - **Q1:** What are the two main Rules of Hooks?
+<details>
+<summary>Answer</summary>
+1. **Only call hooks at the top level** - Don't call hooks inside loops, conditions, or nested functions
+2. **Only call hooks from React functions** - Call them from React function components or custom hooks, not regular JavaScript functions
+</details>
+
 - **Q2:** Why can't you call hooks inside loops or conditions?
+<details>
+<summary>Answer</summary>
+React relies on the **order of hook calls** to maintain state between renders. Calling hooks conditionally or in loops can change this order, causing:
+- **State to be associated with wrong variables**
+- **Unexpected behavior and bugs**
+- **Loss of state between renders**
+```jsx
+// ❌ Wrong - conditional hook call
+if (condition) {
+  const [state, setState] = useState();
+}
+
+// ✅ Correct - hook at top level
+const [state, setState] = useState();
+if (condition) {
+  // Use state here
+}
+```
+</details>
+
 - **Q3:** Where can hooks be called?
+<details>
+<summary>Answer</summary>
+Hooks can only be called from:
+- **React function components**
+- **Custom hooks** (functions starting with "use")
+- **Top level** of these functions (not inside loops, conditions, or nested functions)
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How does React keep track of hook state between renders?
+<details>
+<summary>Answer</summary>
+React uses a **linked list** to track hooks:
+- Each component instance has a **hooks list**
+- Hooks are called in the **same order** every render
+- React **matches hooks by position** in the list, not by name
+- This is why hook order must remain consistent
+</details>
+
 - **Q2:** What tools help enforce the Rules of Hooks?
+<details>
+<summary>Answer</summary>
+- **ESLint plugin**: `eslint-plugin-react-hooks` catches violations
+- **React DevTools**: Shows hook violations in development
+- **TypeScript**: Can help with some hook-related type safety
+```json
+// .eslintrc.js
+{
+  "plugins": ["react-hooks"],
+  "rules": {
+    "react-hooks/rules-of-hooks": "error",
+    "react-hooks/exhaustive-deps": "warn"
+  }
+}
+```
+</details>
 
 ---
 
@@ -1140,12 +1453,132 @@ Overusing `useCallback` can hurt performance by:
 
 #### **📋 Beginner:**
 - **Q1:** How do custom hooks help with code reuse?
+<details>
+<summary>Answer</summary>
+Custom hooks enable code reuse by:
+- **Extracting stateful logic** into reusable functions
+- **Sharing common patterns** across multiple components
+- **Avoiding code duplication** for similar functionality
+- **Creating component-agnostic logic** that can be used anywhere
+```jsx
+// Reusable across multiple components
+function useToggle(initialValue = false) {
+  const [value, setValue] = useState(initialValue);
+  const toggle = useCallback(() => setValue(v => !v), []);
+  return [value, toggle];
+}
+```
+</details>
+
 - **Q2:** What's the difference between custom hooks and HOCs for sharing logic?
+<details>
+<summary>Answer</summary>
+| Custom Hooks | HOCs |
+|--------------|------|
+| Function-based | Component-based |
+| Share stateful logic | Share component logic |
+| No wrapper components | Creates wrapper components |
+| Easier composition | Can cause wrapper hell |
+| Better with modern React | Legacy pattern |
+| Direct state access | Props-based communication |
+</details>
+
 - **Q3:** Can custom hooks return JSX?
+<details>
+<summary>Answer</summary>
+**No**, custom hooks should **not return JSX**. They should return:
+- **State values and setters**
+- **Computed values**
+- **Event handlers**
+- **Plain JavaScript values**
+If you need to share JSX, use **render props** or **compound components** instead.
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** Design a custom hook for handling form input state.
+<details>
+<summary>Answer</summary>
+```jsx
+function useForm(initialValues) {
+  const [values, setValues] = useState(initialValues);
+  const [errors, setErrors] = useState({});
+  
+  const handleChange = (name, value) => {
+    setValues(prev => ({ ...prev, [name]: value }));
+    // Clear error when user starts typing
+    if (errors[name]) {
+      setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+  };
+  
+  const setError = (name, error) => {
+    setErrors(prev => ({ ...prev, [name]: error }));
+  };
+  
+  const reset = () => {
+    setValues(initialValues);
+    setErrors({});
+  };
+  
+  const getInputProps = (name) => ({
+    value: values[name] || '',
+    onChange: (e) => handleChange(name, e.target.value),
+    error: errors[name]
+  });
+  
+  return {
+    values,
+    errors,
+    handleChange,
+    setError,
+    reset,
+    getInputProps
+  };
+}
+
+// Usage
+function LoginForm() {
+  const { values, getInputProps, setError } = useForm({ email: '', password: '' });
+  
+  return (
+    <form>
+      <input {...getInputProps('email')} placeholder="Email" />
+      <input {...getInputProps('password')} type="password" placeholder="Password" />
+    </form>
+  );
+}
+```
+</details>
+
 - **Q2:** How do you compose multiple custom hooks together?
+<details>
+<summary>Answer</summary>
+```jsx
+function useApiWithAuth(url) {
+  const { user, isAuthenticated } = useAuth(); // First custom hook
+  const { data, loading, error } = useApi(url, { // Second custom hook
+    enabled: isAuthenticated,
+    headers: { Authorization: `Bearer ${user?.token}` }
+  });
+  
+  return {
+    data,
+    loading,
+    error,
+    isAuthenticated,
+    user
+  };
+}
+
+// Combine with built-in hooks
+function usePersistedCounter() {
+  const [count, setCount] = useLocalStorage('count', 0); // Custom hook
+  const increment = useCallback(() => setCount(c => c + 1), [setCount]); // Built-in hook
+  
+  return { count, increment };
+}
+```
+</details>
 
 ---
 
