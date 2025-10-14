@@ -1590,12 +1590,117 @@ function usePersistedCounter() {
 
 #### **📋 Beginner:**
 - **Q1:** How do you create and provide context values?
+<details>
+<summary>Answer</summary>
+```jsx
+// 1. Create context
+const ThemeContext = React.createContext('light');
+
+// 2. Provide context value
+function App() {
+  const [theme, setTheme] = useState('dark');
+  
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      <Header />
+      <Main />
+    </ThemeContext.Provider>
+  );
+}
+
+// 3. Consume context
+function Header() {
+  const { theme, setTheme } = useContext(ThemeContext);
+  return <div className={theme}>Header</div>;
+}
+```
+</details>
+
 - **Q2:** What causes Context consumers to re-render?
+<details>
+<summary>Answer</summary>
+Context consumers re-render when:
+- **Context value changes** (reference comparison)
+- **Provider component re-renders** with a new value object
+- **Any part of the context value changes**
+```jsx
+// This causes re-renders on every parent render
+<Context.Provider value={{ user, theme }}>
+
+// Better - memoize the value
+const value = useMemo(() => ({ user, theme }), [user, theme]);
+<Context.Provider value={value}>
+```
+</details>
+
 - **Q3:** How do you consume context in functional components?
+<details>
+<summary>Answer</summary>
+Use the `useContext` hook:
+```jsx
+import { useContext } from 'react';
+
+function MyComponent() {
+  const contextValue = useContext(MyContext);
+  
+  // Use contextValue here
+  return <div>{contextValue.someProperty}</div>;
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you optimize Context to prevent unnecessary re-renders?
+<details>
+<summary>Answer</summary>
+**Optimization strategies:**
+1. **Memoize context value**:
+```jsx
+const value = useMemo(() => ({ user, actions }), [user]);
+```
+
+2. **Split contexts** by update frequency:
+```jsx
+<UserContext.Provider value={user}>
+  <ThemeContext.Provider value={theme}>
+    <App />
+  </ThemeContext.Provider>
+</UserContext.Provider>
+```
+
+3. **Memoize consumers**:
+```jsx
+const ExpensiveComponent = React.memo(() => {
+  const { theme } = useContext(ThemeContext);
+  return <div className={theme}>Content</div>;
+});
+```
+</details>
+
 - **Q2:** When should you use multiple contexts vs one large context?
+<details>
+<summary>Answer</summary>
+**Use multiple contexts when:**
+- Different parts of state change at **different frequencies**
+- Components need **different subsets** of data
+- You want to **avoid unnecessary re-renders**
+
+**Use single context when:**
+- Data is **tightly coupled** and changes together
+- **Simple applications** with minimal state
+- **Performance isn't a concern**
+
+```jsx
+// Multiple contexts approach
+<AuthContext.Provider value={auth}>
+  <ThemeContext.Provider value={theme}>
+    <SettingsContext.Provider value={settings}>
+      <App />
+    </SettingsContext.Provider>
+  </ThemeContext.Provider>
+</AuthContext.Provider>
+```
+</details>
 
 ---
 
@@ -1603,12 +1708,119 @@ function usePersistedCounter() {
 
 #### **📋 Beginner:**
 - **Q1:** What are the three core principles of Redux?
+<details>
+<summary>Answer</summary>
+1. **Single Source of Truth**: The entire application state is stored in one store
+2. **State is Read-Only**: State can only be changed by dispatching actions
+3. **Changes are made with Pure Functions**: Reducers are pure functions that specify how state changes
+</details>
+
 - **Q2:** What is an action in Redux?
+<details>
+<summary>Answer</summary>
+An action is a **plain JavaScript object** that describes what happened. It must have a `type` property:
+```jsx
+// Simple action
+const incrementAction = { type: 'INCREMENT' };
+
+// Action with payload
+const addTodoAction = {
+  type: 'ADD_TODO',
+  payload: {
+    id: 1,
+    text: 'Learn Redux',
+    completed: false
+  }
+};
+
+// Action creator function
+const addTodo = (text) => ({
+  type: 'ADD_TODO',
+  payload: { id: Date.now(), text, completed: false }
+});
+```
+</details>
+
 - **Q3:** What is a reducer and what rules must it follow?
+<details>
+<summary>Answer</summary>
+A reducer is a **pure function** that takes current state and action, returns new state. Rules:
+- **Pure function**: No side effects, same input = same output
+- **Immutable updates**: Never mutate state directly
+- **Handle unknown actions**: Return current state for unknown action types
+```jsx
+function todosReducer(state = [], action) {
+  switch (action.type) {
+    case 'ADD_TODO':
+      return [...state, action.payload]; // Immutable update
+    case 'TOGGLE_TODO':
+      return state.map(todo =>
+        todo.id === action.payload.id
+          ? { ...todo, completed: !todo.completed }
+          : todo
+      );
+    default:
+      return state; // Handle unknown actions
+  }
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How does middleware work in Redux?
+<details>
+<summary>Answer</summary>
+Middleware provides a **third-party extension point** between dispatching an action and reaching the reducer:
+```jsx
+// Custom middleware
+const loggerMiddleware = (store) => (next) => (action) => {
+  console.log('Dispatching:', action);
+  const result = next(action);
+  console.log('New state:', store.getState());
+  return result;
+};
+
+// Apply middleware
+const store = createStore(
+  rootReducer,
+  applyMiddleware(loggerMiddleware, thunk)
+);
+```
+**Common middleware**: Redux Thunk, Redux Saga, Redux Logger
+</details>
+
 - **Q2:** What is the purpose of normalizing state in Redux?
+<details>
+<summary>Answer</summary>
+Normalizing state **flattens nested data** for better performance and easier updates:
+```jsx
+// Non-normalized (bad)
+const state = {
+  posts: [
+    { id: 1, title: 'Post 1', author: { id: 1, name: 'John' } },
+    { id: 2, title: 'Post 2', author: { id: 1, name: 'John' } }
+  ]
+};
+
+// Normalized (good)
+const state = {
+  posts: {
+    byId: {
+      1: { id: 1, title: 'Post 1', authorId: 1 },
+      2: { id: 2, title: 'Post 2', authorId: 1 }
+    },
+    allIds: [1, 2]
+  },
+  authors: {
+    byId: {
+      1: { id: 1, name: 'John' }
+    },
+    allIds: [1]
+  }
+};
+```
+**Benefits**: Avoid duplication, easier updates, better performance
+</details>
 
 ---
 
@@ -1616,12 +1828,127 @@ function usePersistedCounter() {
 
 #### **📋 Beginner:**
 - **Q1:** What problems does Redux Toolkit solve?
+<details>
+<summary>Answer</summary>
+Redux Toolkit (RTK) solves common Redux problems:
+- **Too much boilerplate**: Simplifies action creators and reducers
+- **Complex store setup**: Provides `configureStore` with good defaults
+- **Accidental mutations**: Uses Immer for immutable updates
+- **DevTools setup**: Automatically includes Redux DevTools
+- **Async logic**: Built-in `createAsyncThunk` for async actions
+</details>
+
 - **Q2:** What is createSlice and what does it generate?
+<details>
+<summary>Answer</summary>
+`createSlice` is a function that generates Redux logic. It creates:
+- **Action creators**: Automatically generated from reducer names
+- **Reducer function**: Handles the actions
+- **Action types**: Based on slice name and reducer names
+```jsx
+const counterSlice = createSlice({
+  name: 'counter',
+  initialState: { value: 0 },
+  reducers: {
+    increment: (state) => {
+      state.value += 1; // Immer allows "mutations"
+    },
+    decrement: (state) => {
+      state.value -= 1;
+    },
+    incrementByAmount: (state, action) => {
+      state.value += action.payload;
+    }
+  }
+});
+
+// Auto-generated action creators
+export const { increment, decrement, incrementByAmount } = counterSlice.actions;
+export default counterSlice.reducer;
+```
+</details>
+
 - **Q3:** How does Redux Toolkit handle immutability?
+<details>
+<summary>Answer</summary>
+RTK uses **Immer** under the hood, which allows you to write "mutative" logic that actually produces immutable updates:
+```jsx
+// With RTK + Immer (looks like mutation, but isn't)
+const todosSlice = createSlice({
+  name: 'todos',
+  initialState: [],
+  reducers: {
+    addTodo: (state, action) => {
+      state.push(action.payload); // Immer handles immutability
+    },
+    toggleTodo: (state, action) => {
+      const todo = state.find(todo => todo.id === action.payload);
+      if (todo) {
+        todo.completed = !todo.completed; // Safe with Immer
+      }
+    }
+  }
+});
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What is createAsyncThunk and when would you use it?
+<details>
+<summary>Answer</summary>
+`createAsyncThunk` creates thunks for async operations and automatically dispatches lifecycle actions:
+```jsx
+const fetchUserById = createAsyncThunk(
+  'users/fetchById',
+  async (userId, { rejectWithValue }) => {
+    try {
+      const response = await api.fetchUser(userId);
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.message);
+    }
+  }
+);
+
+const usersSlice = createSlice({
+  name: 'users',
+  initialState: { users: [], loading: false, error: null },
+  extraReducers: (builder) => {
+    builder
+      .addCase(fetchUserById.pending, (state) => {
+        state.loading = true;
+      })
+      .addCase(fetchUserById.fulfilled, (state, action) => {
+        state.loading = false;
+        state.users.push(action.payload);
+      })
+      .addCase(fetchUserById.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
+      });
+  }
+});
+```
+**Use for**: API calls, any async operations, consistent loading states
+</details>
+
 - **Q2:** How does RTK Query compare to other data fetching solutions?
+<details>
+<summary>Answer</summary>
+**RTK Query vs other solutions:**
+
+| Feature | RTK Query | React Query | Apollo |
+|---------|-----------|-------------|---------|
+| **Cache management** | ✅ Automatic | ✅ Automatic | ✅ Automatic |
+| **Background refetch** | ✅ | ✅ | ✅ |
+| **Optimistic updates** | ✅ | ✅ | ✅ |
+| **Redux integration** | ✅ Built-in | ❌ | ❌ |
+| **GraphQL support** | ❌ | ✅ Limited | ✅ Native |
+| **Bundle size** | Medium | Small | Large |
+| **Learning curve** | Medium | Low | High |
+
+**RTK Query is best when**: Already using Redux, need tight integration, REST APIs
+</details>
 
 ---
 
@@ -1633,12 +1960,70 @@ function usePersistedCounter() {
 
 #### **📋 Beginner:**
 - **Q1:** What is the Virtual DOM and why does React use it?
+<details>
+<summary>Answer</summary>
+The Virtual DOM is a **JavaScript representation** of the real DOM kept in memory. React uses it because:
+- **Performance**: Faster to manipulate JavaScript objects than DOM
+- **Predictability**: Declarative updates are easier to reason about
+- **Batching**: Multiple changes can be batched into a single DOM update
+- **Cross-browser**: Abstracts browser differences
+</details>
+
 - **Q2:** How does the Virtual DOM improve performance?
+<details>
+<summary>Answer</summary>
+Virtual DOM improves performance through:
+1. **Diffing**: Compares new virtual DOM with previous version
+2. **Minimal updates**: Only changes necessary DOM nodes
+3. **Batching**: Groups multiple updates together
+4. **Avoiding layout thrashing**: Reduces browser reflows/repaints
+```jsx
+// React calculates minimal changes needed
+// Old: <div><span>0</span></div>
+// New: <div><span>1</span></div>
+// Only updates the text content, not the entire structure
+```
+</details>
+
 - **Q3:** Is the Virtual DOM always faster than direct DOM manipulation?
+<details>
+<summary>Answer</summary>
+**No**, Virtual DOM isn't always faster. It's slower for:
+- **Simple, targeted updates**: Direct DOM manipulation can be faster
+- **Single element changes**: Virtual DOM adds overhead
+- **Very small applications**: The abstraction cost outweighs benefits
+
+Virtual DOM is faster for:
+- **Complex UIs** with many elements
+- **Frequent updates** across multiple components
+- **Declarative programming** where manual optimization is hard
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** Describe the process from state change to DOM update in React.
+<details>
+<summary>Answer</summary>
+1. **State change triggered** (setState, hooks)
+2. **Component re-render** scheduled
+3. **New Virtual DOM tree** created
+4. **Diffing algorithm** compares old vs new Virtual DOM
+5. **Reconciliation** determines minimal changes needed
+6. **DOM mutations** applied to real DOM
+7. **Lifecycle methods** called (useEffect, etc.)
+8. **Browser re-paints** the updated UI
+</details>
+
 - **Q2:** What are the limitations of the Virtual DOM approach?
+<details>
+<summary>Answer</summary>
+**Limitations:**
+- **Memory overhead**: Keeps two DOM trees in memory
+- **Not always optimal**: Can be slower for simple updates
+- **Learning curve**: Abstraction layer to understand
+- **Bundle size**: Additional JavaScript code
+- **CPU overhead**: Diffing algorithm computation
+- **Not magic**: Still requires good programming practices
+</details>
 
 ---
 
@@ -1646,12 +2031,65 @@ function usePersistedCounter() {
 
 #### **📋 Beginner:**
 - **Q1:** What is reconciliation in React?
+<details>
+<summary>Answer</summary>
+Reconciliation is the **process of comparing** the new Virtual DOM tree with the previous one and determining what changes need to be made to the real DOM. It's React's "diffing" algorithm that makes updates efficient.
+</details>
+
 - **Q2:** What triggers the reconciliation process?
+<details>
+<summary>Answer</summary>
+Reconciliation is triggered by:
+- **State updates** (useState, setState)
+- **Props changes** from parent components
+- **Context value changes**
+- **Parent component re-renders**
+- **forceUpdate()** calls (not recommended)
+</details>
+
 - **Q3:** How does React handle different element types during reconciliation?
+<details>
+<summary>Answer</summary>
+React handles different scenarios:
+- **Same element type**: Compares attributes and recurses on children
+- **Different element types**: Destroys old tree and builds new one
+- **Component elements**: Calls component lifecycle methods
+```jsx
+// Same type - updates className only
+<div className="old" /> → <div className="new" />
+
+// Different type - destroys <div>, creates <span>
+<div>Hello</div> → <span>Hello</span>
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How does React's reconciliation algorithm achieve O(n) complexity?
+<details>
+<summary>Answer</summary>
+React's algorithm is O(n) through these assumptions:
+1. **Different element types** produce different trees (no cross-comparison)
+2. **Keys help identify** which children have changed, moved, or removed
+3. **Level-by-level comparison** instead of full tree comparison
+4. **Component boundaries** limit comparison scope
+
+Without these assumptions, general tree diffing would be O(n³).
+</details>
+
 - **Q2:** What happens when component types change during reconciliation?
+<details>
+<summary>Answer</summary>
+When component types change:
+1. **Old component unmounts** (componentWillUnmount, cleanup effects)
+2. **Old DOM nodes removed**
+3. **New component mounts** (constructor, componentDidMount, effects)
+4. **New DOM nodes inserted**
+5. **State is lost** (components are completely different instances)
+```jsx
+// This change destroys UserProfile and creates AdminProfile
+{isAdmin ? <AdminProfile /> : <UserProfile />}
+```
+</details>
 
 ---
 
@@ -1659,12 +2097,82 @@ function usePersistedCounter() {
 
 #### **📋 Beginner:**
 - **Q1:** What assumptions does React's diffing algorithm make?
+<details>
+<summary>Answer</summary>
+React's diffing algorithm makes two key assumptions:
+1. **Elements of different types** will produce different trees
+2. **Developers can hint** at which child elements may be stable across renders using keys
+
+These assumptions allow React to use a fast O(n) algorithm instead of O(n³).
+</details>
+
 - **Q2:** How does React handle list reconciliation?
+<details>
+<summary>Answer</summary>
+For lists, React:
+1. **Compares children by position** if no keys provided
+2. **Uses keys to match elements** across renders when available
+3. **Preserves component state** for elements with stable keys
+4. **Efficiently reorders** elements when keys indicate movement
+```jsx
+// Without keys - poor performance on reorder
+{items.map(item => <Item data={item} />)}
+
+// With keys - efficient reordering
+{items.map(item => <Item key={item.id} data={item} />)}
+```
+</details>
+
 - **Q3:** Why are keys important for the diffing algorithm?
+<details>
+<summary>Answer</summary>
+Keys are important because they:
+- **Help React identify** which items have changed, moved, or been removed
+- **Preserve component state** during list reordering
+- **Improve performance** by avoiding unnecessary DOM manipulations
+- **Prevent bugs** where component state gets mixed up
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What are the performance implications of changing all keys in a list?
+<details>
+<summary>Answer</summary>
+Changing all keys forces React to:
+- **Unmount all existing components** in the list
+- **Mount completely new components** for each item
+- **Lose all component state** (like input focus, scroll position)
+- **Perform expensive DOM operations** (create/destroy elements)
+```jsx
+// Bad - generates new keys every render
+{items.map((item, index) => 
+  <Item key={Math.random()} data={item} />
+)}
+
+// Good - stable keys
+{items.map(item => 
+  <Item key={item.id} data={item} />
+)}
+```
+</details>
+
 - **Q2:** How can poor key choices lead to bugs?
+<details>
+<summary>Answer</summary>
+Poor key choices can cause:
+- **State preservation bugs**: Input values staying with wrong items
+- **Animation glitches**: Transitions applying to wrong elements
+- **Performance issues**: Unnecessary re-renders and DOM operations
+- **Focus management problems**: Tab order and focus getting confused
+```jsx
+// Bug: using array index as key during reordering
+const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
+
+// When reordered, state sticks to index position, not logical item
+{items.map((item, index) => 
+  <input key={index} defaultValue={item.name} />
+)}
+```
+</details>
 
 ---
 
