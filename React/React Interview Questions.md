@@ -76,11 +76,15 @@ No, browsers cannot understand JSX directly. JSX is transpiled (converted) to re
 
 #### **🚀 Intermediate:**
 - **Q1:** What does this JSX code compile to?
+
+<details>
+<summary>Answer</summary>
+
+
 ```jsx
 const element = <h1 className="greeting">Hello, world!</h1>;
 ```
-<details>
-<summary>Answer</summary>
+
 
 ```javascript
 const element = React.createElement(
@@ -95,6 +99,7 @@ const element = React.createElement(
 <details>
 <summary>Answer</summary>
 Events in JSX are handled using camelCase event handlers like `onClick`. Synthetic events are React's wrapper around native events that provide consistent behavior across different browsers. They have the same interface as native events but are cross-browser compatible.
+
 
 ```jsx
 <button onClick={(e) => console.log(e)}>Click me</button>
@@ -118,6 +123,7 @@ A React component is a reusable piece of UI that accepts inputs (props) and retu
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 function Welcome(props) {
   return <h1>Hello, {props.name}!</h1>;
@@ -133,6 +139,7 @@ const Welcome = (props) => {
 - **Q3:** What is the basic structure of a class component?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 class Welcome extends React.Component {
@@ -155,6 +162,11 @@ class Welcome extends React.Component {
 </details>
 
 - **Q2:** Convert this class component to a functional component:
+
+<details>
+<summary>Answer</summary>
+
+
 ```jsx
 class Welcome extends React.Component {
   render() {
@@ -162,8 +174,8 @@ class Welcome extends React.Component {
   }
 }
 ```
-<details>
-<summary>Answer</summary>
+
+
 ```jsx
 function Welcome({ name }) {
   return <h1>Hello, {name}</h1>;
@@ -185,6 +197,8 @@ const Welcome = ({ name }) => {
 <details>
 <summary>Answer</summary>
 Props (properties) are read-only inputs passed from parent to child components. They are passed as attributes:
+
+
 ```jsx
 // Parent component
 <Welcome name="John" age={25} />
@@ -202,6 +216,8 @@ function Welcome(props) {
 State is mutable data that belongs to a component and can change over time. 
 - **Props**: Immutable, passed from parent, read-only
 - **State**: Mutable, owned by component, can be updated
+
+
 ```jsx
 const [count, setCount] = useState(0); // State
 <Counter initialValue={10} /> // Props
@@ -228,6 +244,8 @@ React will throw an error in development mode: "Cannot assign to read only prope
 <details>
 <summary>Answer</summary>
 When multiple child components need to share state, move the state to their closest common parent. The parent manages the state and passes it down as props.
+
+
 ```jsx
 // Parent manages shared state
 function App() {
@@ -250,6 +268,8 @@ function App() {
 - **Q1:** How do you render a React element to the DOM?
 <details>
 <summary>Answer</summary>
+
+
 ```jsx
 // React 18+
 import { createRoot } from 'react-dom/client';
@@ -275,6 +295,8 @@ The root element is the DOM element where React mounts and manages the entire ap
 <details>
 <summary>Answer</summary>
 Yes, you can have multiple React roots on the same page by creating multiple root elements and rendering different applications to each:
+
+
 ```jsx
 const root1 = createRoot(document.getElementById('app1'));
 const root2 = createRoot(document.getElementById('app2'));
@@ -289,6 +311,8 @@ root2.render(<App2 />);
 <summary>Answer</summary>
 - **ReactDOM.render()**: Legacy API (React 17 and earlier), synchronous rendering
 - **createRoot()**: New API (React 18+), enables concurrent features like automatic batching, transitions, and Suspense
+
+
 ```jsx
 // Old way
 ReactDOM.render(<App />, container);
@@ -319,6 +343,8 @@ React re-renders components when:
 <details>
 <summary>Answer</summary>
 You can conditionally render elements using JavaScript expressions:
+
+
 ```jsx
 // Using && operator
 {isLoggedIn && <WelcomeMessage />}
@@ -344,11 +370,15 @@ if (isLoggedIn) {
 </details>
 
 - **Q3:** What will this code render if `isLoggedIn` is false?
+
+<details>
+<summary>Answer</summary>
+
+
 ```jsx
 {isLoggedIn && <WelcomeMessage />}
 ```
-<details>
-<summary>Answer</summary>
+
 It will render nothing (no element). The logical AND operator returns `false` when the condition is false, and React doesn't render boolean values.
 </details>
 
@@ -357,11 +387,15 @@ It will render nothing (no element). The logical AND operator returns `false` wh
 <details>
 <summary>Answer</summary>
 - **&& operator**: Renders component or nothing
-  ```jsx
+  
+
+```jsx
   {isTrue && <Component />} // Renders Component or nothing
   ```
 - **Ternary operator**: Always renders something
-  ```jsx
+  
+
+```jsx
   {isTrue ? <ComponentA /> : <ComponentB />} // Always renders one component
   ```
 </details>
@@ -370,6 +404,8 @@ It will render nothing (no element). The logical AND operator returns `false` wh
 <details>
 <summary>Answer</summary>
 Use helper functions or switch statements for complex conditions:
+
+
 ```jsx
 const renderContent = () => {
   if (loading) return <Spinner />;
@@ -391,6 +427,8 @@ return <div>{renderContent()}</div>;
 <details>
 <summary>Answer</summary>
 Use the `map()` method to transform an array into JSX elements:
+
+
 ```jsx
 const items = ['apple', 'banana', 'orange'];
 const listItems = items.map((item, index) => 
@@ -404,6 +442,8 @@ return <ul>{listItems}</ul>;
 <details>
 <summary>Answer</summary>
 Keys are unique identifiers for list elements that help React identify which items have changed, been added, or removed. They improve performance by enabling efficient list updates and maintaining component state correctly during re-renders.
+
+
 ```jsx
 {users.map(user => <User key={user.id} data={user} />)}
 ```
@@ -426,6 +466,8 @@ Using array indices as keys can cause issues when the list order changes:
 - React might incorrectly preserve component state
 - Performance degradation during reordering
 - Input focus and scroll position bugs
+
+
 ```jsx
 // Bad - can cause issues
 {items.map((item, index) => <Item key={index} />)}
@@ -487,6 +529,8 @@ Examples: database IDs, UUIDs, or stable combinations of data fields.
 <summary>Answer</summary>
 - **componentDidMount()**: Called once after initial render (mounting phase)
 - **componentDidUpdate()**: Called after every re-render (updating phase), receives prevProps and prevState as parameters
+
+
 ```jsx
 componentDidUpdate(prevProps, prevState) {
   if (prevProps.userId !== this.props.userId) {
@@ -500,6 +544,8 @@ componentDidUpdate(prevProps, prevState) {
 <details>
 <summary>Answer</summary>
 Use `shouldComponentUpdate()` or `React.PureComponent`:
+
+
 ```jsx
 shouldComponentUpdate(nextProps, nextState) {
   return nextProps.id !== this.props.id;
@@ -525,6 +571,8 @@ class MyComponent extends React.PureComponent {
 <details>
 <summary>Answer</summary>
 `useState` is a Hook that lets you add state to functional components. It returns an array with the current state value and a setter function.
+
+
 ```jsx
 import { useState } from 'react';
 
@@ -545,6 +593,8 @@ function Counter() {
 `useState` returns an array with exactly two elements:
 1. **Current state value**: The current value of the state
 2. **Setter function**: A function to update the state value
+
+
 ```jsx
 const [state, setState] = useState(initialValue);
 ```
@@ -554,6 +604,8 @@ const [state, setState] = useState(initialValue);
 <details>
 <summary>Answer</summary>
 Call the setter function with the new value:
+
+
 ```jsx
 const [name, setName] = useState('');
 const [count, setCount] = useState(0);
@@ -569,6 +621,11 @@ setCount(prevCount => prevCount + 1);
 
 #### **🚀 Intermediate:**
 - **Q1:** What will happen when this button is clicked?
+
+<details>
+<summary>Answer</summary>
+
+
 ```jsx
 const [count, setCount] = useState(0);
 const handleClick = () => {
@@ -577,8 +634,7 @@ const handleClick = () => {
   console.log(count);
 };
 ```
-<details>
-<summary>Answer</summary>
+
 - `count` will only increase by 1 (not 2)
 - Console will log `0` (current value, not updated value)
 - Both `setCount` calls use the same `count` value (0), so both set it to 1
@@ -586,9 +642,14 @@ const handleClick = () => {
 </details>
 
 - **Q2:** How do you update state based on previous state correctly?
+</details>
+
+- **Q2:** How do you update state based on previous state correctly?
 <details>
 <summary>Answer</summary>
 Use the functional update pattern:
+
+
 ```jsx
 // Correct way
 setCount(prevCount => prevCount + 1);
@@ -611,6 +672,8 @@ setUser(prevUser => ({ ...prevUser, name: 'John' }));
 - After every render by default
 - After initial render (like componentDidMount)
 - After updates (like componentDidUpdate)
+
+
 ```jsx
 useEffect(() => {
   console.log('Component rendered');
@@ -622,6 +685,7 @@ useEffect(() => {
 <details>
 <summary>Answer</summary>
 Pass an empty dependency array `[]` as the second argument:
+
 ```jsx
 useEffect(() => {
   console.log('Runs only once after initial render');
@@ -636,6 +700,7 @@ The dependency array controls when the effect runs:
 - **No array**: Runs after every render
 - **Empty array `[]`**: Runs only once after initial render
 - **With dependencies `[dep1, dep2]`**: Runs when any dependency changes
+
 ```jsx
 useEffect(() => {
   fetchUser(userId);
@@ -648,6 +713,7 @@ useEffect(() => {
 <details>
 <summary>Answer</summary>
 Return a cleanup function from the effect:
+
 ```jsx
 useEffect(() => {
   const handleScroll = () => console.log('scrolling');
@@ -662,15 +728,30 @@ useEffect(() => {
 </details>
 
 - **Q2:** What will happen in this useEffect?
+
+<details>
+<summary>Answer</summary>
+
+
 ```jsx
 useEffect(() => {
   console.log('Effect runs');
   setCount(count + 1);
 }, [count]);
 ```
-<details>
-<summary>Answer</summary>
+
 This creates an **infinite loop**:
+1. Effect runs and updates `count`
+2. `count` change triggers effect again
+3. Effect runs and updates `count` again
+4. Process repeats infinitely
+
+**Fix**: Use functional update or different dependency.
+</details>
+
+---
+
+### 🎯 **useContext**
 1. Effect runs and updates `count`
 2. `count` change triggers effect again
 3. Effect runs and updates `count` again
@@ -690,6 +771,7 @@ This creates an **infinite loop**:
 <details>
 <summary>Answer</summary>
 `useContext` is a Hook that lets you consume context values in functional components without nesting:
+
 ```jsx
 const ThemeContext = React.createContext();
 
@@ -704,6 +786,7 @@ function MyComponent() {
 <details>
 <summary>Answer</summary>
 Use `React.createContext()`:
+
 ```jsx
 // Create context
 const UserContext = React.createContext();
@@ -724,6 +807,7 @@ function App() {
 <details>
 <summary>Answer</summary>
 A Context Provider is a component that supplies context values to all its descendant components. It accepts a `value` prop that will be available to all consuming components:
+
 ```jsx
 <ThemeContext.Provider value="dark">
   <App /> {/* All children can access "dark" theme */}
@@ -738,6 +822,7 @@ A Context Provider is a component that supplies context values to all its descen
 - **Split contexts**: Separate frequently changing data
 - **Memoize context value**: Use `useMemo` for object values
 - **Memoize components**: Use `React.memo` for consumers
+
 ```jsx
 const value = useMemo(() => ({ user, settings }), [user, settings]);
 <UserContext.Provider value={value}>
@@ -751,6 +836,7 @@ Split contexts when:
 - Different parts of data change at different frequencies
 - Different components need different subsets of data
 - You want to avoid unnecessary re-renders
+
 ```jsx
 // Instead of one large context
 <UserContext.Provider> // Split into
@@ -770,6 +856,7 @@ Split contexts when:
 - State has multiple sub-values
 - Next state depends on the previous one
 - You want predictable state transitions
+
 ```jsx
 const [state, dispatch] = useReducer(reducer, initialState);
 ```
@@ -782,6 +869,7 @@ const [state, dispatch] = useReducer(reducer, initialState);
 1. **reducer function**: `(state, action) => newState`
 2. **initial state**: The initial state value
 3. **init function** (optional): For lazy initialization
+
 ```jsx
 const [state, dispatch] = useReducer(reducer, initialState, init);
 ```
@@ -791,6 +879,7 @@ const [state, dispatch] = useReducer(reducer, initialState, init);
 <details>
 <summary>Answer</summary>
 A reducer is a pure function that takes current state and an action, then returns a new state:
+
 ```jsx
 function reducer(state, action) {
   switch (action.type) {
@@ -809,6 +898,7 @@ function reducer(state, action) {
 - **Q1:** How do you implement useReducer for a counter with increment, decrement, and reset actions?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 const initialState = { count: 0 };
 
@@ -861,6 +951,7 @@ function Counter() {
 - **Accessing DOM elements**: Focus inputs, scroll to elements
 - **Storing mutable values**: Previous values, timers, any mutable data
 - **Persisting values**: Across renders without causing re-renders
+
 ```jsx
 const inputRef = useRef(null);
 const countRef = useRef(0);
@@ -871,6 +962,7 @@ const countRef = useRef(0);
 <details>
 <summary>Answer</summary>
 Assign the ref to an element's `ref` attribute:
+
 ```jsx
 function MyComponent() {
   const inputRef = useRef(null);
@@ -893,6 +985,7 @@ function MyComponent() {
 <details>
 <summary>Answer</summary>
 **No**, changing `ref.current` does not cause a re-render. This is the key difference between refs and state:
+
 ```jsx
 const countRef = useRef(0);
 countRef.current = 5; // No re-render triggered
@@ -904,6 +997,7 @@ countRef.current = 5; // No re-render triggered
 <details>
 <summary>Answer</summary>
 Use `useRef` with `useEffect` to track previous values:
+
 ```jsx
 function usePrevious(value) {
   const ref = useRef();
@@ -944,6 +1038,7 @@ function MyComponent({ count }) {
 - You have expensive computations
 - You want to avoid recalculating on every render
 - The calculation depends on specific values
+
 ```jsx
 const expensiveValue = useMemo(() => {
   return someExpensiveCalculation(a, b);
@@ -975,6 +1070,7 @@ const expensiveValue = useMemo(() => {
 - **Overused on cheap calculations**: The memoization overhead exceeds the benefit
 - **Dependencies change frequently**: Defeats the purpose of memoization
 - **Used everywhere**: Creates unnecessary complexity and memory usage
+
 ```jsx
 // Anti-pattern - too simple
 const sum = useMemo(() => a + b, [a, b]);
@@ -988,6 +1084,7 @@ Include all values from component scope that are used inside `useMemo`:
 - **Props** used in the calculation
 - **State variables** used in the calculation
 - **Other computed values** used in the calculation
+
 ```jsx
 const result = useMemo(() => {
   return calculate(prop1, state1, localVar);
@@ -1006,6 +1103,7 @@ const result = useMemo(() => {
 `useCallback` is a Hook that memoizes functions. It's related to `useMemo` but specifically for functions:
 - **useCallback**: Returns a memoized function
 - **useMemo**: Returns a memoized value
+
 ```jsx
 const memoizedCallback = useCallback(() => {
   doSomething(a, b);
@@ -1025,6 +1123,7 @@ Use `useCallback` when:
 - Passing functions to memoized child components
 - Functions are dependencies of other hooks
 - Preventing unnecessary re-renders of child components
+
 ```jsx
 const Child = React.memo(({ onClick }) => <button onClick={onClick} />);
 
@@ -1046,6 +1145,11 @@ function Parent() {
 
 #### **🚀 Intermediate:**
 - **Q1:** Why doesn't this optimization work?
+
+<details>
+<summary>Answer</summary>
+
+
 ```jsx
 const Child = React.memo(({ onClick, data }) => {
   return <button onClick={onClick}>{data.name}</button>;
@@ -1058,11 +1162,11 @@ const Parent = () => {
   return <Child onClick={handleClick} data={data} />;
 };
 ```
-<details>
-<summary>Answer</summary>
+
 The optimization doesn't work because `data` is a **new object on every render**. Even though `onClick` is memoized, the `data` prop changes, causing `Child` to re-render.
 
 **Fix**: Memoize the data object too:
+
 ```jsx
 const data = useMemo(() => ({ name: 'Button' }), []);
 ```
@@ -1088,6 +1192,7 @@ Overusing `useCallback` can hurt performance by:
 <summary>Answer</summary>
 - **useEffect**: Runs **asynchronously** after DOM mutations and browser paint
 - **useLayoutEffect**: Runs **synchronously** after DOM mutations but before browser paint
+
 ```jsx
 useEffect(() => {
   // Runs after paint - won't block visual updates
@@ -1123,6 +1228,7 @@ Use `useLayoutEffect` when you need to:
 - **Q1:** How would you measure DOM elements before the browser paints?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 function MyComponent() {
   const [height, setHeight] = useState(0);
@@ -1163,6 +1269,7 @@ function MyComponent() {
 <details>
 <summary>Answer</summary>
 `useImperativeHandle` is a Hook that customizes the instance value exposed to parent components when using `ref`. It's typically used with `forwardRef`:
+
 ```jsx
 const MyInput = forwardRef((props, ref) => {
   useImperativeHandle(ref, () => ({
@@ -1188,6 +1295,7 @@ Use `useImperativeHandle` when you need to:
 - **Q3:** How do you expose methods from a child component to its parent?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Child component
 const CustomInput = forwardRef((props, ref) => {
@@ -1234,6 +1342,7 @@ function Parent() {
 - **Q2:** How do you create a custom input component that exposes a focus method?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 const FocusableInput = forwardRef(({ placeholder, ...props }, ref) => {
   const inputRef = useRef();
@@ -1276,6 +1385,7 @@ Custom hooks are JavaScript functions that:
 - **Start with "use"** (naming convention)
 - **Can call other hooks** inside them
 - **Allow sharing stateful logic** between components
+
 ```jsx
 function useCounter(initialValue = 0) {
   const [count, setCount] = useState(initialValue);
@@ -1300,6 +1410,7 @@ Create custom hooks to:
 <details>
 <summary>Answer</summary>
 **Yes**, custom hooks can use any built-in hooks or other custom hooks:
+
 ```jsx
 function useApi(url) {
   const [data, setData] = useState(null); // useState
@@ -1318,6 +1429,7 @@ function useApi(url) {
 - **Q1:** Create a custom hook called useLocalStorage that manages localStorage state.
 <details>
 <summary>Answer</summary>
+
 ```jsx
 function useLocalStorage(key, initialValue) {
   const [storedValue, setStoredValue] = useState(() => {
@@ -1354,6 +1466,7 @@ function App() {
 <details>
 <summary>Answer</summary>
 Use React Testing Library's `renderHook`:
+
 ```jsx
 import { renderHook, act } from '@testing-library/react';
 import { useCounter } from './useCounter';
@@ -1395,6 +1508,7 @@ React relies on the **order of hook calls** to maintain state between renders. C
 - **State to be associated with wrong variables**
 - **Unexpected behavior and bugs**
 - **Loss of state between renders**
+
 ```jsx
 // ❌ Wrong - conditional hook call
 if (condition) {
@@ -1435,6 +1549,7 @@ React uses a **linked list** to track hooks:
 - **ESLint plugin**: `eslint-plugin-react-hooks` catches violations
 - **React DevTools**: Shows hook violations in development
 - **TypeScript**: Can help with some hook-related type safety
+
 ```json
 // .eslintrc.js
 {
@@ -1460,6 +1575,7 @@ Custom hooks enable code reuse by:
 - **Sharing common patterns** across multiple components
 - **Avoiding code duplication** for similar functionality
 - **Creating component-agnostic logic** that can be used anywhere
+
 ```jsx
 // Reusable across multiple components
 function useToggle(initialValue = false) {
@@ -1498,6 +1614,7 @@ If you need to share JSX, use **render props** or **compound components** instea
 - **Q1:** Design a custom hook for handling form input state.
 <details>
 <summary>Answer</summary>
+
 ```jsx
 function useForm(initialValues) {
   const [values, setValues] = useState(initialValues);
@@ -1553,6 +1670,7 @@ function LoginForm() {
 - **Q2:** How do you compose multiple custom hooks together?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 function useApiWithAuth(url) {
   const { user, isAuthenticated } = useAuth(); // First custom hook
@@ -1592,6 +1710,7 @@ function usePersistedCounter() {
 - **Q1:** How do you create and provide context values?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // 1. Create context
 const ThemeContext = React.createContext('light');
@@ -1623,6 +1742,7 @@ Context consumers re-render when:
 - **Context value changes** (reference comparison)
 - **Provider component re-renders** with a new value object
 - **Any part of the context value changes**
+
 ```jsx
 // This causes re-renders on every parent render
 <Context.Provider value={{ user, theme }}>
@@ -1637,6 +1757,7 @@ const value = useMemo(() => ({ user, theme }), [user, theme]);
 <details>
 <summary>Answer</summary>
 Use the `useContext` hook:
+
 ```jsx
 import { useContext } from 'react';
 
@@ -1655,11 +1776,13 @@ function MyComponent() {
 <summary>Answer</summary>
 **Optimization strategies:**
 1. **Memoize context value**:
+
 ```jsx
 const value = useMemo(() => ({ user, actions }), [user]);
 ```
 
 2. **Split contexts** by update frequency:
+
 ```jsx
 <UserContext.Provider value={user}>
   <ThemeContext.Provider value={theme}>
@@ -1669,6 +1792,7 @@ const value = useMemo(() => ({ user, actions }), [user]);
 ```
 
 3. **Memoize consumers**:
+
 ```jsx
 const ExpensiveComponent = React.memo(() => {
   const { theme } = useContext(ThemeContext);
@@ -1689,6 +1813,7 @@ const ExpensiveComponent = React.memo(() => {
 - Data is **tightly coupled** and changes together
 - **Simple applications** with minimal state
 - **Performance isn't a concern**
+
 
 ```jsx
 // Multiple contexts approach
@@ -1719,6 +1844,7 @@ const ExpensiveComponent = React.memo(() => {
 <details>
 <summary>Answer</summary>
 An action is a **plain JavaScript object** that describes what happened. It must have a `type` property:
+
 ```jsx
 // Simple action
 const incrementAction = { type: 'INCREMENT' };
@@ -1748,6 +1874,7 @@ A reducer is a **pure function** that takes current state and action, returns ne
 - **Pure function**: No side effects, same input = same output
 - **Immutable updates**: Never mutate state directly
 - **Handle unknown actions**: Return current state for unknown action types
+
 ```jsx
 function todosReducer(state = [], action) {
   switch (action.type) {
@@ -1771,6 +1898,7 @@ function todosReducer(state = [], action) {
 <details>
 <summary>Answer</summary>
 Middleware provides a **third-party extension point** between dispatching an action and reaching the reducer:
+
 ```jsx
 // Custom middleware
 const loggerMiddleware = (store) => (next) => (action) => {
@@ -1793,6 +1921,7 @@ const store = createStore(
 <details>
 <summary>Answer</summary>
 Normalizing state **flattens nested data** for better performance and easier updates:
+
 ```jsx
 // Non-normalized (bad)
 const state = {
@@ -1845,6 +1974,7 @@ Redux Toolkit (RTK) solves common Redux problems:
 - **Action creators**: Automatically generated from reducer names
 - **Reducer function**: Handles the actions
 - **Action types**: Based on slice name and reducer names
+
 ```jsx
 const counterSlice = createSlice({
   name: 'counter',
@@ -1872,6 +2002,7 @@ export default counterSlice.reducer;
 <details>
 <summary>Answer</summary>
 RTK uses **Immer** under the hood, which allows you to write "mutative" logic that actually produces immutable updates:
+
 ```jsx
 // With RTK + Immer (looks like mutation, but isn't)
 const todosSlice = createSlice({
@@ -1897,6 +2028,7 @@ const todosSlice = createSlice({
 <details>
 <summary>Answer</summary>
 `createAsyncThunk` creates thunks for async operations and automatically dispatches lifecycle actions:
+
 ```jsx
 const fetchUserById = createAsyncThunk(
   'users/fetchById',
@@ -1977,6 +2109,7 @@ Virtual DOM improves performance through:
 2. **Minimal updates**: Only changes necessary DOM nodes
 3. **Batching**: Groups multiple updates together
 4. **Avoiding layout thrashing**: Reduces browser reflows/repaints
+
 ```jsx
 // React calculates minimal changes needed
 // Old: <div><span>0</span></div>
@@ -2054,6 +2187,7 @@ React handles different scenarios:
 - **Same element type**: Compares attributes and recurses on children
 - **Different element types**: Destroys old tree and builds new one
 - **Component elements**: Calls component lifecycle methods
+
 ```jsx
 // Same type - updates className only
 <div className="old" /> → <div className="new" />
@@ -2085,6 +2219,7 @@ When component types change:
 3. **New component mounts** (constructor, componentDidMount, effects)
 4. **New DOM nodes inserted**
 5. **State is lost** (components are completely different instances)
+
 ```jsx
 // This change destroys UserProfile and creates AdminProfile
 {isAdmin ? <AdminProfile /> : <UserProfile />}
@@ -2114,6 +2249,7 @@ For lists, React:
 2. **Uses keys to match elements** across renders when available
 3. **Preserves component state** for elements with stable keys
 4. **Efficiently reorders** elements when keys indicate movement
+
 ```jsx
 // Without keys - poor performance on reorder
 {items.map(item => <Item data={item} />)}
@@ -2142,6 +2278,7 @@ Changing all keys forces React to:
 - **Mount completely new components** for each item
 - **Lose all component state** (like input focus, scroll position)
 - **Perform expensive DOM operations** (create/destroy elements)
+
 ```jsx
 // Bad - generates new keys every render
 {items.map((item, index) => 
@@ -2163,6 +2300,7 @@ Poor key choices can cause:
 - **Animation glitches**: Transitions applying to wrong elements
 - **Performance issues**: Unnecessary re-renders and DOM operations
 - **Focus management problems**: Tab order and focus getting confused
+
 ```jsx
 // Bug: using array index as key during reordering
 const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
@@ -2184,6 +2322,7 @@ const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
 <summary>Answer</summary>
 - **Controlled components**: Form data is handled by React state. React controls the input value.
 - **Uncontrolled components**: Form data is handled by the DOM itself. Uses refs to access values.
+
 
 ```jsx
 // Controlled
@@ -2208,6 +2347,7 @@ function UncontrolledInput() {
 - **Q2:** How do you create a controlled input component?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 function ControlledForm() {
   const [formData, setFormData] = useState({
@@ -2259,6 +2399,7 @@ Use uncontrolled components when:
 - **Integration with non-React libraries**
 - **Performance optimization** for large forms
 - **Minimal validation** requirements
+
 ```jsx
 function UncontrolledForm() {
   const formRef = useRef();
@@ -2305,6 +2446,7 @@ function UncontrolledForm() {
 <details>
 <summary>Answer</summary>
 File inputs are always uncontrolled because their value cannot be set programmatically for security reasons:
+
 ```jsx
 function FileUpload() {
   const [selectedFile, setSelectedFile] = useState(null);
@@ -2345,6 +2487,7 @@ function FileUpload() {
 <details>
 <summary>Answer</summary>
 `React.memo` is a **higher-order component** that memoizes the result of a component. It only re-renders if props change (shallow comparison):
+
 ```jsx
 const ExpensiveComponent = React.memo(({ name, age }) => {
   console.log('Rendering ExpensiveComponent');
@@ -2372,6 +2515,7 @@ They work together to optimize performance:
 - **React.memo**: Prevents component re-renders
 - **useMemo**: Memoizes expensive calculations
 - **useCallback**: Memoizes function references
+
 
 ```jsx
 const Child = React.memo(({ items, onItemClick }) => {
@@ -2417,6 +2561,7 @@ React.memo doesn't prevent re-renders when:
 - **Props contain functions** that are recreated each render
 - **Context value changes** (for context consumers)
 - **Parent uses children** as props
+
 ```jsx
 // ❌ These cause re-renders despite React.memo
 <MemoComponent 
@@ -2441,6 +2586,7 @@ Memoization can hurt performance when:
 - **Dependencies change frequently**: Defeats the purpose
 - **Used everywhere**: Unnecessary memory usage and complexity
 - **Complex comparison logic**: Custom comparison functions are expensive
+
 ```jsx
 // ❌ Anti-patterns
 const sum = useMemo(() => a + b, [a, b]); // Too simple
@@ -2456,6 +2602,7 @@ const expensiveCalculation = useMemo(() => {
 - **Q2:** How do you properly memoize a component with object props?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Option 1: Memoize the object prop
 function Parent() {
@@ -2498,6 +2645,7 @@ Code splitting is **dividing your bundle** into smaller chunks that can be loade
 - **Better user experience**: App starts faster
 - **Reduced bandwidth**: Users don't download unused code
 - **Improved caching**: Changes to one part don't invalidate entire bundle
+
 ```jsx
 // Instead of one large bundle
 import HomePage from './HomePage';
@@ -2514,6 +2662,7 @@ const ContactPage = lazy(() => import('./ContactPage'));
 - **Q2:** How do you implement lazy loading with React.lazy?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 import { Suspense, lazy } from 'react';
 
@@ -2545,6 +2694,7 @@ function App() {
 - **Catches loading promises** from lazy components
 - **Shows fallback UI** while loading
 - **Automatically renders** the component when loaded
+
 ```jsx
 <Suspense fallback={<LoadingSpinner />}>
   <LazyComponent />
@@ -2566,23 +2716,27 @@ function App() {
 **Effective code splitting strategies:**
 
 1. **Route-based splitting**: Split by pages/routes
+
 ```jsx
 const Home = lazy(() => import('./pages/Home'));
 const About = lazy(() => import('./pages/About'));
 ```
 
 2. **Feature-based splitting**: Split by functionality
+
 ```jsx
 const AdminPanel = lazy(() => import('./features/admin/AdminPanel'));
 const UserDashboard = lazy(() => import('./features/user/Dashboard'));
 ```
 
 3. **Component-based splitting**: Split heavy components
+
 ```jsx
 const DataVisualization = lazy(() => import('./components/DataVisualization'));
 ```
 
 4. **Library splitting**: Split third-party libraries
+
 ```jsx
 const ChartComponent = lazy(() => 
   import('./ChartComponent').then(module => ({
@@ -2592,6 +2746,7 @@ const ChartComponent = lazy(() =>
 ```
 
 5. **Conditional splitting**: Load based on user permissions
+
 ```jsx
 const AdminTools = lazy(() => 
   userRole === 'admin' 
@@ -2604,6 +2759,7 @@ const AdminTools = lazy(() =>
 - **Q2:** How do you handle loading errors with lazy components?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 import { Suspense, lazy } from 'react';
 
@@ -2670,6 +2826,7 @@ function App() {
 - **Lazy loading components** with React.lazy
 - **Code splitting** at the component level
 - **Future**: Data fetching (experimental)
+
 ```jsx
 <Suspense fallback={<LoadingSpinner />}>
   <LazyComponent />
@@ -2681,6 +2838,7 @@ It catches "loading promises" thrown by components and shows fallback UI until r
 - **Q2:** How do you use Suspense with React.lazy?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 import { Suspense, lazy } from 'react';
 
@@ -2715,6 +2873,7 @@ A **fallback** is the UI shown while suspended components are loading. It can be
 - **Simple text**: `fallback="Loading..."`
 - **Components**: `fallback={<LoadingSpinner />}`
 - **Complex UI**: `fallback={<SkeletonLoader />}`
+
 ```jsx
 // Different fallback examples
 <Suspense fallback="Loading...">
@@ -2737,6 +2896,7 @@ A **fallback** is the UI shown while suspended components are loading. It can be
 - **Declarative loading states** without useEffect
 - **Automatic coordination** of multiple loading operations
 - **Better user experience** with coordinated loading
+
 
 ```jsx
 // Future experimental pattern
@@ -2762,6 +2922,7 @@ function App() {
 <details>
 <summary>Answer</summary>
 Nested Suspense boundaries allow **granular loading states**:
+
 ```jsx
 function App() {
   return (
@@ -2816,6 +2977,7 @@ React Router is a **client-side routing library** for React that enables navigat
 - **URL synchronization**: Keep URL in sync with UI state
 - **Navigation**: Handle browser back/forward buttons
 - **Deep linking**: Allow users to bookmark specific pages
+
 ```jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
@@ -2844,6 +3006,7 @@ function App() {
 | **Cleaner URLs** | **URLs have # symbol** |
 | **Better for production** | **Better for static hosting** |
 
+
 ```jsx
 // BrowserRouter - clean URLs
 <BrowserRouter>
@@ -2862,6 +3025,7 @@ function App() {
 - **Q3:** How do you create basic routes using Route components?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
 
@@ -2904,6 +3068,7 @@ function App() {
 | **Uses History API** | **Browser navigation** |
 | **SPA behavior** | **Traditional web behavior** |
 
+
 ```jsx
 // ❌ Anchor - causes page reload
 <a href="/about">About</a>
@@ -2924,6 +3089,7 @@ function App() {
 - **Q2:** How do you implement nested routing layouts?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 import { Outlet } from 'react-router-dom';
 
@@ -2975,6 +3141,7 @@ function App() {
 <details>
 <summary>Answer</summary>
 Route parameters are defined using **colon (`:`) syntax** in the route path:
+
 ```jsx
 <Routes>
   {/* Single parameter */}
@@ -2996,6 +3163,7 @@ Route parameters are defined using **colon (`:`) syntax** in the route path:
 <details>
 <summary>Answer</summary>
 Use the `useParams` hook to access route parameters:
+
 ```jsx
 import { useParams } from 'react-router-dom';
 
@@ -3036,6 +3204,7 @@ If a required parameter is missing, the route **won't match** and React Router w
 - Eventually show 404/catch-all route if no other routes match
 - `useParams` will return `undefined` for missing parameters
 
+
 ```jsx
 <Routes>
   <Route path="/users/:id" element={<UserProfile />} />
@@ -3061,6 +3230,7 @@ function UserProfile() {
 - **Q1:** How do you handle optional route parameters?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Method 1: Optional parameter with ?
 <Route path="/products/:category/:id?" element={<ProductPage />} />
@@ -3096,6 +3266,7 @@ function ProductSearch() {
 - **Q2:** How do you validate route parameters?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Custom hook for parameter validation
 function useValidatedParams(schema) {
@@ -3160,6 +3331,7 @@ const productLoader = ({ params }) => {
 <details>
 <summary>Answer</summary>
 Nested routes allow you to render components inside other components based on URL structure. They create **hierarchical routing**:
+
 ```jsx
 import { Outlet } from 'react-router-dom';
 
@@ -3196,6 +3368,7 @@ function Dashboard() {
 - **Marks the spot** where child routes should render
 - **Passes context** to child routes
 - **Handles route matching** automatically
+
 ```jsx
 function Layout() {
   return (
@@ -3232,6 +3405,7 @@ function ProfilePage() {
 - **Q3:** How do you structure components for nested routes?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // File structure
 src/
@@ -3281,6 +3455,7 @@ function App() {
 - **Q1:** How do you implement breadcrumbs with nested routes?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 import { useMatches } from 'react-router-dom';
 
@@ -3346,6 +3521,7 @@ function Breadcrumbs() {
 - **Q2:** How do you handle data loading for nested routes?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Using loaders (React Router v6.4+)
 const dashboardLoader = async () => {
@@ -3438,6 +3614,7 @@ function useNestedData() {
 You can redirect users using:
 
 **1. Navigate component (declarative)**:
+
 ```jsx
 import { Navigate } from 'react-router-dom';
 
@@ -3453,6 +3630,7 @@ function ProtectedPage() {
 ```
 
 **2. useNavigate hook (programmatic)**:
+
 ```jsx
 import { useNavigate } from 'react-router-dom';
 
@@ -3481,6 +3659,7 @@ function LoginForm() {
 | **Conditional rendering** | **Event handlers/effects** |
 | **Immediate redirect** | **Programmatic control** |
 
+
 ```jsx
 // Navigate - declarative, in render
 function App() {
@@ -3504,6 +3683,7 @@ function LoginButton() {
 - **Q3:** How do you implement protected routes?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Protected Route component
 function ProtectedRoute({ children }) {
@@ -3552,6 +3732,7 @@ function RoleProtectedRoute({ children, allowedRoles }) {
 - **Q1:** How do you preserve the intended destination after login redirects?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Protected route saves intended destination
 function ProtectedRoute({ children }) {
@@ -3609,6 +3790,7 @@ function useRedirectAfterLogin() {
 - **Q2:** How do you handle programmatic navigation with state?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 function ProductList() {
   const navigate = useNavigate();
@@ -3689,6 +3871,7 @@ function FormPage() {
 <details>
 <summary>Answer</summary>
 `useParams` returns an **object containing route parameters** as key-value pairs:
+
 ```jsx
 import { useParams } from 'react-router-dom';
 
@@ -3721,6 +3904,7 @@ function TypedComponent() {
 - **Q2:** How do you navigate programmatically using useNavigate?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 import { useNavigate } from 'react-router-dom';
 
@@ -3766,6 +3950,7 @@ function MyComponent() {
 <summary>Answer</summary>
 **Common React Router hooks:**
 
+
 ```jsx
 import { 
   useLocation,
@@ -3807,6 +3992,7 @@ function ComponentUsingHooks() {
 - **Q1:** How do you access query parameters and location state?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 import { useSearchParams, useLocation } from 'react-router-dom';
 
@@ -3888,6 +4074,7 @@ function useSearchParam(key, defaultValue) {
 - **Q2:** How do you implement navigation guards with React Router hooks?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 import { useEffect, useCallback } from 'react';
 import { useNavigate, useLocation, useBlocker } from 'react-router-dom';
@@ -3989,6 +4176,7 @@ Error Boundaries are **React components that catch JavaScript errors** anywhere 
 - **Lifecycle methods**
 - **Constructors of the whole tree below them**
 
+
 ```jsx
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -4022,6 +4210,7 @@ class ErrorBoundary extends React.Component {
 - **Q2:** How do you create an Error Boundary?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -4081,6 +4270,7 @@ Error Boundaries **do NOT catch** errors in:
 - **Server-side rendering**
 - **Errors in the error boundary itself**
 
+
 ```jsx
 // ❌ These errors are NOT caught by Error Boundaries
 function MyComponent() {
@@ -4130,6 +4320,7 @@ function MyComponent() {
 - **Q1:** How do you implement error logging in Error Boundaries?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Error reporting service integration
 import * as Sentry from '@sentry/react';
@@ -4213,6 +4404,7 @@ class ErrorBoundary extends React.Component {
 - **Q2:** How do you reset Error Boundaries after an error?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -4319,6 +4511,7 @@ function MyApp() {
 - **Send error reports to services**
 - **Perform side effects** (unlike getDerivedStateFromError)
 
+
 ```jsx
 class ErrorBoundary extends React.Component {
   componentDidCatch(error, errorInfo) {
@@ -4346,6 +4539,7 @@ class ErrorBoundary extends React.Component {
 | **For logging/reporting** | **For updating state** |
 | **Can access this** | **Static method** |
 | **Async operations OK** | **Synchronous only** |
+
 
 ```jsx
 class ErrorBoundary extends React.Component {
@@ -4392,6 +4586,7 @@ class ErrorBoundary extends React.Component {
 
 These are only available in **class components**.
 
+
 ```jsx
 // ❌ Cannot create error boundary with hooks
 function ErrorBoundary({ children }) {
@@ -4425,6 +4620,7 @@ function App() {
 - **Q1:** How do you integrate error boundaries with error monitoring services?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 import * as Sentry from '@sentry/react';
 import * as LogRocket from 'logrocket';
@@ -4542,6 +4738,7 @@ const SafeComponent = withErrorBoundary(MyComponent, {
 - **Q2:** How do you test error boundaries?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 import { render, screen } from '@testing-library/react';
 import ErrorBoundary from './ErrorBoundary';
@@ -4681,6 +4878,7 @@ Error Boundaries **don't catch async errors** because:
 - Promises and setTimeout execute **after the render cycle**
 - React can't associate async errors with specific components
 
+
 ```jsx
 // ❌ These errors are NOT caught by Error Boundaries
 function MyComponent() {
@@ -4735,6 +4933,8 @@ function MyComponent() {
 - **Q2:** How do you handle errors in async operations?
 <details>
 <summary>Answer</summary>
+
+
 ```jsx
 // Method 1: Try-catch with async/await
 function DataComponent() {
@@ -4816,6 +5016,7 @@ function ComponentWithAsyncError() {
 - **Q3:** How do you handle promise rejections in useEffect?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 function PromiseHandler() {
   const [data, setData] = useState(null);
@@ -4889,6 +5090,7 @@ function PromiseHandler() {
 - **Q1:** How do you create a global error handler for async operations?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Global error context
 const ErrorContext = createContext();
@@ -5001,6 +5203,7 @@ export function useAsyncOperation() {
 - **Q2:** How do you implement retry logic for failed async operations?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Custom hook with retry logic
 function useRetryableAsync(asyncFn, dependencies = [], options = {}) {
@@ -5207,6 +5410,7 @@ The **Context API** solves the **prop drilling problem** - passing data through 
 - **Component coupling** - Reduces dependencies between parent/child components
 - **Code maintainability** - Cleaner component hierarchy
 
+
 ```jsx
 // ❌ Prop drilling problem
 function App() {
@@ -5293,6 +5497,7 @@ function UserInfo() {
 - **Q2:** How do you avoid prop drilling using Context?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Step 1: Create Context
 const AppContext = createContext();
@@ -5430,6 +5635,7 @@ function App() {
 - **Performance critical** updates
 - **Testing** is easier with explicit dependencies
 
+
 ```jsx
 // ✅ Good use of Props
 function UserCard({ user, onEdit, onDelete }) {
@@ -5536,6 +5742,7 @@ const comparison = {
 - **Q1:** How do you optimize Context usage for large applications?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // 1. Split Context by Concern and Update Frequency
 const UserContext = createContext(); // Rarely changes
@@ -5789,6 +5996,7 @@ function ExpensiveComponent() {
 - **Q2:** How do you implement multiple contexts efficiently?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // 1. Context Composition Pattern
 function createContextComposer() {
@@ -6110,6 +6318,7 @@ function UserComponent() {
 | **Async Handling** | Manual (useEffect + useState) | Built-in with middleware (Thunk, Saga) |
 | **State Structure** | Flexible, any shape | Encourages normalized state |
 
+
 ```jsx
 // Context API Example
 const UserContext = createContext();
@@ -6179,6 +6388,7 @@ const login = (credentials) => async (dispatch) => {
 4. **React-only project** - No external dependencies preferred
 5. **Quick prototyping** - Fast development, minimal setup
 6. **Theme/UI state** - Simple global UI preferences
+
 
 ```jsx
 // Good Context use cases
@@ -6276,6 +6486,7 @@ function CartProvider({ children }) {
 5. **Performance critical** - Need fine-grained optimizations
 6. **Team collaboration** - Standardized patterns, predictable structure
 
+
 ```jsx
 // Good Redux use cases
 
@@ -6353,6 +6564,7 @@ const selectPostById = (state, postId) =>
 - **Scalability** - Handles complex state relationships
 
 **Decision Matrix:**
+
 ```jsx
 const decisionGuide = {
   projectSize: {
@@ -6395,6 +6607,7 @@ const decisionGuide = {
 | **Bundle Impact** | 0KB | ~2.5KB (RTK) |
 | **Update Efficiency** | Object equality checks | Shallow equality with selectors |
 | **Memory Usage** | Lower overhead | Higher (normalized state) |
+
 
 ```jsx
 // Context Performance Issues
@@ -6560,6 +6773,7 @@ function ContextComponent() {
 <summary>Answer</summary>
 **Decision Framework:**
 
+
 ```jsx
 // Decision Tree Function
 function chooseStateManagement(requirements) {
@@ -6657,6 +6871,7 @@ const enterpriseApp = chooseStateManagement({
 | **Jotai** | Atomic state | Fine-grained reactivity | New paradigm |
 | **Valtio** | Mutable state | Proxy-based, intuitive | Less predictable |
 | **React Query** | Server state | Caching, synchronization | Only for server state |
+
 
 ```jsx
 // Practical Examples
@@ -6795,6 +7010,7 @@ function App() {
 <summary>Answer</summary>
 Use **useEffect** for data fetching on mount:
 
+
 ```jsx
 function UserProfile({ userId }) {
   const [user, setUser] = useState(null);
@@ -6837,6 +7053,7 @@ function UserProfile({ userId }) {
 - **Performance** - Blocks rendering
 - **Side effects** - Render should be pure
 
+
 ```jsx
 // ❌ Wrong - fetches on every render
 function BadComponent() {
@@ -6873,6 +7090,7 @@ function GoodComponent() {
 | **Request cancellation** | AbortController | CancelToken |
 | **Timeout** | Manual | Built-in |
 
+
 ```jsx
 // fetch
 const fetchData = async () => {
@@ -6899,6 +7117,7 @@ const fetchData = async () => {
 <details>
 <summary>Answer</summary>
 **Race condition:** Multiple requests in flight, latest request might not be last response.
+
 
 ```jsx
 // ❌ Race condition problem
@@ -6960,6 +7179,7 @@ function SearchResults({ query }) {
 - **Q2:** How do you implement request cancellation?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Method 1: AbortController (fetch)
 function DataComponent() {
@@ -7034,6 +7254,7 @@ function useCancellableRequest() {
 <summary>Answer</summary>
 **No, you cannot make the useEffect callback async directly.**
 
+
 ```jsx
 // ❌ Wrong - useEffect callback cannot be async
 useEffect(async () => {
@@ -7068,6 +7289,7 @@ useEffect(() => {
 - **Q2:** How do you properly handle async operations in useEffect?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 function DataComponent() {
   const [data, setData] = useState(null);
@@ -7125,6 +7347,7 @@ function DataComponent() {
 - **Q3:** How do you clean up async operations in useEffect?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Method 1: Cancellation flag
 useEffect(() => {
@@ -7185,6 +7408,7 @@ function Component() {
 - **Q1:** How do you handle component unmounting during async operations?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Custom hook for safe async operations
 function useSafeAsync() {
@@ -7244,6 +7468,7 @@ function useIsMounted() {
 - **Q2:** How do you implement proper error handling for async useEffect operations?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 function useAsyncError() {
   const [, setError] = useState();
@@ -7328,6 +7553,7 @@ function useAsyncOperation() {
 <summary>Answer</summary>
 **Suspense** allows components to "wait" for data and show fallback UI while loading.
 
+
 ```jsx
 // Component that uses Suspense-compatible data fetching
 function UserProfile({ userId }) {
@@ -7369,6 +7595,7 @@ function Dashboard() {
 <details>
 <summary>Answer</summary>
 **Concurrent rendering** allows React to pause and resume work, making apps more responsive.
+
 
 ```jsx
 // Before: Blocking rendering
@@ -7436,6 +7663,7 @@ function DataView() {
 3. **SSR complexity** - Server-side rendering needs special handling
 4. **Error boundaries required** - Need error boundaries for error handling
 
+
 ```jsx
 // ❌ Won't work - regular fetch doesn't support Suspense
 function UserProfile() {
@@ -7476,6 +7704,7 @@ function App() {
 - **Q1:** How do you implement data fetching libraries that work with Suspense?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Basic Suspense-compatible cache
 class SuspenseCache {
@@ -7565,6 +7794,7 @@ function UserProfile() {
 - **Q2:** How do you handle error boundaries with Suspense data fetching?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Suspense-aware Error Boundary
 class SuspenseErrorBoundary extends Component {
@@ -7661,6 +7891,7 @@ function AppWithReset() {
 <summary>Answer</summary>
 **Automatic batching** groups multiple state updates into a single re-render for better performance.
 
+
 ```jsx
 // React 18 - All these updates are batched automatically
 function App() {
@@ -7702,6 +7933,7 @@ function App() {
 <details>
 <summary>Answer</summary>
 **Performance improvements:**
+
 
 ```jsx
 // Without batching (React 17 behavior)
@@ -7750,6 +7982,7 @@ function Component() {
 | **Native events** | ❌ Not batched | ✅ Batched |
 | **fetch callbacks** | ❌ Not batched | ✅ Batched |
 
+
 ```jsx
 // React 17 vs 18 comparison
 function Example() {
@@ -7792,6 +8025,7 @@ function Example() {
 <details>
 <summary>Answer</summary>
 Use **flushSync** to force synchronous updates:
+
 
 ```jsx
 import { flushSync } from 'react-dom';
@@ -7856,6 +8090,7 @@ function FormWithValidation() {
 <details>
 <summary>Answer</summary>
 **Testing considerations:**
+
 
 ```jsx
 // Test might need act() for async updates
@@ -7940,6 +8175,7 @@ test('automatic batching reduces renders', () => {
 <summary>Answer</summary>
 **useTransition** marks updates as non-urgent, letting React prioritize more important updates.
 
+
 ```jsx
 import { useTransition, useState } from 'react';
 
@@ -7987,6 +8223,7 @@ function SearchApp() {
 - **Q2:** How do you mark updates as transitions?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 function App() {
   const [tab, setTab] = useState('home');
@@ -8046,6 +8283,7 @@ function SearchWithDeferred() {
 <details>
 <summary>Answer</summary>
 **isPending** indicates if any transition updates are currently pending.
+
 
 ```jsx
 function DataTable() {
@@ -8116,6 +8354,7 @@ function useTransitionState(initialState) {
 - **Q1:** How do transitions improve user experience in large lists?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 function ContactList() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -8189,6 +8428,7 @@ function OptimizedList({ items }) {
 <details>
 <summary>Answer</summary>
 **Avoid transitions for:**
+
 
 ```jsx
 // ❌ Don't use for urgent updates
@@ -8268,6 +8508,7 @@ function AnimatedButton({ onClick }) {
 <summary>Answer</summary>
 **useDeferredValue** lets you defer updates to a value during urgent updates.
 
+
 ```jsx
 import { useDeferredValue, useState } from 'react';
 
@@ -8321,6 +8562,7 @@ function SearchResults({ query }) {
 | **isPending** | Provides pending state | No pending indicator |
 | **Best for** | Manual optimization | Component props |
 
+
 ```jsx
 // useTransition - you control the deferring
 function TransitionExample() {
@@ -8372,6 +8614,7 @@ function DeferredExample() {
 <details>
 <summary>Answer</summary>
 **Use useDeferredValue for:**
+
 
 ```jsx
 // 1. Search/Filter inputs
@@ -8445,6 +8688,7 @@ function MapWithSearch() {
 - **Q1:** How do you implement debounced search with useDeferredValue?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Method 1: Pure useDeferredValue (React handles timing)
 function SearchWithDeferred() {
@@ -8565,6 +8809,7 @@ function SmartSearch() {
 - **Q2:** What are the performance implications of useDeferredValue?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Performance monitoring with useDeferredValue
 function PerformanceExample() {
@@ -8700,6 +8945,7 @@ function OptimizedComponent() {
 <summary>Answer</summary>
 **Concurrent rendering** allows React to pause, resume, and prioritize work to keep the app responsive.
 
+
 ```jsx
 // Before React 18: Blocking rendering
 function App() {
@@ -8759,6 +9005,7 @@ function App() {
 <details>
 <summary>Answer</summary>
 **UX improvements:**
+
 
 ```jsx
 // Example: Responsive search
@@ -8835,6 +9082,7 @@ function App() {
 <summary>Answer</summary>
 **Minimal changes needed** - Most apps benefit automatically:
 
+
 ```jsx
 // 1. Update to React 18 and createRoot
 // Before
@@ -8897,6 +9145,7 @@ function OptimizedComponent() {
 - **Q1:** How does concurrent rendering affect component lifecycle?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Lifecycle methods may be called multiple times
 class MyComponent extends Component {
@@ -8964,6 +9213,7 @@ function SafeComponent() {
 - **Q2:** What are the implications of concurrent rendering for third-party libraries?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Libraries need to be concurrent-safe
 // ❌ Problem: Library that mutates during render
@@ -9078,6 +9328,7 @@ function TestConcurrentSafety() {
 2. Sends chunks as components render
 3. Browser displays content progressively
 
+
 ```jsx
 // React 18 streaming with renderToPipeableStream
 import { renderToPipeableStream } from 'react-dom/server';
@@ -9141,6 +9392,7 @@ async function BlogPosts() {
 **Performance improvements:**
 
 1. **Faster Time to First Byte (TTFB)**:
+
 ```jsx
 // Traditional SSR timeline:
 // 0ms: Request received
@@ -9155,6 +9407,7 @@ async function BlogPosts() {
 ```
 
 2. **Progressive rendering**:
+
 ```jsx
 function StreamingApp() {
   return (
@@ -9188,6 +9441,7 @@ function StreamingApp() {
 - **Reduced layout shift** - Skeletons prevent content jumping
 
 4. **Parallel data fetching**:
+
 ```jsx
 // Multiple Suspense boundaries fetch in parallel
 function Dashboard() {
@@ -9220,6 +9474,7 @@ function Dashboard() {
 <details>
 <summary>Answer</summary>
 **Suspense enables streaming** by defining boundaries where rendering can be paused and resumed:
+
 
 ```jsx
 // Suspense boundaries create streaming chunks
@@ -9269,6 +9524,7 @@ async function PostsList() {
 4. **Async resolves**: Component renders, content streams to browser
 5. **Client hydrates**: JavaScript makes streamed content interactive
 
+
 ```jsx
 // Advanced Suspense patterns for streaming
 function BlogPage() {
@@ -9314,6 +9570,7 @@ function BlogPage() {
 <details>
 <summary>Answer</summary>
 **Selective hydration** allows parts of the page to become interactive before the entire page has hydrated:
+
 
 ```jsx
 // React 18 automatically enables selective hydration
@@ -9470,6 +9727,7 @@ function InteractionBasedHydration({ children, triggerEvents = ['click', 'focus'
 **Implementation challenges:**
 
 1. **Error handling in streams**:
+
 ```jsx
 // Robust error handling for streaming
 function handleRequest(req, res) {
@@ -9525,6 +9783,7 @@ class StreamingErrorBoundary extends React.Component {
 ```
 
 2. **SEO and crawlers**:
+
 ```jsx
 // Detect crawlers and use traditional SSR
 function handleRequest(req, res) {
@@ -9566,6 +9825,7 @@ function App() {
 ```
 
 3. **Data fetching complexity**:
+
 ```jsx
 // Coordinating multiple data sources
 function ComplexPage() {
@@ -9622,6 +9882,7 @@ const TimeoutAwareComponent = withTimeout(SlowComponent, 3000);
 ```
 
 4. **State management challenges**:
+
 ```jsx
 // Hydration mismatches with streaming
 function StreamingCounter() {
@@ -9679,6 +9940,7 @@ function useServerState(initialState) {
 <summary>Answer</summary>
 **Webpack** is a module bundler that packages JavaScript files and assets for browsers.
 
+
 ```javascript
 // webpack.config.js
 module.exports = {
@@ -9714,6 +9976,7 @@ module.exports = {
 - **Q2:** What are the main concepts in Webpack (entry, output, loaders, plugins)?
 <details>
 <summary>Answer</summary>
+
 ```javascript
 module.exports = {
   // Entry: Starting point
@@ -9765,6 +10028,7 @@ module.exports = {
 - **Q3:** How does Webpack handle different file types?
 <details>
 <summary>Answer</summary>
+
 ```javascript
 module.exports = {
   module: {
@@ -9830,6 +10094,7 @@ function App() {
 - **Q1:** How do you optimize Webpack builds for production?
 <details>
 <summary>Answer</summary>
+
 ```javascript
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
@@ -9896,6 +10161,7 @@ module.exports = {
 - **Q2:** How do you implement code splitting with Webpack?
 <details>
 <summary>Answer</summary>
+
 ```javascript
 // 1. Dynamic imports in React
 import { lazy, Suspense } from 'react';
@@ -9972,6 +10238,7 @@ import(/* webpackChunkName: "lodash" */ 'lodash').then((_) => {
 <summary>Answer</summary>
 **Babel** is a JavaScript compiler that transforms modern JS/JSX into browser-compatible code.
 
+
 ```javascript
 // Input (JSX + ES6)
 const App = () => {
@@ -10000,6 +10267,7 @@ const App = () => {
 - **Q2:** How does JSX get transformed into JavaScript?
 <details>
 <summary>Answer</summary>
+
 ```javascript
 // JSX input
 const element = (
@@ -10039,6 +10307,7 @@ const element = _jsxs("div", {
 - **Q3:** What are Babel presets and plugins?
 <details>
 <summary>Answer</summary>
+
 ```javascript
 // .babelrc or babel.config.js
 module.exports = {
@@ -10089,6 +10358,7 @@ module.exports = {
 - **Q1:** How do you configure Babel for optimal React builds?
 <details>
 <summary>Answer</summary>
+
 ```javascript
 // babel.config.js
 module.exports = {
@@ -10149,6 +10419,7 @@ module.exports = {
 - **Q2:** What are the differences between different JSX transforms?
 <details>
 <summary>Answer</summary>
+
 ```javascript
 // Classic JSX Transform (React 16 and earlier)
 // Requires React import
@@ -10207,6 +10478,7 @@ function App() {
 - **Q1:** What optimizations should you apply for React production builds?
 <details>
 <summary>Answer</summary>
+
 ```javascript
 // Essential production optimizations
 const optimizations = {
@@ -10265,6 +10537,7 @@ module.exports = {
 - **Q2:** How do you minify and compress React applications?
 <details>
 <summary>Answer</summary>
+
 ```javascript
 // Webpack configuration for minification
 const TerserPlugin = require('terser-webpack-plugin');
@@ -10328,6 +10601,7 @@ app.use(compression({
 <summary>Answer</summary>
 **Tree shaking** removes unused code from bundles.
 
+
 ```javascript
 // utils.js
 export const add = (a, b) => a + b;
@@ -10383,6 +10657,7 @@ import debounce from 'lodash/debounce';
 - **Q1:** How do you analyze and optimize bundle sizes?
 <details>
 <summary>Answer</summary>
+
 ```javascript
 // 1. Bundle analyzer
 const BundleAnalyzerPlugin = require('webpack-bundle-analyzer').BundleAnalyzerPlugin;
@@ -10446,6 +10721,7 @@ module.exports = {
 - **Q2:** What are the best practices for caching strategies in React apps?
 <details>
 <summary>Answer</summary>
+
 ```javascript
 // 1. Content-based hashing
 module.exports = {
@@ -10537,6 +10813,7 @@ function App() {
 <summary>Answer</summary>
 **HOC** is a function that takes a component and returns a new enhanced component.
 
+
 ```jsx
 // Basic HOC pattern
 function withLogger(WrappedComponent) {
@@ -10568,6 +10845,7 @@ const LoggedButton = withLogger(Button);
 - **Q2:** How do you create a simple HOC?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // 1. Simple authentication HOC
 function withAuth(WrappedComponent) {
@@ -10629,6 +10907,7 @@ const EnhancedProfile = withAuth(withLoading(withErrorBoundary(Profile)));
 <details>
 <summary>Answer</summary>
 **HOCs solve cross-cutting concerns:**
+
 
 ```jsx
 // 1. Authentication
@@ -10701,6 +10980,7 @@ const EnhancedComponent = withAuth(
 <details>
 <summary>Answer</summary>
 **HOC problems:**
+
 
 ```jsx
 // 1. Wrapper hell
@@ -10775,6 +11055,7 @@ function withTheme(WrappedComponent) {
 - **Q2:** How do HOCs compare to hooks and render props?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // 1. Same functionality, different patterns
 
@@ -10840,6 +11121,7 @@ const comparison = {
 - **Q2:** How do HOCs compare to hooks and render props?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // 1. Same functionality, different patterns
 
@@ -10912,6 +11194,7 @@ const comparison = {
 <summary>Answer</summary>
 **Render props** is a pattern where a component receives a function as a prop that returns JSX.
 
+
 ```jsx
 // Basic render props pattern
 function DataProvider({ render }) {
@@ -10959,6 +11242,7 @@ function DataProvider({ children }) {
 - **Q2:** How do you implement a component using render props?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Mouse position tracker
 function Mouse({ render }) {
@@ -11043,6 +11327,7 @@ function Fetcher({ url, children }) {
 - **Q3:** What are the benefits of render props?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // 1. Flexible rendering
 function DataList({ data, children }) {
@@ -11115,6 +11400,7 @@ function Permission({ role, children }) {
 - **Q1:** How do render props compare to HOCs and hooks?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Same counter logic, different patterns
 
@@ -11177,6 +11463,7 @@ const patterns = {
 - **Q2:** How do you avoid callback hell with render props?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // ❌ Callback hell problem
 <UserProvider>
@@ -11278,6 +11565,7 @@ function RenderPropComposer({ providers, children }) {
 <summary>Answer</summary>
 **Portals** render children into a DOM node outside the parent component's hierarchy.
 
+
 ```jsx
 import { createPortal } from 'react-dom';
 
@@ -11326,6 +11614,7 @@ function App() {
 - **Q2:** How do you create a portal?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 import { createPortal } from 'react-dom';
 
@@ -11414,6 +11703,7 @@ function NotificationProvider({ children }) {
 <summary>Answer</summary>
 **Events bubble through React tree, not DOM tree.**
 
+
 ```jsx
 function App() {
   const handleClick = (e) => {
@@ -11481,6 +11771,7 @@ function PortalComponent() {
 - **Q1:** How do you handle portal cleanup and memory leaks?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Custom portal hook with cleanup
 function usePortal(elementId) {
@@ -11584,6 +11875,7 @@ function App() {
 - **Q2:** How do portals work with SSR?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Portals don't work with SSR - they're client-only
 function Modal({ children, isOpen }) {
@@ -11671,6 +11963,7 @@ const ClientOnlyPortal = dynamic(
 <summary>Answer</summary>
 **Fragments** let you group elements without adding extra DOM nodes.
 
+
 ```jsx
 // ❌ Without Fragments - adds unnecessary div
 function UserInfo() {
@@ -11733,6 +12026,7 @@ function TableRow() {
 - **Q2:** What are the different ways to use Fragments?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // 1. React.Fragment syntax
 function Component() {
@@ -11802,6 +12096,7 @@ function ConditionalComponent({ showExtra }) {
 - **Q3:** When should you use Fragments vs div wrappers?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // ✅ Use Fragments when:
 
@@ -11889,6 +12184,7 @@ const guidelines = {
 - **Q1:** Can Fragments have keys? When is this useful?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // ✅ React.Fragment can have keys (short syntax cannot)
 function CommentList({ comments }) {
@@ -11968,6 +12264,7 @@ function ChatMessage({ message }) {
 - **Q2:** How do Fragments affect CSS styling and layout?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // CSS Grid example
 .grid-container {
@@ -12083,6 +12380,7 @@ function DataTable({ rows }) {
 <summary>Answer</summary>
 **Keys** help React identify which items have changed, been added, or removed in lists.
 
+
 ```jsx
 // ❌ Without keys - performance issues and bugs
 function UserList({ users }) {
@@ -12148,6 +12446,7 @@ function TodoItem({ todo }) {
 - **Q2:** What happens if you use array indices as keys?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // ❌ Using index as key - problematic for dynamic lists
 function BadTodoList({ todos, onDelete }) {
@@ -12205,6 +12504,7 @@ const okayToUseIndex = [
 - **Q3:** What makes a good key for list items?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // ✅ GOOD: Stable unique identifiers
 function ProductList({ products }) {
@@ -12297,6 +12597,7 @@ function generateKeys(items) {
 - **Q1:** How do keys affect component state during list reordering?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Demonstration of key impact on component state
 
@@ -12415,6 +12716,7 @@ const statePreservation = {
 - **Q2:** How do you handle keys in dynamic lists?
 <details>
 <summary>Answer</summary>
+
 ```jsx
 // Dynamic list with filtering, sorting, and CRUD operations
 
@@ -12570,6 +12872,7 @@ const keyStrategies = {
 - **React "hydrates"** the static HTML, making it interactive
 - **Event listeners attached**, state restored, components become functional
 
+
 ```jsx
 // Server renders this HTML
 <div id="root">
@@ -12607,6 +12910,7 @@ hydrateRoot(document.getElementById('root'), <App />);
 6. **Initializes state** and makes components interactive
 7. **Reports mismatches** if server/client don't match
 
+
 ```jsx
 // During hydration React does:
 function HydrationExample() {
@@ -12642,6 +12946,7 @@ function HydrationExample() {
 - **Random values** (Math.random(), Date.now())
 - **Browser-only APIs** used during SSR
 - **Conditional rendering** based on client-only state
+
 
 ```jsx
 // ❌ Causes hydration mismatch
@@ -12695,6 +13000,7 @@ function ClientOnlyComponent() {
 **Debugging hydration issues:**
 
 1. **Enable detailed warnings**:
+
 ```jsx
 // React 18 - more detailed hydration errors
 import { hydrateRoot } from 'react-dom/client';
@@ -12704,6 +13010,7 @@ const root = hydrateRoot(document.getElementById('root'), <App />);
 ```
 
 2. **Use development tools**:
+
 ```jsx
 // Add debug logging
 function DebugComponent() {
@@ -12721,6 +13028,7 @@ function DebugComponent() {
 ```
 
 3. **Compare server vs client output**:
+
 ```jsx
 // Custom hook to detect hydration
 function useHydrated() {
@@ -12749,6 +13057,7 @@ function DebuggingComponent() {
 ```
 
 4. **Use suppressHydrationWarning strategically**:
+
 ```jsx
 // Only suppress when you know why there's a mismatch
 function TimestampComponent() {
@@ -12773,6 +13082,7 @@ function TimestampComponent() {
 <details>
 <summary>Answer</summary>
 **Progressive hydration** loads and hydrates components incrementally:
+
 
 ```jsx
 // Custom hook for intersection-based hydration
@@ -12902,6 +13212,7 @@ function PriorityHydration({ priority, children, fallback }) {
 - **Image optimization** - Built-in image component with optimization
 - **TypeScript support** - First-class TypeScript integration
 
+
 ```jsx
 // File structure creates routes automatically
 pages/
@@ -12935,6 +13246,7 @@ export default HomePage;
 | **SSR** | Request time | Server | Good | Excellent | Dynamic content |
 | **SSG** | Build time | CDN | Excellent | Excellent | Static content |
 | **CSR** | Runtime | Browser | Poor initial | Poor | Interactive apps |
+
 
 ```jsx
 // SSG - getStaticProps (build time)
@@ -13004,6 +13316,7 @@ function Dashboard() {
 3. **New version** replaces old static page
 4. **Subsequent requests** get updated version
 
+
 ```jsx
 // ISR with revalidate
 export async function getStaticProps() {
@@ -13068,6 +13381,7 @@ export async function getStaticProps({ params }) {
 <details>
 <summary>Answer</summary>
 **Decision matrix:**
+
 
 ```jsx
 // Use getStaticProps when:
@@ -13155,6 +13469,7 @@ function ProductPage({ product, relatedProducts }) {
 <details>
 <summary>Answer</summary>
 **API routes** in Next.js create serverless functions:
+
 
 ```jsx
 // pages/api/users.js - Basic API route
@@ -13295,6 +13610,7 @@ export default async function handler(req, res) {
 - **Zero client JavaScript** - Reduces bundle size
 - **Seamless integration** - Work with client components
 
+
 ```jsx
 // Server Component (runs on server)
 import { db } from './database';
@@ -13350,6 +13666,7 @@ function PostInteractions({ postId }) {
 | **Data access** | Direct backend | API calls |
 | **Re-rendering** | Server re-render | Client re-render |
 | **State** | No client state | Full client state |
+
 
 ```jsx
 // Traditional SSR
@@ -13419,6 +13736,7 @@ function PostFilter() {
 **Server Components benefits:**
 
 1. **Reduced bundle size**:
+
 ```jsx
 // Before: Large chart library ships to client
 import { LargeChartLibrary } from 'heavy-charts';
@@ -13435,6 +13753,7 @@ async function ServerDashboard() {
 ```
 
 2. **Direct backend access**:
+
 ```jsx
 // Before: Need API routes
 function UserProfile({ userId }) {
@@ -13467,6 +13786,7 @@ async function ServerUserProfile({ userId }) {
 - **Reduced attack surface** - Less client-side code
 
 5. **Simplified data fetching**:
+
 ```jsx
 // Complex client-side data fetching
 function ComplexComponent() {
@@ -13507,6 +13827,7 @@ async function ServerComponent() {
 <details>
 <summary>Answer</summary>
 **Server and Client Components composition patterns:**
+
 
 ```jsx
 // Server Component (default)
@@ -13621,6 +13942,7 @@ function InteractiveReviews({ initialReviews, productId }) {
 **Server Component limitations:**
 
 1. **No client-side state**:
+
 ```jsx
 // ❌ Can't use useState, useEffect, etc.
 function ServerComponent() {
@@ -13646,6 +13968,7 @@ function ClientCounter() {
 ```
 
 2. **No browser APIs**:
+
 ```jsx
 // ❌ No access to window, document, localStorage
 function ServerComponent() {
@@ -13669,6 +13992,7 @@ function ClientComponent() {
 ```
 
 3. **No event handlers**:
+
 ```jsx
 // ❌ No onClick, onChange, etc.
 function ServerComponent() {
@@ -13698,6 +14022,7 @@ function ClientButton() {
 ```
 
 4. **Serialization constraints**:
+
 ```jsx
 // ❌ Can't pass functions, classes, or complex objects
 async function ServerParent() {
@@ -13730,6 +14055,7 @@ async function ServerParent() {
 ```
 
 5. **No context consumption**:
+
 ```jsx
 // ❌ Can't use useContext in Server Components
 function ServerComponent() {
