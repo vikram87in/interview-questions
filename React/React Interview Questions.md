@@ -2180,12 +2180,161 @@ const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
 
 #### **📋 Beginner:**
 - **Q1:** What's the difference between controlled and uncontrolled components?
+<details>
+<summary>Answer</summary>
+- **Controlled components**: Form data is handled by React state. React controls the input value.
+- **Uncontrolled components**: Form data is handled by the DOM itself. Uses refs to access values.
+
+```jsx
+// Controlled
+function ControlledInput() {
+  const [value, setValue] = useState('');
+  return (
+    <input 
+      value={value} 
+      onChange={(e) => setValue(e.target.value)} 
+    />
+  );
+}
+
+// Uncontrolled
+function UncontrolledInput() {
+  const inputRef = useRef();
+  return <input ref={inputRef} defaultValue="initial" />;
+}
+```
+</details>
+
 - **Q2:** How do you create a controlled input component?
+<details>
+<summary>Answer</summary>
+```jsx
+function ControlledForm() {
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    message: ''
+  });
+  
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  return (
+    <form>
+      <input 
+        name="name"
+        value={formData.name}
+        onChange={handleChange}
+        placeholder="Name"
+      />
+      <input 
+        name="email"
+        value={formData.email}
+        onChange={handleChange}
+        placeholder="Email"
+      />
+      <textarea 
+        name="message"
+        value={formData.message}
+        onChange={handleChange}
+        placeholder="Message"
+      />
+    </form>
+  );
+}
+```
+</details>
+
 - **Q3:** When might you use an uncontrolled component?
+<details>
+<summary>Answer</summary>
+Use uncontrolled components when:
+- **Simple forms** where you only need the value on submit
+- **File inputs** (always uncontrolled in React)
+- **Integration with non-React libraries**
+- **Performance optimization** for large forms
+- **Minimal validation** requirements
+```jsx
+function UncontrolledForm() {
+  const formRef = useRef();
+  
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    const formData = new FormData(formRef.current);
+    const data = Object.fromEntries(formData);
+    console.log(data);
+  };
+  
+  return (
+    <form ref={formRef} onSubmit={handleSubmit}>
+      <input name="username" defaultValue="" />
+      <input type="file" name="avatar" />
+      <button type="submit">Submit</button>
+    </form>
+  );
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What are the trade-offs between controlled and uncontrolled components?
+<details>
+<summary>Answer</summary>
+**Controlled Components:**
+- ✅ **Pros**: Immediate validation, dynamic behavior, consistent with React patterns
+- ❌ **Cons**: More code, potential performance issues with large forms
+
+**Uncontrolled Components:**
+- ✅ **Pros**: Less code, better performance, easier integration with non-React code
+- ❌ **Cons**: Less control, harder validation, not reactive to state changes
+
+| Feature | Controlled | Uncontrolled |
+|---------|------------|--------------|
+| **Data source** | React state | DOM |
+| **Validation** | Real-time | On submit |
+| **Performance** | Can be slower | Faster |
+| **Code complexity** | Higher | Lower |
+</details>
+
 - **Q2:** How do you handle file inputs (which are always uncontrolled)?
+<details>
+<summary>Answer</summary>
+File inputs are always uncontrolled because their value cannot be set programmatically for security reasons:
+```jsx
+function FileUpload() {
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [preview, setPreview] = useState(null);
+  
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    setSelectedFile(file);
+    
+    if (file && file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onloadend = () => setPreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+  
+  return (
+    <div>
+      <input 
+        type="file" 
+        onChange={handleFileChange}
+        accept="image/*"
+      />
+      {preview && <img src={preview} alt="Preview" />}
+      {selectedFile && <p>Selected: {selectedFile.name}</p>}
+    </div>
+  );
+}
+```
+</details>
 
 ---
 
@@ -2193,12 +2342,148 @@ const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
 
 #### **📋 Beginner:**
 - **Q1:** What is React.memo and when should you use it?
+<details>
+<summary>Answer</summary>
+`React.memo` is a **higher-order component** that memoizes the result of a component. It only re-renders if props change (shallow comparison):
+```jsx
+const ExpensiveComponent = React.memo(({ name, age }) => {
+  console.log('Rendering ExpensiveComponent');
+  return <div>{name} is {age} years old</div>;
+});
+
+// Only re-renders when name or age props change
+function Parent() {
+  const [count, setCount] = useState(0);
+  return (
+    <>
+      <ExpensiveComponent name="John" age={30} />
+      <button onClick={() => setCount(c => c + 1)}>Count: {count}</button>
+    </>
+  );
+}
+```
+**Use when**: Component renders often with same props, expensive rendering logic
+</details>
+
 - **Q2:** How do React.memo, useMemo, and useCallback work together?
+<details>
+<summary>Answer</summary>
+They work together to optimize performance:
+- **React.memo**: Prevents component re-renders
+- **useMemo**: Memoizes expensive calculations
+- **useCallback**: Memoizes function references
+
+```jsx
+const Child = React.memo(({ items, onItemClick }) => {
+  return (
+    <ul>
+      {items.map(item => (
+        <li key={item.id} onClick={() => onItemClick(item.id)}>
+          {item.name}
+        </li>
+      ))}
+    </ul>
+  );
+});
+
+function Parent({ data }) {
+  const [count, setCount] = useState(0);
+  
+  // Memoize expensive calculation
+  const expensiveItems = useMemo(() => {
+    return data.filter(item => item.active).sort((a, b) => a.name.localeCompare(b.name));
+  }, [data]);
+  
+  // Memoize callback to prevent Child re-renders
+  const handleItemClick = useCallback((id) => {
+    console.log('Clicked item:', id);
+  }, []);
+  
+  return (
+    <>
+      <Child items={expensiveItems} onItemClick={handleItemClick} />
+      <button onClick={() => setCount(c => c + 1)}>Count: {count}</button>
+    </>
+  );
+}
+```
+</details>
+
 - **Q3:** When does React.memo not prevent re-renders?
+<details>
+<summary>Answer</summary>
+React.memo doesn't prevent re-renders when:
+- **Props contain new object/array references** each render
+- **Props contain functions** that are recreated each render
+- **Context value changes** (for context consumers)
+- **Parent uses children** as props
+```jsx
+// ❌ These cause re-renders despite React.memo
+<MemoComponent 
+  data={{ name: 'John' }}  // New object each render
+  onClick={() => {}}       // New function each render
+  style={{ color: 'red' }} // New object each render
+/>
+
+// ✅ These don't cause unnecessary re-renders
+const data = useMemo(() => ({ name: 'John' }), []);
+const onClick = useCallback(() => {}, []);
+const style = useMemo(() => ({ color: 'red' }), []);
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** When can memoization actually hurt performance?
+<details>
+<summary>Answer</summary>
+Memoization can hurt performance when:
+- **Overused on cheap calculations**: Memoization overhead > calculation cost
+- **Dependencies change frequently**: Defeats the purpose
+- **Used everywhere**: Unnecessary memory usage and complexity
+- **Complex comparison logic**: Custom comparison functions are expensive
+```jsx
+// ❌ Anti-patterns
+const sum = useMemo(() => a + b, [a, b]); // Too simple
+const obj = useMemo(() => ({ ...data }), [data]); // Dependencies change often
+
+// ✅ Good use cases
+const expensiveCalculation = useMemo(() => {
+  return heavyProcessing(largeDataset);
+}, [largeDataset]);
+```
+</details>
+
 - **Q2:** How do you properly memoize a component with object props?
+<details>
+<summary>Answer</summary>
+```jsx
+// Option 1: Memoize the object prop
+function Parent() {
+  const [name, setName] = useState('John');
+  const [age, setAge] = useState(30);
+  
+  const user = useMemo(() => ({ name, age }), [name, age]);
+  
+  return <UserProfile user={user} />;
+}
+
+// Option 2: Custom comparison function
+const UserProfile = React.memo(({ user, settings }) => {
+  return <div>{user.name} - {settings.theme}</div>;
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.user.name === nextProps.user.name &&
+    prevProps.user.age === nextProps.user.age &&
+    prevProps.settings.theme === nextProps.settings.theme
+  );
+});
+
+// Option 3: Destructure props to avoid object comparison
+const UserCard = React.memo(({ name, age, theme }) => {
+  return <div className={theme}>{name} is {age}</div>;
+});
+```
+</details>
 
 ---
 
@@ -2206,12 +2491,172 @@ const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
 
 #### **📋 Beginner:**
 - **Q1:** What is code splitting and why is it useful?
+<details>
+<summary>Answer</summary>
+Code splitting is **dividing your bundle** into smaller chunks that can be loaded on demand. Benefits:
+- **Faster initial load**: Only load what's needed immediately
+- **Better user experience**: App starts faster
+- **Reduced bandwidth**: Users don't download unused code
+- **Improved caching**: Changes to one part don't invalidate entire bundle
+```jsx
+// Instead of one large bundle
+import HomePage from './HomePage';
+import AboutPage from './AboutPage';
+import ContactPage from './ContactPage';
+
+// Split into separate chunks loaded when needed
+const HomePage = lazy(() => import('./HomePage'));
+const AboutPage = lazy(() => import('./AboutPage'));
+const ContactPage = lazy(() => import('./ContactPage'));
+```
+</details>
+
 - **Q2:** How do you implement lazy loading with React.lazy?
+<details>
+<summary>Answer</summary>
+```jsx
+import { Suspense, lazy } from 'react';
+
+// Lazy load components
+const Dashboard = lazy(() => import('./Dashboard'));
+const Profile = lazy(() => import('./Profile'));
+const Settings = lazy(() => import('./Settings'));
+
+function App() {
+  return (
+    <div>
+      <Suspense fallback={<div>Loading...</div>}>
+        <Routes>
+          <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/profile" element={<Profile />} />
+          <Route path="/settings" element={<Settings />} />
+        </Routes>
+      </Suspense>
+    </div>
+  );
+}
+```
+</details>
+
 - **Q3:** What is Suspense and how does it work with lazy loading?
+<details>
+<summary>Answer</summary>
+`Suspense` is a component that **handles loading states** for lazy components. It:
+- **Catches loading promises** from lazy components
+- **Shows fallback UI** while loading
+- **Automatically renders** the component when loaded
+```jsx
+<Suspense fallback={<LoadingSpinner />}>
+  <LazyComponent />
+</Suspense>
+
+// Can wrap multiple lazy components
+<Suspense fallback={<div>Loading page...</div>}>
+  <Header />
+  <LazyMainContent />
+  <LazySidebar />
+</Suspense>
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What are the best strategies for code splitting in a React app?
+<details>
+<summary>Answer</summary>
+**Effective code splitting strategies:**
+
+1. **Route-based splitting**: Split by pages/routes
+```jsx
+const Home = lazy(() => import('./pages/Home'));
+const About = lazy(() => import('./pages/About'));
+```
+
+2. **Feature-based splitting**: Split by functionality
+```jsx
+const AdminPanel = lazy(() => import('./features/admin/AdminPanel'));
+const UserDashboard = lazy(() => import('./features/user/Dashboard'));
+```
+
+3. **Component-based splitting**: Split heavy components
+```jsx
+const DataVisualization = lazy(() => import('./components/DataVisualization'));
+```
+
+4. **Library splitting**: Split third-party libraries
+```jsx
+const ChartComponent = lazy(() => 
+  import('./ChartComponent').then(module => ({
+    default: module.ChartComponent
+  }))
+);
+```
+
+5. **Conditional splitting**: Load based on user permissions
+```jsx
+const AdminTools = lazy(() => 
+  userRole === 'admin' 
+    ? import('./AdminTools')
+    : Promise.resolve({ default: () => null })
+);
+```
+</details>
+
 - **Q2:** How do you handle loading errors with lazy components?
+<details>
+<summary>Answer</summary>
+```jsx
+import { Suspense, lazy } from 'react';
+
+// Error boundary for lazy loading errors
+class LazyErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    console.error('Lazy loading error:', error, errorInfo);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div>
+          <h2>Something went wrong loading this page.</h2>
+          <button onClick={() => window.location.reload()}>
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+    return this.props.children;
+  }
+}
+
+// Usage with retry logic
+const LazyComponent = lazy(() =>
+  import('./MyComponent').catch(error => {
+    console.error('Failed to load component:', error);
+    // Return fallback component
+    return { default: () => <div>Failed to load component</div> };
+  })
+);
+
+function App() {
+  return (
+    <LazyErrorBoundary>
+      <Suspense fallback={<LoadingSpinner />}>
+        <LazyComponent />
+      </Suspense>
+    </LazyErrorBoundary>
+  );
+}
+```
+</details>
 
 ---
 
@@ -2219,12 +2664,140 @@ const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
 
 #### **📋 Beginner:**
 - **Q1:** What is Suspense and what can it be used for?
+<details>
+<summary>Answer</summary>
+`Suspense` is a React component that lets you **handle loading states** declaratively. Currently used for:
+- **Lazy loading components** with React.lazy
+- **Code splitting** at the component level
+- **Future**: Data fetching (experimental)
+```jsx
+<Suspense fallback={<LoadingSpinner />}>
+  <LazyComponent />
+</Suspense>
+```
+It catches "loading promises" thrown by components and shows fallback UI until resolved.
+</details>
+
 - **Q2:** How do you use Suspense with React.lazy?
+<details>
+<summary>Answer</summary>
+```jsx
+import { Suspense, lazy } from 'react';
+
+// Create lazy component
+const HeavyComponent = lazy(() => import('./HeavyComponent'));
+
+function App() {
+  return (
+    <div>
+      <h1>My App</h1>
+      <Suspense fallback={<div>Loading heavy component...</div>}>
+        <HeavyComponent />
+      </Suspense>
+    </div>
+  );
+}
+
+// Can also wrap multiple lazy components
+<Suspense fallback={<PageLoader />}>
+  <Header />
+  <LazyMainContent />
+  <LazySidebar />
+  <Footer />
+</Suspense>
+```
+</details>
+
 - **Q3:** What is a fallback in Suspense?
+<details>
+<summary>Answer</summary>
+A **fallback** is the UI shown while suspended components are loading. It can be:
+- **Simple text**: `fallback="Loading..."`
+- **Components**: `fallback={<LoadingSpinner />}`
+- **Complex UI**: `fallback={<SkeletonLoader />}`
+```jsx
+// Different fallback examples
+<Suspense fallback="Loading...">
+<Suspense fallback={<div className="spinner" />}>
+<Suspense fallback={
+  <div className="loading-container">
+    <h3>Loading awesome content...</h3>
+    <ProgressBar />
+  </div>
+}>
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How will Suspense work with data fetching in the future?
+<details>
+<summary>Answer</summary>
+**Future Suspense for data fetching** (experimental):
+- Components can **"suspend"** while data loads
+- **Declarative loading states** without useEffect
+- **Automatic coordination** of multiple loading operations
+- **Better user experience** with coordinated loading
+
+```jsx
+// Future experimental pattern
+function UserProfile({ userId }) {
+  // This would suspend the component until data loads
+  const user = use(fetchUser(userId)); // Experimental 'use' hook
+  
+  return <div>{user.name}</div>;
+}
+
+function App() {
+  return (
+    <Suspense fallback={<ProfileSkeleton />}>
+      <UserProfile userId={123} />
+    </Suspense>
+  );
+}
+```
+**Note**: This is still experimental and APIs may change.
+</details>
+
 - **Q2:** How do you handle nested Suspense boundaries?
+<details>
+<summary>Answer</summary>
+Nested Suspense boundaries allow **granular loading states**:
+```jsx
+function App() {
+  return (
+    <Suspense fallback={<PageLoader />}>
+      <Header />
+      
+      <main>
+        <Suspense fallback={<SidebarSkeleton />}>
+          <LazySidebar />
+        </Suspense>
+        
+        <section>
+          <Suspense fallback={<ContentSkeleton />}>
+            <LazyMainContent />
+            
+            <Suspense fallback={<WidgetLoader />}>
+              <LazyWidget />
+            </Suspense>
+          </Suspense>
+        </section>
+      </main>
+      
+      <Suspense fallback={<FooterSkeleton />}>
+        <LazyFooter />
+      </Suspense>
+    </Suspense>
+  );
+}
+```
+
+**Benefits of nesting:**
+- **Independent loading**: Each boundary loads independently
+- **Better UX**: Show content as it becomes available
+- **Granular fallbacks**: Different loading UI for different sections
+- **Parallel loading**: Multiple components can load simultaneously
+</details>
 
 ---
 
@@ -2236,12 +2809,162 @@ const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
 
 #### **📋 Beginner:**
 - **Q1:** What is React Router and why is it needed?
+<details>
+<summary>Answer</summary>
+React Router is a **client-side routing library** for React that enables navigation between different components/pages without full page refreshes. It's needed because:
+- **SPAs need routing**: Single Page Applications need to handle multiple views
+- **URL synchronization**: Keep URL in sync with UI state
+- **Navigation**: Handle browser back/forward buttons
+- **Deep linking**: Allow users to bookmark specific pages
+```jsx
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/about" element={<About />} />
+        <Route path="/contact" element={<Contact />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+</details>
+
 - **Q2:** What's the difference between BrowserRouter and HashRouter?
+<details>
+<summary>Answer</summary>
+| BrowserRouter | HashRouter |
+|---------------|------------|
+| **URL format**: `/home/profile` | **URL format**: `/#/home/profile` |
+| **Uses HTML5 History API** | **Uses URL hash** |
+| **Requires server config** | **Works without server config** |
+| **Cleaner URLs** | **URLs have # symbol** |
+| **Better for production** | **Better for static hosting** |
+
+```jsx
+// BrowserRouter - clean URLs
+<BrowserRouter>
+  <Routes>...</Routes>
+</BrowserRouter>
+// URLs: example.com/home, example.com/about
+
+// HashRouter - hash URLs  
+<HashRouter>
+  <Routes>...</Routes>
+</HashRouter>
+// URLs: example.com/#/home, example.com/#/about
+```
+</details>
+
 - **Q3:** How do you create basic routes using Route components?
+<details>
+<summary>Answer</summary>
+```jsx
+import { BrowserRouter, Routes, Route } from 'react-router-dom';
+
+function App() {
+  return (
+    <BrowserRouter>
+      <nav>
+        <Link to="/">Home</Link>
+        <Link to="/products">Products</Link>
+        <Link to="/about">About</Link>
+      </nav>
+      
+      <Routes>
+        {/* Exact path matching */}
+        <Route path="/" element={<HomePage />} />
+        <Route path="/products" element={<ProductsPage />} />
+        <Route path="/about" element={<AboutPage />} />
+        
+        {/* Dynamic route with parameter */}
+        <Route path="/products/:id" element={<ProductDetail />} />
+        
+        {/* Catch-all route for 404 */}
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** What's the difference between Link and regular anchor tags?
+<details>
+<summary>Answer</summary>
+| Link | Anchor Tag |
+|------|------------|
+| **Client-side navigation** | **Full page reload** |
+| **Preserves app state** | **Loses app state** |
+| **Faster navigation** | **Slower (page reload)** |
+| **Uses History API** | **Browser navigation** |
+| **SPA behavior** | **Traditional web behavior** |
+
+```jsx
+// ❌ Anchor - causes page reload
+<a href="/about">About</a>
+
+// ✅ Link - client-side navigation
+<Link to="/about">About</Link>
+
+// NavLink - active state support
+<NavLink 
+  to="/about" 
+  className={({ isActive }) => isActive ? 'active' : ''}
+>
+  About
+</NavLink>
+```
+</details>
+
 - **Q2:** How do you implement nested routing layouts?
+<details>
+<summary>Answer</summary>
+```jsx
+import { Outlet } from 'react-router-dom';
+
+// Layout component
+function DashboardLayout() {
+  return (
+    <div className="dashboard">
+      <nav>
+        <Link to="/dashboard">Overview</Link>
+        <Link to="/dashboard/users">Users</Link>
+        <Link to="/dashboard/settings">Settings</Link>
+      </nav>
+      <main>
+        <Outlet /> {/* Child routes render here */}
+      </main>
+    </div>
+  );
+}
+
+// App routing
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<HomePage />} />
+        
+        {/* Nested routes */}
+        <Route path="/dashboard" element={<DashboardLayout />}>
+          <Route index element={<DashboardOverview />} />
+          <Route path="users" element={<UsersPage />} />
+          <Route path="users/:id" element={<UserDetail />} />
+          <Route path="settings" element={<SettingsPage />} />
+        </Route>
+        
+        <Route path="*" element={<NotFound />} />
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+</details>
 
 ---
 
@@ -2249,12 +2972,184 @@ const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
 
 #### **📋 Beginner:**
 - **Q1:** How do you define route parameters in React Router?
+<details>
+<summary>Answer</summary>
+Route parameters are defined using **colon (`:`) syntax** in the route path:
+```jsx
+<Routes>
+  {/* Single parameter */}
+  <Route path="/users/:id" element={<UserProfile />} />
+  
+  {/* Multiple parameters */}
+  <Route path="/users/:userId/posts/:postId" element={<UserPost />} />
+  
+  {/* Optional parameter with ? */}
+  <Route path="/products/:category/:id?" element={<ProductPage />} />
+  
+  {/* Wildcard parameter */}
+  <Route path="/files/*" element={<FileExplorer />} />
+</Routes>
+```
+</details>
+
 - **Q2:** How do you access route parameters in your components?
+<details>
+<summary>Answer</summary>
+Use the `useParams` hook to access route parameters:
+```jsx
+import { useParams } from 'react-router-dom';
+
+function UserProfile() {
+  const { id } = useParams();
+  
+  useEffect(() => {
+    fetchUser(id);
+  }, [id]);
+  
+  return <div>User ID: {id}</div>;
+}
+
+function UserPost() {
+  const { userId, postId } = useParams();
+  
+  return (
+    <div>
+      <h1>User {userId}</h1>
+      <h2>Post {postId}</h2>
+    </div>
+  );
+}
+
+// With TypeScript
+function TypedComponent() {
+  const { id } = useParams<{ id: string }>();
+  // id is typed as string | undefined
+}
+```
+</details>
+
 - **Q3:** What happens if a required parameter is missing?
+<details>
+<summary>Answer</summary>
+If a required parameter is missing, the route **won't match** and React Router will:
+- Continue to next route in the Routes list
+- Eventually show 404/catch-all route if no other routes match
+- `useParams` will return `undefined` for missing parameters
+
+```jsx
+<Routes>
+  <Route path="/users/:id" element={<UserProfile />} />
+  <Route path="*" element={<NotFound />} />
+</Routes>
+
+// URL: /users (missing :id parameter)
+// Result: Shows NotFound component
+
+function UserProfile() {
+  const { id } = useParams();
+  
+  if (!id) {
+    return <div>Invalid user ID</div>;
+  }
+  
+  return <div>User: {id}</div>;
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you handle optional route parameters?
+<details>
+<summary>Answer</summary>
+```jsx
+// Method 1: Optional parameter with ?
+<Route path="/products/:category/:id?" element={<ProductPage />} />
+
+function ProductPage() {
+  const { category, id } = useParams();
+  
+  if (id) {
+    return <ProductDetail category={category} id={id} />;
+  } else {
+    return <ProductList category={category} />;
+  }
+}
+
+// Method 2: Multiple routes
+<Routes>
+  <Route path="/products/:category" element={<ProductList />} />
+  <Route path="/products/:category/:id" element={<ProductDetail />} />
+</Routes>
+
+// Method 3: Query parameters for optional data
+function ProductSearch() {
+  const [searchParams] = useSearchParams();
+  const category = searchParams.get('category');
+  const minPrice = searchParams.get('minPrice');
+  
+  return <div>Search: {category}, Min: {minPrice}</div>;
+}
+// URL: /search?category=electronics&minPrice=100
+```
+</details>
+
 - **Q2:** How do you validate route parameters?
+<details>
+<summary>Answer</summary>
+```jsx
+// Custom hook for parameter validation
+function useValidatedParams(schema) {
+  const params = useParams();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    const isValid = schema.validate(params);
+    if (!isValid) {
+      navigate('/404', { replace: true });
+    }
+  }, [params, schema, navigate]);
+  
+  return params;
+}
+
+// Usage
+function UserProfile() {
+  const params = useValidatedParams({
+    validate: ({ id }) => /^\d+$/.test(id) // Only numeric IDs
+  });
+  
+  return <div>User: {params.id}</div>;
+}
+
+// Or validate in component
+function ProductDetail() {
+  const { id } = useParams();
+  const navigate = useNavigate();
+  
+  useEffect(() => {
+    if (!id || !/^[0-9]+$/.test(id)) {
+      navigate('/products', { replace: true });
+    }
+  }, [id, navigate]);
+  
+  return <div>Product: {id}</div>;
+}
+
+// Loader-based validation (React Router v6.4+)
+const productLoader = ({ params }) => {
+  if (!/^\d+$/.test(params.id)) {
+    throw new Response('Invalid product ID', { status: 400 });
+  }
+  return fetchProduct(params.id);
+};
+
+<Route 
+  path="/products/:id" 
+  element={<ProductDetail />}
+  loader={productLoader}
+/>
+```
+</details>
 
 ---
 
@@ -2262,12 +3157,275 @@ const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
 
 #### **📋 Beginner:**
 - **Q1:** What are nested routes and how do you implement them?
+<details>
+<summary>Answer</summary>
+Nested routes allow you to render components inside other components based on URL structure. They create **hierarchical routing**:
+```jsx
+import { Outlet } from 'react-router-dom';
+
+// Parent layout component
+function Dashboard() {
+  return (
+    <div>
+      <h1>Dashboard</h1>
+      <nav>
+        <Link to="/dashboard">Overview</Link>
+        <Link to="/dashboard/profile">Profile</Link>
+        <Link to="/dashboard/settings">Settings</Link>
+      </nav>
+      <Outlet /> {/* Child routes render here */}
+    </div>
+  );
+}
+
+// Route configuration
+<Routes>
+  <Route path="/dashboard" element={<Dashboard />}>
+    <Route index element={<DashboardHome />} />
+    <Route path="profile" element={<Profile />} />
+    <Route path="settings" element={<Settings />} />
+  </Route>
+</Routes>
+```
+</details>
+
 - **Q2:** How does the Outlet component work?
+<details>
+<summary>Answer</summary>
+`Outlet` is a **placeholder component** that renders the child route's element. It:
+- **Marks the spot** where child routes should render
+- **Passes context** to child routes
+- **Handles route matching** automatically
+```jsx
+function Layout() {
+  return (
+    <div>
+      <header>Site Header</header>
+      <main>
+        <Outlet /> {/* Child route content appears here */}
+      </main>
+      <footer>Site Footer</footer>
+    </div>
+  );
+}
+
+// With context passing
+function DashboardLayout() {
+  const [user, setUser] = useState(null);
+  
+  return (
+    <div>
+      <nav>Dashboard Nav</nav>
+      <Outlet context={{ user, setUser }} />
+    </div>
+  );
+}
+
+// Child component can access context
+function ProfilePage() {
+  const { user } = useOutletContext();
+  return <div>Welcome, {user.name}</div>;
+}
+```
+</details>
+
 - **Q3:** How do you structure components for nested routes?
+<details>
+<summary>Answer</summary>
+```jsx
+// File structure
+src/
+  components/
+    Layout.jsx          // Main app layout
+    DashboardLayout.jsx // Dashboard-specific layout
+  pages/
+    Home.jsx
+    Dashboard/
+      index.jsx         // Dashboard overview
+      Profile.jsx
+      Settings.jsx
+      Users/
+        index.jsx       // Users list
+        UserDetail.jsx
+
+// Route structure
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        {/* Main layout */}
+        <Route path="/" element={<Layout />}>
+          <Route index element={<Home />} />
+          
+          {/* Dashboard with nested routes */}
+          <Route path="dashboard" element={<DashboardLayout />}>
+            <Route index element={<DashboardOverview />} />
+            <Route path="profile" element={<Profile />} />
+            <Route path="settings" element={<Settings />} />
+            
+            {/* Further nested routes */}
+            <Route path="users" element={<UsersLayout />}>
+              <Route index element={<UsersList />} />
+              <Route path=":id" element={<UserDetail />} />
+            </Route>
+          </Route>
+        </Route>
+      </Routes>
+    </BrowserRouter>
+  );
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you implement breadcrumbs with nested routes?
+<details>
+<summary>Answer</summary>
+```jsx
+import { useMatches } from 'react-router-dom';
+
+// Route configuration with handle for breadcrumbs
+const routes = [
+  {
+    path: "/",
+    element: <Layout />,
+    handle: { crumb: () => "Home" },
+    children: [
+      {
+        path: "dashboard",
+        element: <Dashboard />,
+        handle: { crumb: () => "Dashboard" },
+        children: [
+          {
+            path: "users",
+            element: <Users />,
+            handle: { crumb: () => "Users" },
+          },
+          {
+            path: "users/:id",
+            element: <UserDetail />,
+            handle: { 
+              crumb: (match) => `User ${match.params.id}` 
+            },
+          }
+        ]
+      }
+    ]
+  }
+];
+
+// Breadcrumb component
+function Breadcrumbs() {
+  const matches = useMatches();
+  
+  const crumbs = matches
+    .filter(match => match.handle?.crumb)
+    .map(match => ({
+      pathname: match.pathname,
+      label: match.handle.crumb(match)
+    }));
+  
+  return (
+    <nav>
+      {crumbs.map((crumb, index) => (
+        <span key={crumb.pathname}>
+          {index > 0 && " > "}
+          {index === crumbs.length - 1 ? (
+            crumb.label
+          ) : (
+            <Link to={crumb.pathname}>{crumb.label}</Link>
+          )}
+        </span>
+      ))}
+    </nav>
+  );
+}
+```
+</details>
+
 - **Q2:** How do you handle data loading for nested routes?
+<details>
+<summary>Answer</summary>
+```jsx
+// Using loaders (React Router v6.4+)
+const dashboardLoader = async () => {
+  const user = await fetchCurrentUser();
+  return { user };
+};
+
+const usersLoader = async () => {
+  const users = await fetchUsers();
+  return { users };
+};
+
+const userDetailLoader = async ({ params }) => {
+  const user = await fetchUser(params.id);
+  return { user };
+};
+
+// Route configuration
+const router = createBrowserRouter([
+  {
+    path: "/dashboard",
+    element: <Dashboard />,
+    loader: dashboardLoader,
+    children: [
+      {
+        path: "users",
+        element: <Users />,
+        loader: usersLoader,
+        children: [
+          {
+            path: ":id",
+            element: <UserDetail />,
+            loader: userDetailLoader,
+          }
+        ]
+      }
+    ]
+  }
+]);
+
+// Access loaded data in components
+function Dashboard() {
+  const { user } = useLoaderData();
+  
+  return (
+    <div>
+      <h1>Welcome, {user.name}</h1>
+      <Outlet />
+    </div>
+  );
+}
+
+function UserDetail() {
+  const { user } = useLoaderData();
+  const parentData = useOutletContext(); // Access parent data
+  
+  return <div>User: {user.name}</div>;
+}
+
+// Alternative: Custom data fetching hook
+function useNestedData() {
+  const location = useLocation();
+  const [data, setData] = useState({});
+  
+  useEffect(() => {
+    const loadData = async () => {
+      // Load data based on current route
+      if (location.pathname.includes('/dashboard')) {
+        const userData = await fetchUserData();
+        setData(prev => ({ ...prev, user: userData }));
+      }
+    };
+    
+    loadData();
+  }, [location.pathname]);
+  
+  return data;
+}
+```
+</details>
 
 ---
 
@@ -2275,12 +3433,252 @@ const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
 
 #### **📋 Beginner:**
 - **Q1:** How do you redirect users to different routes?
+<details>
+<summary>Answer</summary>
+You can redirect users using:
+
+**1. Navigate component (declarative)**:
+```jsx
+import { Navigate } from 'react-router-dom';
+
+function ProtectedPage() {
+  const { isAuthenticated } = useAuth();
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" replace />;
+  }
+  
+  return <div>Protected content</div>;
+}
+```
+
+**2. useNavigate hook (programmatic)**:
+```jsx
+import { useNavigate } from 'react-router-dom';
+
+function LoginForm() {
+  const navigate = useNavigate();
+  
+  const handleSubmit = async (credentials) => {
+    const success = await login(credentials);
+    if (success) {
+      navigate('/dashboard'); // Redirect after login
+    }
+  };
+  
+  return <form onSubmit={handleSubmit}>...</form>;
+}
+```
+</details>
+
 - **Q2:** What's the difference between Navigate and useNavigate?
+<details>
+<summary>Answer</summary>
+| Navigate Component | useNavigate Hook |
+|-------------------|------------------|
+| **Declarative** | **Imperative** |
+| **Renders in JSX** | **Call in functions** |
+| **Conditional rendering** | **Event handlers/effects** |
+| **Immediate redirect** | **Programmatic control** |
+
+```jsx
+// Navigate - declarative, in render
+function App() {
+  return isLoggedIn ? <Dashboard /> : <Navigate to="/login" />;
+}
+
+// useNavigate - imperative, in handlers
+function LoginButton() {
+  const navigate = useNavigate();
+  
+  const handleLogin = () => {
+    // Do login logic
+    navigate('/dashboard');
+  };
+  
+  return <button onClick={handleLogin}>Login</button>;
+}
+```
+</details>
+
 - **Q3:** How do you implement protected routes?
+<details>
+<summary>Answer</summary>
+```jsx
+// Protected Route component
+function ProtectedRoute({ children }) {
+  const { isAuthenticated, isLoading } = useAuth();
+  
+  if (isLoading) {
+    return <LoadingSpinner />;
+  }
+  
+  if (!isAuthenticated) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+  
+  return children;
+}
+
+// Usage in routes
+<Routes>
+  <Route path="/login" element={<LoginPage />} />
+  <Route path="/dashboard" element={
+    <ProtectedRoute>
+      <Dashboard />
+    </ProtectedRoute>
+  } />
+  <Route path="/profile" element={
+    <ProtectedRoute>
+      <Profile />
+    </ProtectedRoute>
+  } />
+</Routes>
+
+// Role-based protection
+function RoleProtectedRoute({ children, allowedRoles }) {
+  const { user } = useAuth();
+  
+  if (!allowedRoles.includes(user.role)) {
+    return <Navigate to="/unauthorized" replace />;
+  }
+  
+  return children;
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you preserve the intended destination after login redirects?
+<details>
+<summary>Answer</summary>
+```jsx
+// Protected route saves intended destination
+function ProtectedRoute({ children }) {
+  const { isAuthenticated } = useAuth();
+  const location = useLocation();
+  
+  if (!isAuthenticated) {
+    return (
+      <Navigate 
+        to="/login" 
+        state={{ from: location }} 
+        replace 
+      />
+    );
+  }
+  
+  return children;
+}
+
+// Login component redirects to intended destination
+function LoginPage() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  const from = location.state?.from?.pathname || '/dashboard';
+  
+  const handleLogin = async (credentials) => {
+    const success = await login(credentials);
+    if (success) {
+      navigate(from, { replace: true });
+    }
+  };
+  
+  return (
+    <form onSubmit={handleLogin}>
+      <p>Please log in to access {from}</p>
+      {/* Login form fields */}
+    </form>
+  );
+}
+
+// Custom hook for redirect logic
+function useRedirectAfterLogin() {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  return useCallback((defaultPath = '/dashboard') => {
+    const intendedPath = location.state?.from?.pathname || defaultPath;
+    navigate(intendedPath, { replace: true });
+  }, [navigate, location.state]);
+}
+```
+</details>
+
 - **Q2:** How do you handle programmatic navigation with state?
+<details>
+<summary>Answer</summary>
+```jsx
+function ProductList() {
+  const navigate = useNavigate();
+  
+  const handleProductClick = (product) => {
+    navigate(`/products/${product.id}`, {
+      state: { 
+        product,
+        returnTo: '/products',
+        searchFilters: currentFilters 
+      }
+    });
+  };
+  
+  return (
+    <div>
+      {products.map(product => (
+        <div key={product.id} onClick={() => handleProductClick(product)}>
+          {product.name}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function ProductDetail() {
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Access passed state
+  const { product, returnTo, searchFilters } = location.state || {};
+  
+  const handleBack = () => {
+    if (returnTo) {
+      navigate(returnTo, { state: { filters: searchFilters } });
+    } else {
+      navigate(-1); // Go back in history
+    }
+  };
+  
+  return (
+    <div>
+      <button onClick={handleBack}>← Back</button>
+      <h1>{product?.name}</h1>
+      {/* Product details */}
+    </div>
+  );
+}
+
+// Navigation with replace
+function FormPage() {
+  const navigate = useNavigate();
+  
+  const handleSubmit = async (data) => {
+    await saveData(data);
+    
+    // Replace current entry in history (prevent back to form)
+    navigate('/success', { 
+      replace: true,
+      state: { message: 'Data saved successfully!' }
+    });
+  };
+  
+  // Navigation with relative paths
+  const handleCancel = () => {
+    navigate('..', { relative: 'path' }); // Go up one level
+  };
+}
+```
+</details>
 
 ---
 
@@ -2288,12 +3686,291 @@ const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
 
 #### **📋 Beginner:**
 - **Q1:** What does useParams return and how do you use it?
+<details>
+<summary>Answer</summary>
+`useParams` returns an **object containing route parameters** as key-value pairs:
+```jsx
+import { useParams } from 'react-router-dom';
+
+// Route: /users/:userId/posts/:postId
+function BlogPost() {
+  const params = useParams();
+  // params = { userId: "123", postId: "456" }
+  
+  const { userId, postId } = useParams();
+  
+  useEffect(() => {
+    fetchPost(userId, postId);
+  }, [userId, postId]);
+  
+  return (
+    <div>
+      <h1>User {userId} - Post {postId}</h1>
+    </div>
+  );
+}
+
+// With TypeScript
+function TypedComponent() {
+  const { id } = useParams<{ id: string }>();
+  // id is typed as string | undefined
+}
+```
+</details>
+
 - **Q2:** How do you navigate programmatically using useNavigate?
+<details>
+<summary>Answer</summary>
+```jsx
+import { useNavigate } from 'react-router-dom';
+
+function MyComponent() {
+  const navigate = useNavigate();
+  
+  // Basic navigation
+  const goToHome = () => navigate('/');
+  const goToProfile = () => navigate('/profile');
+  
+  // Navigation with parameters
+  const goToUser = (userId) => navigate(`/users/${userId}`);
+  
+  // Navigation with state
+  const goToProductWithData = (product) => {
+    navigate('/products/' + product.id, {
+      state: { product, fromPage: 'search' }
+    });
+  };
+  
+  // Replace current entry (no back button)
+  const replaceWithLogin = () => {
+    navigate('/login', { replace: true });
+  };
+  
+  // Relative navigation
+  const goBack = () => navigate(-1);
+  const goForward = () => navigate(1);
+  const goUp = () => navigate('..', { relative: 'path' });
+  
+  return (
+    <div>
+      <button onClick={goToHome}>Home</button>
+      <button onClick={goBack}>Back</button>
+    </div>
+  );
+}
+```
+</details>
+
 - **Q3:** What other React Router hooks are commonly used?
+<details>
+<summary>Answer</summary>
+**Common React Router hooks:**
+
+```jsx
+import { 
+  useLocation,
+  useSearchParams, 
+  useNavigationType,
+  useMatches,
+  useOutletContext 
+} from 'react-router-dom';
+
+function ComponentUsingHooks() {
+  // Current location object
+  const location = useLocation();
+  console.log(location.pathname, location.search, location.state);
+  
+  // Query parameters
+  const [searchParams, setSearchParams] = useSearchParams();
+  const category = searchParams.get('category');
+  const page = parseInt(searchParams.get('page')) || 1;
+  
+  // Navigation type (POP, PUSH, REPLACE)
+  const navigationType = useNavigationType();
+  
+  // All current route matches
+  const matches = useMatches();
+  
+  // Context from parent Outlet
+  const outletContext = useOutletContext();
+  
+  const updateSearch = () => {
+    setSearchParams({ category: 'electronics', page: '2' });
+  };
+  
+  return <div>Current page: {page}</div>;
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you access query parameters and location state?
+<details>
+<summary>Answer</summary>
+```jsx
+import { useSearchParams, useLocation } from 'react-router-dom';
+
+function SearchPage() {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const location = useLocation();
+  
+  // Query parameters
+  const query = searchParams.get('q') || '';
+  const category = searchParams.get('category') || 'all';
+  const page = parseInt(searchParams.get('page')) || 1;
+  
+  // Location state (passed via navigate)
+  const { filters, sortBy } = location.state || {};
+  
+  // Update query parameters
+  const handleSearch = (newQuery) => {
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      newParams.set('q', newQuery);
+      newParams.set('page', '1'); // Reset page
+      return newParams;
+    });
+  };
+  
+  // Preserve existing params while updating
+  const handleCategoryChange = (newCategory) => {
+    setSearchParams(prev => ({
+      ...Object.fromEntries(prev),
+      category: newCategory,
+      page: '1'
+    }));
+  };
+  
+  // Clear specific parameter
+  const clearCategory = () => {
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      newParams.delete('category');
+      return newParams;
+    });
+  };
+  
+  return (
+    <div>
+      <input 
+        value={query} 
+        onChange={(e) => handleSearch(e.target.value)} 
+      />
+      <p>Page {page} of {category} results</p>
+      {filters && <p>Applied filters: {JSON.stringify(filters)}</p>}
+    </div>
+  );
+}
+
+// Custom hook for search params
+function useSearchParam(key, defaultValue) {
+  const [searchParams, setSearchParams] = useSearchParams();
+  
+  const value = searchParams.get(key) || defaultValue;
+  
+  const setValue = useCallback((newValue) => {
+    setSearchParams(prev => {
+      const newParams = new URLSearchParams(prev);
+      if (newValue === null || newValue === undefined) {
+        newParams.delete(key);
+      } else {
+        newParams.set(key, String(newValue));
+      }
+      return newParams;
+    });
+  }, [key, setSearchParams]);
+  
+  return [value, setValue];
+}
+```
+</details>
+
 - **Q2:** How do you implement navigation guards with React Router hooks?
+<details>
+<summary>Answer</summary>
+```jsx
+import { useEffect, useCallback } from 'react';
+import { useNavigate, useLocation, useBlocker } from 'react-router-dom';
+
+// Custom hook for navigation guards
+function useNavigationGuard(shouldBlock, message = 'Are you sure you want to leave?') {
+  const navigate = useNavigate();
+  
+  // Block navigation when form is dirty
+  const blocker = useBlocker(shouldBlock);
+  
+  useEffect(() => {
+    if (blocker.state === 'blocked') {
+      const proceed = window.confirm(message);
+      if (proceed) {
+        blocker.proceed();
+      } else {
+        blocker.reset();
+      }
+    }
+  }, [blocker, message]);
+  
+  // Block browser back/forward/refresh
+  useEffect(() => {
+    if (shouldBlock) {
+      const handleBeforeUnload = (e) => {
+        e.preventDefault();
+        e.returnValue = message;
+        return message;
+      };
+      
+      window.addEventListener('beforeunload', handleBeforeUnload);
+      return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+    }
+  }, [shouldBlock, message]);
+}
+
+// Usage in form component
+function FormWithGuard() {
+  const [formData, setFormData] = useState({});
+  const [isDirty, setIsDirty] = useState(false);
+  
+  useNavigationGuard(isDirty, 'You have unsaved changes. Are you sure you want to leave?');
+  
+  const handleInputChange = (field, value) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setIsDirty(true);
+  };
+  
+  const handleSubmit = async () => {
+    await saveForm(formData);
+    setIsDirty(false); // Allow navigation after save
+  };
+  
+  return (
+    <form onSubmit={handleSubmit}>
+      {/* Form fields */}
+    </form>
+  );
+}
+
+// Route-level guards
+function ProtectedRouteGuard({ children, canAccess }) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  
+  useEffect(() => {
+    if (!canAccess) {
+      navigate('/unauthorized', { 
+        state: { from: location },
+        replace: true 
+      });
+    }
+  }, [canAccess, navigate, location]);
+  
+  if (!canAccess) {
+    return <div>Checking permissions...</div>;
+  }
+  
+  return children;
+}
+```
+</details>
 
 ---
 
