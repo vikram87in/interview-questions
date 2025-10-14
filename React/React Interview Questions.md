@@ -3982,12 +3982,329 @@ function ProtectedRouteGuard({ children, canAccess }) {
 
 #### **📋 Beginner:**
 - **Q1:** What are Error Boundaries and what errors do they catch?
+<details>
+<summary>Answer</summary>
+Error Boundaries are **React components that catch JavaScript errors** anywhere in their child component tree. They catch errors during:
+- **Rendering**
+- **Lifecycle methods**
+- **Constructors of the whole tree below them**
+
+```jsx
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught by boundary:', error, errorInfo);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong.</h1>;
+    }
+    return this.props.children;
+  }
+}
+
+// Usage
+<ErrorBoundary>
+  <MyComponent />
+</ErrorBoundary>
+```
+</details>
+
 - **Q2:** How do you create an Error Boundary?
+<details>
+<summary>Answer</summary>
+```jsx
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { 
+      hasError: false, 
+      error: null, 
+      errorInfo: null 
+    };
+  }
+  
+  static getDerivedStateFromError(error) {
+    // Update state to show fallback UI
+    return { hasError: true };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    // Log error details
+    this.setState({
+      error: error,
+      errorInfo: errorInfo
+    });
+    
+    // Log to error reporting service
+    console.error('Error Boundary caught an error:', error, errorInfo);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div>
+          <h2>Something went wrong.</h2>
+          {process.env.NODE_ENV === 'development' && (
+            <details style={{ whiteSpace: 'pre-wrap' }}>
+              <summary>Error details (dev only)</summary>
+              {this.state.error && this.state.error.toString()}
+              <br />
+              {this.state.errorInfo.componentStack}
+            </details>
+          )}
+        </div>
+      );
+    }
+    
+    return this.props.children;
+  }
+}
+```
+</details>
+
 - **Q3:** What errors do Error Boundaries NOT catch?
+<details>
+<summary>Answer</summary>
+Error Boundaries **do NOT catch** errors in:
+- **Event handlers** (use try-catch instead)
+- **Asynchronous code** (setTimeout, promises, async/await)
+- **Server-side rendering**
+- **Errors in the error boundary itself**
+
+```jsx
+// ❌ These errors are NOT caught by Error Boundaries
+function MyComponent() {
+  const handleClick = () => {
+    throw new Error('Event handler error'); // Not caught
+  };
+  
+  useEffect(() => {
+    setTimeout(() => {
+      throw new Error('Async error'); // Not caught
+    }, 1000);
+  }, []);
+  
+  const handleAsync = async () => {
+    await Promise.reject('Promise error'); // Not caught
+  };
+  
+  return <button onClick={handleClick}>Click me</button>;
+}
+
+// ✅ Handle these errors manually
+function MyComponent() {
+  const handleClick = () => {
+    try {
+      riskyOperation();
+    } catch (error) {
+      console.error('Event error:', error);
+    }
+  };
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        riskyAsyncOperation();
+      } catch (error) {
+        console.error('Async error:', error);
+      }
+    }, 1000);
+    
+    return () => clearTimeout(timer);
+  }, []);
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you implement error logging in Error Boundaries?
+<details>
+<summary>Answer</summary>
+```jsx
+// Error reporting service integration
+import * as Sentry from '@sentry/react';
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, eventId: null };
+  }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    // Log to console in development
+    if (process.env.NODE_ENV === 'development') {
+      console.error('Error Boundary caught error:', error);
+      console.error('Component stack:', errorInfo.componentStack);
+    }
+    
+    // Send to error tracking service
+    const eventId = Sentry.captureException(error, {
+      contexts: {
+        react: {
+          componentStack: errorInfo.componentStack
+        }
+      },
+      tags: {
+        section: this.props.section || 'unknown'
+      }
+    });
+    
+    this.setState({ eventId });
+    
+    // Custom error reporting
+    this.reportError(error, errorInfo);
+  }
+  
+  reportError = (error, errorInfo) => {
+    const errorReport = {
+      message: error.message,
+      stack: error.stack,
+      componentStack: errorInfo.componentStack,
+      timestamp: new Date().toISOString(),
+      userAgent: navigator.userAgent,
+      url: window.location.href,
+      userId: this.props.userId
+    };
+    
+    // Send to your error tracking service
+    fetch('/api/errors', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(errorReport)
+    }).catch(err => console.error('Failed to report error:', err));
+  };
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-boundary">
+          <h2>Oops! Something went wrong</h2>
+          <p>We've been notified about this error.</p>
+          {this.state.eventId && (
+            <p>Error ID: {this.state.eventId}</p>
+          )}
+          <button onClick={() => window.location.reload()}>
+            Reload Page
+          </button>
+        </div>
+      );
+    }
+    
+    return this.props.children;
+  }
+}
+```
+</details>
+
 - **Q2:** How do you reset Error Boundaries after an error?
+<details>
+<summary>Answer</summary>
+```jsx
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    console.error('Error caught:', error, errorInfo);
+  }
+  
+  // Reset error state
+  resetError = () => {
+    this.setState({ hasError: false, error: null });
+  };
+  
+  // Reset when key prop changes
+  componentDidUpdate(prevProps) {
+    if (prevProps.resetKey !== this.props.resetKey) {
+      this.resetError();
+    }
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-fallback">
+          <h2>Something went wrong</h2>
+          <button onClick={this.resetError}>Try again</button>
+          {this.props.fallback && this.props.fallback(this.state.error, this.resetError)}
+        </div>
+      );
+    }
+    
+    return this.props.children;
+  }
+}
+
+// Usage with reset functionality
+function App() {
+  const [resetKey, setResetKey] = useState(0);
+  
+  const handleReset = () => {
+    setResetKey(prev => prev + 1);
+  };
+  
+  return (
+    <ErrorBoundary 
+      resetKey={resetKey}
+      fallback={(error, reset) => (
+        <div>
+          <p>Error: {error.message}</p>
+          <button onClick={reset}>Reset</button>
+          <button onClick={handleReset}>Force Reset</button>
+        </div>
+      )}
+    >
+      <MyApp />
+    </ErrorBoundary>
+  );
+}
+
+// Using react-error-boundary library (recommended)
+import { ErrorBoundary } from 'react-error-boundary';
+
+function ErrorFallback({ error, resetErrorBoundary }) {
+  return (
+    <div role="alert">
+      <h2>Something went wrong:</h2>
+      <pre>{error.message}</pre>
+      <button onClick={resetErrorBoundary}>Try again</button>
+    </div>
+  );
+}
+
+function MyApp() {
+  return (
+    <ErrorBoundary
+      FallbackComponent={ErrorFallback}
+      onReset={() => window.location.reload()}
+      resetKeys={[user.id]} // Reset when user changes
+    >
+      <App />
+    </ErrorBoundary>
+  );
+}
+```
+</details>
 
 ---
 
@@ -3995,12 +4312,360 @@ function ProtectedRouteGuard({ children, canAccess }) {
 
 #### **📋 Beginner:**
 - **Q1:** What is componentDidCatch and when is it called?
+<details>
+<summary>Answer</summary>
+`componentDidCatch` is a **lifecycle method** called when an error is thrown by any component in the component tree below. It's called during the **"commit" phase** and allows you to:
+- **Log error information**
+- **Send error reports to services**
+- **Perform side effects** (unlike getDerivedStateFromError)
+
+```jsx
+class ErrorBoundary extends React.Component {
+  componentDidCatch(error, errorInfo) {
+    // Called when a child component throws an error
+    console.log('Error:', error);
+    console.log('Error Info:', errorInfo);
+    
+    // errorInfo.componentStack shows where error occurred
+  }
+  
+  render() {
+    return this.props.children;
+  }
+}
+```
+</details>
+
 - **Q2:** What's the difference between componentDidCatch and getDerivedStateFromError?
+<details>
+<summary>Answer</summary>
+| componentDidCatch | getDerivedStateFromError |
+|-------------------|--------------------------|
+| **Side effects allowed** | **Pure function only** |
+| **Called during commit phase** | **Called during render phase** |
+| **For logging/reporting** | **For updating state** |
+| **Can access this** | **Static method** |
+| **Async operations OK** | **Synchronous only** |
+
+```jsx
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false };
+  }
+  
+  // Pure function - update state only
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  
+  // Side effects - logging, reporting
+  componentDidCatch(error, errorInfo) {
+    // ✅ Can do side effects here
+    this.logErrorToService(error, errorInfo);
+    this.setState({ errorDetails: error.message });
+  }
+  
+  logErrorToService = (error, errorInfo) => {
+    // Send to error monitoring service
+    errorReportingService.captureException(error, {
+      extra: errorInfo
+    });
+  };
+  
+  render() {
+    if (this.state.hasError) {
+      return <h1>Something went wrong.</h1>;
+    }
+    return this.props.children;
+  }
+}
+```
+</details>
+
 - **Q3:** Can functional components implement error boundaries?
+<details>
+<summary>Answer</summary>
+**No**, functional components **cannot be error boundaries**. Error boundaries require:
+- `getDerivedStateFromError` (static method)
+- `componentDidCatch` (lifecycle method)
+
+These are only available in **class components**.
+
+```jsx
+// ❌ Cannot create error boundary with hooks
+function ErrorBoundary({ children }) {
+  const [hasError, setHasError] = useState(false);
+  
+  // No equivalent hooks for error boundary methods
+  // useErrorBoundary() doesn't exist
+  
+  return hasError ? <div>Error occurred</div> : children;
+}
+
+// ✅ Must use class component
+class ErrorBoundary extends React.Component {
+  // ... error boundary implementation
+}
+
+// ✅ Alternative: Use react-error-boundary library
+import { ErrorBoundary } from 'react-error-boundary';
+
+function App() {
+  return (
+    <ErrorBoundary fallback={<ErrorFallback />}>
+      <MyComponent />
+    </ErrorBoundary>
+  );
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you integrate error boundaries with error monitoring services?
+<details>
+<summary>Answer</summary>
+```jsx
+import * as Sentry from '@sentry/react';
+import * as LogRocket from 'logrocket';
+
+class ErrorBoundary extends React.Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, eventId: null };
+  }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    // Multiple error tracking services
+    this.reportToMultipleServices(error, errorInfo);
+  }
+  
+  reportToMultipleServices = (error, errorInfo) => {
+    // Sentry integration
+    const sentryEventId = Sentry.withScope(scope => {
+      scope.setTag('section', this.props.section);
+      scope.setLevel('error');
+      scope.setContext('errorInfo', errorInfo);
+      scope.setUser({
+        id: this.props.userId,
+        email: this.props.userEmail
+      });
+      
+      return Sentry.captureException(error);
+    });
+    
+    // LogRocket integration
+    LogRocket.captureException(error);
+    
+    // Bugsnag integration
+    if (window.Bugsnag) {
+      window.Bugsnag.notify(error, {
+        metaData: {
+          react: errorInfo,
+          user: {
+            id: this.props.userId,
+            section: this.props.section
+          }
+        }
+      });
+    }
+    
+    // Custom analytics
+    if (window.gtag) {
+      window.gtag('event', 'exception', {
+        description: error.message,
+        fatal: true
+      });
+    }
+    
+    this.setState({ eventId: sentryEventId });
+  };
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div className="error-boundary">
+          <h2>Application Error</h2>
+          <p>We've been notified and are working on a fix.</p>
+          
+          {/* Show error ID for support */}
+          {this.state.eventId && (
+            <details>
+              <summary>Error Reference</summary>
+              <p>Error ID: {this.state.eventId}</p>
+            </details>
+          )}
+          
+          {/* User feedback for Sentry */}
+          <button
+            onClick={() => 
+              Sentry.showReportDialog({ eventId: this.state.eventId })
+            }
+          >
+            Report Feedback
+          </button>
+          
+          <button onClick={() => window.location.reload()}>
+            Reload Application
+          </button>
+        </div>
+      );
+    }
+    
+    return this.props.children;
+  }
+}
+
+// HOC for automatic error boundary wrapping
+export const withErrorBoundary = (Component, errorBoundaryConfig = {}) => {
+  return function WrappedComponent(props) {
+    return (
+      <ErrorBoundary {...errorBoundaryConfig}>
+        <Component {...props} />
+      </ErrorBoundary>
+    );
+  };
+};
+
+// Usage
+const SafeComponent = withErrorBoundary(MyComponent, {
+  section: 'user-dashboard',
+  userId: user.id
+});
+```
+</details>
+
 - **Q2:** How do you test error boundaries?
+<details>
+<summary>Answer</summary>
+```jsx
+import { render, screen } from '@testing-library/react';
+import ErrorBoundary from './ErrorBoundary';
+
+// Component that throws an error
+const ThrowError = ({ shouldThrow }) => {
+  if (shouldThrow) {
+    throw new Error('Test error');
+  }
+  return <div>No error</div>;
+};
+
+describe('ErrorBoundary', () => {
+  // Suppress console.error for cleaner test output
+  beforeEach(() => {
+    jest.spyOn(console, 'error').mockImplementation(() => {});
+  });
+  
+  afterEach(() => {
+    console.error.mockRestore();
+  });
+  
+  test('renders children when there is no error', () => {
+    render(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={false} />
+      </ErrorBoundary>
+    );
+    
+    expect(screen.getByText('No error')).toBeInTheDocument();
+  });
+  
+  test('renders error UI when child throws', () => {
+    render(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>
+    );
+    
+    expect(screen.getByText(/something went wrong/i)).toBeInTheDocument();
+  });
+  
+  test('calls error reporting service', () => {
+    const mockReportError = jest.fn();
+    
+    class TestErrorBoundary extends React.Component {
+      constructor(props) {
+        super(props);
+        this.state = { hasError: false };
+      }
+      
+      static getDerivedStateFromError() {
+        return { hasError: true };
+      }
+      
+      componentDidCatch(error, errorInfo) {
+        mockReportError(error, errorInfo);
+      }
+      
+      render() {
+        if (this.state.hasError) {
+          return <div>Error occurred</div>;
+        }
+        return this.props.children;
+      }
+    }
+    
+    render(
+      <TestErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </TestErrorBoundary>
+    );
+    
+    expect(mockReportError).toHaveBeenCalledWith(
+      expect.any(Error),
+      expect.objectContaining({
+        componentStack: expect.any(String)
+      })
+    );
+  });
+  
+  test('resets error state when reset button clicked', () => {
+    const { rerender } = render(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={true} />
+      </ErrorBoundary>
+    );
+    
+    expect(screen.getByText(/something went wrong/i)).toBeInTheDocument();
+    
+    // Simulate reset
+    rerender(
+      <ErrorBoundary>
+        <ThrowError shouldThrow={false} />
+      </ErrorBoundary>
+    );
+    
+    expect(screen.getByText('No error')).toBeInTheDocument();
+  });
+});
+
+// Integration test with error monitoring
+test('integrates with Sentry', async () => {
+  const mockSentryCapture = jest.fn().mockReturnValue('test-event-id');
+  jest.mock('@sentry/react', () => ({
+    captureException: mockSentryCapture,
+    withScope: (callback) => callback({
+      setTag: jest.fn(),
+      setLevel: jest.fn(),
+      setContext: jest.fn(),
+      setUser: jest.fn()
+    })
+  }));
+  
+  render(
+    <ErrorBoundary userId="123">
+      <ThrowError shouldThrow={true} />
+    </ErrorBoundary>
+  );
+  
+  expect(mockSentryCapture).toHaveBeenCalled();
+});
+```
+</details>
 
 ---
 
@@ -4008,12 +4673,519 @@ function ProtectedRouteGuard({ children, canAccess }) {
 
 #### **📋 Beginner:**
 - **Q1:** Why don't Error Boundaries catch async errors?
+<details>
+<summary>Answer</summary>
+Error Boundaries **don't catch async errors** because:
+- They only catch errors during **React's render phase**
+- Async errors happen **outside the React call stack**
+- Promises and setTimeout execute **after the render cycle**
+- React can't associate async errors with specific components
+
+```jsx
+// ❌ These errors are NOT caught by Error Boundaries
+function MyComponent() {
+  useEffect(() => {
+    // Async errors not caught
+    setTimeout(() => {
+      throw new Error('Timer error');
+    }, 1000);
+    
+    fetch('/api/data')
+      .then(response => {
+        throw new Error('Fetch error');
+      });
+    
+    async function asyncFunction() {
+      throw new Error('Async function error');
+    }
+    asyncFunction();
+  }, []);
+  
+  return <div>Component</div>;
+}
+
+// ✅ Handle async errors manually
+function MyComponent() {
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      try {
+        riskyOperation();
+      } catch (error) {
+        setError(error);
+      }
+    }, 1000);
+    
+    fetch('/api/data')
+      .catch(error => setError(error));
+    
+    return () => clearTimeout(timer);
+  }, []);
+  
+  if (error) {
+    throw error; // Now Error Boundary can catch it
+  }
+  
+  return <div>Component</div>;
+}
+```
+</details>
+
 - **Q2:** How do you handle errors in async operations?
+<details>
+<summary>Answer</summary>
+```jsx
+// Method 1: Try-catch with async/await
+function DataComponent() {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        setLoading(true);
+        const response = await fetch('/api/data');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        setData(result);
+      } catch (error) {
+        setError(error);
+        console.error('Fetch error:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, []);
+  
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  return <div>Data: {JSON.stringify(data)}</div>;
+}
+
+// Method 2: Promise .catch()
+function PromiseComponent() {
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    fetch('/api/data')
+      .then(response => response.json())
+      .then(setResult)
+      .catch(error => {
+        setError(error);
+        console.error('Promise error:', error);
+      });
+  }, []);
+  
+  if (error) throw error; // Let Error Boundary handle it
+  return <div>{result}</div>;
+}
+
+// Method 3: Custom hook for error handling
+function useAsyncError() {
+  const [, setError] = useState();
+  
+  return useCallback((error) => {
+    setError(() => {
+      throw error;
+    });
+  }, []);
+}
+
+function ComponentWithAsyncError() {
+  const throwError = useAsyncError();
+  
+  useEffect(() => {
+    someAsyncOperation()
+      .catch(throwError); // This will be caught by Error Boundary
+  }, [throwError]);
+  
+  return <div>Component</div>;
+}
+```
+</details>
+
 - **Q3:** How do you handle promise rejections in useEffect?
+<details>
+<summary>Answer</summary>
+```jsx
+function PromiseHandler() {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    let cancelled = false;
+    
+    const fetchData = async () => {
+      try {
+        const result = await apiCall();
+        
+        // Check if component is still mounted
+        if (!cancelled) {
+          setData(result);
+        }
+      } catch (error) {
+        if (!cancelled) {
+          setError(error);
+        }
+      }
+    };
+    
+    fetchData();
+    
+    // Cleanup function
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+  
+  // Another approach with AbortController
+  useEffect(() => {
+    const abortController = new AbortController();
+    
+    fetch('/api/data', { signal: abortController.signal })
+      .then(response => response.json())
+      .then(setData)
+      .catch(error => {
+        if (error.name !== 'AbortError') {
+          setError(error);
+        }
+      });
+    
+    return () => {
+      abortController.abort();
+    };
+  }, []);
+  
+  // Handle unhandled promise rejections globally
+  useEffect(() => {
+    const handleUnhandledRejection = (event) => {
+      console.error('Unhandled promise rejection:', event.reason);
+      setError(new Error('An unexpected error occurred'));
+    };
+    
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    
+    return () => {
+      window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+    };
+  }, []);
+  
+  if (error) throw error;
+  return <div>Data: {data}</div>;
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you create a global error handler for async operations?
+<details>
+<summary>Answer</summary>
+```jsx
+// Global error context
+const ErrorContext = createContext();
+
+export function ErrorProvider({ children }) {
+  const [errors, setErrors] = useState([]);
+  
+  const addError = useCallback((error) => {
+    const errorId = Date.now() + Math.random();
+    setErrors(prev => [...prev, { id: errorId, error, timestamp: new Date() }]);
+    
+    // Auto-remove error after 5 seconds
+    setTimeout(() => {
+      setErrors(prev => prev.filter(e => e.id !== errorId));
+    }, 5000);
+  }, []);
+  
+  const removeError = useCallback((errorId) => {
+    setErrors(prev => prev.filter(e => e.id !== errorId));
+  }, []);
+  
+  // Global unhandled rejection handler
+  useEffect(() => {
+    const handleUnhandledRejection = (event) => {
+      event.preventDefault();
+      addError(new Error(event.reason?.message || 'Unhandled async error'));
+    };
+    
+    window.addEventListener('unhandledrejection', handleUnhandledRejection);
+    return () => window.removeEventListener('unhandledrejection', handleUnhandledRejection);
+  }, [addError]);
+  
+  return (
+    <ErrorContext.Provider value={{ errors, addError, removeError }}>
+      {children}
+      <ErrorToast errors={errors} onDismiss={removeError} />
+    </ErrorContext.Provider>
+  );
+}
+
+// Custom hook for global error handling
+export function useErrorHandler() {
+  const context = useContext(ErrorContext);
+  if (!context) {
+    throw new Error('useErrorHandler must be used within ErrorProvider');
+  }
+  
+  return context.addError;
+}
+
+// Error Toast component
+function ErrorToast({ errors, onDismiss }) {
+  return (
+    <div className="error-toast-container">
+      {errors.map(({ id, error }) => (
+        <div key={id} className="error-toast">
+          <span>{error.message}</span>
+          <button onClick={() => onDismiss(id)}>×</button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+// Usage in components
+function DataComponent() {
+  const handleError = useErrorHandler();
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    fetch('/api/data')
+      .then(response => {
+        if (!response.ok) {
+          throw new Error(`Failed to fetch: ${response.status}`);
+        }
+        return response.json();
+      })
+      .then(setData)
+      .catch(handleError); // Global error handling
+  }, [handleError]);
+  
+  return <div>Data: {JSON.stringify(data)}</div>;
+}
+
+// Enhanced hook with retry functionality
+export function useAsyncOperation() {
+  const handleError = useErrorHandler();
+  
+  return useCallback(async (operation, retries = 3) => {
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        return await operation();
+      } catch (error) {
+        if (attempt === retries) {
+          handleError(error);
+          throw error;
+        }
+        
+        // Exponential backoff
+        await new Promise(resolve => 
+          setTimeout(resolve, Math.pow(2, attempt) * 1000)
+        );
+      }
+    }
+  }, [handleError]);
+}
+```
+</details>
+
 - **Q2:** How do you implement retry logic for failed async operations?
+<details>
+<summary>Answer</summary>
+```jsx
+// Custom hook with retry logic
+function useRetryableAsync(asyncFn, dependencies = [], options = {}) {
+  const {
+    retries = 3,
+    retryDelay = 1000,
+    exponentialBackoff = true,
+    retryCondition = () => true
+  } = options;
+  
+  const [state, setState] = useState({
+    data: null,
+    loading: false,
+    error: null,
+    attempt: 0
+  });
+  
+  const execute = useCallback(async (...args) => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
+    for (let attempt = 1; attempt <= retries + 1; attempt++) {
+      try {
+        setState(prev => ({ ...prev, attempt }));
+        const result = await asyncFn(...args);
+        
+        setState({
+          data: result,
+          loading: false,
+          error: null,
+          attempt
+        });
+        
+        return result;
+      } catch (error) {
+        const isLastAttempt = attempt > retries;
+        const shouldRetry = retryCondition(error, attempt);
+        
+        if (isLastAttempt || !shouldRetry) {
+          setState(prev => ({
+            ...prev,
+            loading: false,
+            error,
+            attempt
+          }));
+          throw error;
+        }
+        
+        // Calculate delay
+        const delay = exponentialBackoff 
+          ? retryDelay * Math.pow(2, attempt - 1)
+          : retryDelay;
+        
+        console.warn(`Attempt ${attempt} failed, retrying in ${delay}ms...`);
+        await new Promise(resolve => setTimeout(resolve, delay));
+      }
+    }
+  }, [asyncFn, retries, retryDelay, exponentialBackoff, retryCondition]);
+  
+  useEffect(() => {
+    execute();
+  }, dependencies);
+  
+  return { ...state, execute, retry: execute };
+}
+
+// Usage
+function DataComponent() {
+  const fetchData = useCallback(async () => {
+    const response = await fetch('/api/data');
+    if (!response.ok) {
+      throw new Error(`HTTP ${response.status}`);
+    }
+    return response.json();
+  }, []);
+  
+  const { data, loading, error, attempt, retry } = useRetryableAsync(
+    fetchData,
+    [], // dependencies
+    {
+      retries: 3,
+      retryDelay: 1000,
+      exponentialBackoff: true,
+      retryCondition: (error, attempt) => {
+        // Only retry on network errors, not 400/401/403
+        return !error.message.includes('400') && 
+               !error.message.includes('401') && 
+               !error.message.includes('403');
+      }
+    }
+  );
+  
+  if (loading) {
+    return <div>Loading... (Attempt {attempt})</div>;
+  }
+  
+  if (error) {
+    return (
+      <div>
+        <p>Error: {error.message}</p>
+        <p>Failed after {attempt} attempts</p>
+        <button onClick={retry}>Retry</button>
+      </div>
+    );
+  }
+  
+  return <div>Data: {JSON.stringify(data)}</div>;
+}
+
+// Circuit breaker pattern
+class CircuitBreaker {
+  constructor(options = {}) {
+    this.failureThreshold = options.failureThreshold || 5;
+    this.resetTimeout = options.resetTimeout || 60000;
+    this.state = 'CLOSED'; // CLOSED, OPEN, HALF_OPEN
+    this.failureCount = 0;
+    this.nextAttempt = Date.now();
+  }
+  
+  async execute(operation) {
+    if (this.state === 'OPEN') {
+      if (Date.now() < this.nextAttempt) {
+        throw new Error('Circuit breaker is OPEN');
+      } else {
+        this.state = 'HALF_OPEN';
+      }
+    }
+    
+    try {
+      const result = await operation();
+      this.onSuccess();
+      return result;
+    } catch (error) {
+      this.onFailure();
+      throw error;
+    }
+  }
+  
+  onSuccess() {
+    this.failureCount = 0;
+    this.state = 'CLOSED';
+  }
+  
+  onFailure() {
+    this.failureCount++;
+    if (this.failureCount >= this.failureThreshold) {
+      this.state = 'OPEN';
+      this.nextAttempt = Date.now() + this.resetTimeout;
+    }
+  }
+}
+
+// Usage with circuit breaker
+const apiCircuitBreaker = new CircuitBreaker({
+  failureThreshold: 3,
+  resetTimeout: 30000
+});
+
+function ComponentWithCircuitBreaker() {
+  const [data, setData] = useState(null);
+  const [error, setError] = useState(null);
+  
+  const fetchData = async () => {
+    try {
+      const result = await apiCircuitBreaker.execute(async () => {
+        const response = await fetch('/api/data');
+        if (!response.ok) throw new Error('API Error');
+        return response.json();
+      });
+      setData(result);
+      setError(null);
+    } catch (error) {
+      setError(error);
+    }
+  };
+  
+  return (
+    <div>
+      <button onClick={fetchData}>Fetch Data</button>
+      {error && <p>Error: {error.message}</p>}
+      {data && <p>Data: {JSON.stringify(data)}</p>}
+    </div>
+  );
+}
+```
+</details>
 
 ---
 
@@ -4025,12 +5197,897 @@ function ProtectedRouteGuard({ children, canAccess }) {
 
 #### **📋 Beginner:**
 - **Q1:** What problem does Context API solve?
+<details>
+<summary>Answer</summary>
+The **Context API** solves the **prop drilling problem** - passing data through multiple component layers to reach a deeply nested component.
+
+**Problems Context solves:**
+- **Prop drilling** - Avoiding unnecessary prop passing
+- **Global state sharing** - Components at any level can access shared data
+- **Component coupling** - Reduces dependencies between parent/child components
+- **Code maintainability** - Cleaner component hierarchy
+
+```jsx
+// ❌ Prop drilling problem
+function App() {
+  const user = { name: 'John', role: 'admin' };
+  const theme = 'dark';
+  
+  return <Dashboard user={user} theme={theme} />;
+}
+
+function Dashboard({ user, theme }) {
+  return (
+    <div>
+      <Sidebar user={user} theme={theme} />
+      <MainContent user={user} theme={theme} />
+    </div>
+  );
+}
+
+function Sidebar({ user, theme }) {
+  return <Navigation user={user} theme={theme} />;
+}
+
+function Navigation({ user, theme }) {
+  return (
+    <nav className={theme}>
+      <UserInfo user={user} />
+    </nav>
+  );
+}
+
+function UserInfo({ user }) {
+  return <span>Welcome, {user.name}</span>;
+}
+
+// ✅ Context API solution
+const UserContext = createContext();
+const ThemeContext = createContext();
+
+function App() {
+  const user = { name: 'John', role: 'admin' };
+  const theme = 'dark';
+  
+  return (
+    <UserContext.Provider value={user}>
+      <ThemeContext.Provider value={theme}>
+        <Dashboard />
+      </ThemeContext.Provider>
+    </UserContext.Provider>
+  );
+}
+
+function Dashboard() {
+  return (
+    <div>
+      <Sidebar />
+      <MainContent />
+    </div>
+  );
+}
+
+function Navigation() {
+  const theme = useContext(ThemeContext);
+  return (
+    <nav className={theme}>
+      <UserInfo />
+    </nav>
+  );
+}
+
+function UserInfo() {
+  const user = useContext(UserContext);
+  return <span>Welcome, {user.name}</span>;
+}
+```
+
+**When to use Context:**
+- **Authentication state** (user login status)
+- **Theme/UI preferences** (dark/light mode)
+- **Internationalization** (language settings)
+- **Shopping cart data**
+- **Application configuration**
+</details>
+
 - **Q2:** How do you avoid prop drilling using Context?
+<details>
+<summary>Answer</summary>
+```jsx
+// Step 1: Create Context
+const AppContext = createContext();
+
+// Step 2: Create Provider Component
+function AppProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [theme, setTheme] = useState('light');
+  const [language, setLanguage] = useState('en');
+  
+  const contextValue = {
+    user,
+    setUser,
+    theme,
+    setTheme,
+    language,
+    setLanguage
+  };
+  
+  return (
+    <AppContext.Provider value={contextValue}>
+      {children}
+    </AppContext.Provider>
+  );
+}
+
+// Step 3: Custom hook for easy access
+function useApp() {
+  const context = useContext(AppContext);
+  if (!context) {
+    throw new Error('useApp must be used within AppProvider');
+  }
+  return context;
+}
+
+// Step 4: Wrap your app
+function App() {
+  return (
+    <AppProvider>
+      <Header />
+      <Main />
+      <Footer />
+    </AppProvider>
+  );
+}
+
+// Step 5: Use context anywhere in the tree
+function Header() {
+  const { user, theme, setTheme } = useApp();
+  
+  return (
+    <header className={`header-${theme}`}>
+      <h1>Welcome {user?.name || 'Guest'}</h1>
+      <button onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}>
+        Toggle Theme
+      </button>
+    </header>
+  );
+}
+
+function DeepNestedComponent() {
+  // Direct access without prop drilling
+  const { user, language } = useApp();
+  
+  return (
+    <div>
+      <p>User: {user?.name}</p>
+      <p>Language: {language}</p>
+    </div>
+  );
+}
+
+// Alternative: Multiple specific contexts
+const UserContext = createContext();
+const ThemeContext = createContext();
+
+function UserProvider({ children }) {
+  const [user, setUser] = useState(null);
+  
+  const login = async (credentials) => {
+    const userData = await authenticate(credentials);
+    setUser(userData);
+  };
+  
+  const logout = () => setUser(null);
+  
+  return (
+    <UserContext.Provider value={{ user, login, logout }}>
+      {children}
+    </UserContext.Provider>
+  );
+}
+
+function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+  
+  const toggleTheme = () => {
+    setTheme(prev => prev === 'light' ? 'dark' : 'light');
+  };
+  
+  return (
+    <ThemeContext.Provider value={{ theme, toggleTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+// Compose providers
+function App() {
+  return (
+    <UserProvider>
+      <ThemeProvider>
+        <MainApp />
+      </ThemeProvider>
+    </UserProvider>
+  );
+}
+```
+</details>
+
 - **Q3:** When should you use Context vs props?
+<details>
+<summary>Answer</summary>
+**Use Context when:**
+- Data is needed by **many components** at different nesting levels
+- **Prop drilling** becomes cumbersome (3+ levels deep)
+- Data is **truly global** (theme, auth, language)
+- Components are **far apart** in the tree
+- You want to **decouple** data from component hierarchy
+
+**Use Props when:**
+- **Direct parent-child** communication
+- Data is **local** to a component subtree
+- **Simple data flow** (1-2 levels deep)
+- **Performance critical** updates
+- **Testing** is easier with explicit dependencies
+
+```jsx
+// ✅ Good use of Props
+function UserCard({ user, onEdit, onDelete }) {
+  return (
+    <div className="user-card">
+      <Avatar src={user.avatar} />
+      <UserInfo user={user} />
+      <ActionButtons onEdit={onEdit} onDelete={onDelete} />
+    </div>
+  );
+}
+
+function UserInfo({ user }) {
+  return (
+    <div>
+      <h3>{user.name}</h3>
+      <p>{user.email}</p>
+    </div>
+  );
+}
+
+// ✅ Good use of Context
+const AuthContext = createContext();
+
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  
+  return (
+    <AuthContext.Provider value={{ user, setUser }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// Any component can access auth state
+function Navbar() {
+  const { user } = useContext(AuthContext);
+  return user ? <LoggedInNav /> : <GuestNav />;
+}
+
+function ProfilePage() {
+  const { user } = useContext(AuthContext);
+  return <Profile user={user} />;
+}
+
+function Sidebar() {
+  const { user } = useContext(AuthContext);
+  return <UserMenu user={user} />;
+}
+
+// ❌ Avoid Context for
+function Counter() {
+  const [count, setCount] = useState(0); // Local state is better
+  return (
+    <div>
+      <span>{count}</span>
+      <button onClick={() => setCount(c => c + 1)}>+</button>
+    </div>
+  );
+}
+
+// ❌ Don't use Context for simple prop passing
+function App() {
+  const title = "My App";
+  return <Header title={title} />; // Direct prop is simpler
+}
+
+// Comparison table
+const comparison = {
+  criteria: {
+    "Scope": {
+      "Props": "Local, parent-child",
+      "Context": "Global, cross-component"
+    },
+    "Performance": {
+      "Props": "Better, no unnecessary re-renders",
+      "Context": "Can cause re-renders if not optimized"
+    },
+    "Testing": {
+      "Props": "Easier, explicit dependencies",
+      "Context": "Requires provider setup"
+    },
+    "Type Safety": {
+      "Props": "Full TypeScript support",
+      "Context": "Requires additional typing"
+    },
+    "Debugging": {
+      "Props": "Clear data flow",
+      "Context": "Less obvious data source"
+    }
+  }
+};
+```
+
+**Decision Framework:**
+1. **Start with props** - Default choice for component communication
+2. **Consider Context** when prop drilling becomes annoying (3+ levels)
+3. **Use Context** for truly global state (auth, theme, i18n)
+4. **Optimize Context** with useMemo and multiple contexts
+5. **Consider alternatives** like component composition or state management libraries
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you optimize Context usage for large applications?
+<details>
+<summary>Answer</summary>
+```jsx
+// 1. Split Context by Concern and Update Frequency
+const UserContext = createContext(); // Rarely changes
+const UIContext = createContext();   // Changes frequently
+
+function UserProvider({ children }) {
+  const [user, setUser] = useState(null);
+  
+  // Memoize to prevent unnecessary re-renders
+  const value = useMemo(() => ({
+    user,
+    setUser
+  }), [user]);
+  
+  return (
+    <UserContext.Provider value={value}>
+      {children}
+    </UserContext.Provider>
+  );
+}
+
+function UIProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+  const [sidebar, setSidebar] = useState(false);
+  
+  const value = useMemo(() => ({
+    theme,
+    setTheme,
+    sidebar,
+    setSidebar
+  }), [theme, sidebar]);
+  
+  return (
+    <UIContext.Provider value={value}>
+      {children}
+    </UIContext.Provider>
+  );
+}
+
+// 2. Selective Context Consumption
+function createSelectorContext(initialState) {
+  const StateContext = createContext();
+  const SelectorContext = createContext();
+  
+  function Provider({ children }) {
+    const [state, setState] = useState(initialState);
+    
+    const selectors = useMemo(() => ({
+      getUser: () => state.user,
+      getTheme: () => state.theme,
+      getCounter: () => state.counter
+    }), [state]);
+    
+    return (
+      <StateContext.Provider value={{ state, setState }}>
+        <SelectorContext.Provider value={selectors}>
+          {children}
+        </SelectorContext.Provider>
+      </StateContext.Provider>
+    );
+  }
+  
+  function useSelector(selector) {
+    const selectors = useContext(SelectorContext);
+    return selector(selectors);
+  }
+  
+  return { Provider, useSelector };
+}
+
+// Usage
+const { Provider: AppProvider, useSelector } = createSelectorContext({
+  user: null,
+  theme: 'light',
+  counter: 0
+});
+
+function UserComponent() {
+  const user = useSelector(s => s.getUser()); // Only re-renders when user changes
+  return <div>{user?.name}</div>;
+}
+
+// 3. Context with Reducers for Complex State
+const AppStateContext = createContext();
+const AppDispatchContext = createContext();
+
+function appReducer(state, action) {
+  switch (action.type) {
+    case 'SET_USER':
+      return { ...state, user: action.payload };
+    case 'SET_THEME':
+      return { ...state, theme: action.payload };
+    case 'TOGGLE_SIDEBAR':
+      return { ...state, sidebarOpen: !state.sidebarOpen };
+    default:
+      throw new Error(`Unknown action: ${action.type}`);
+  }
+}
+
+function AppProvider({ children }) {
+  const [state, dispatch] = useReducer(appReducer, {
+    user: null,
+    theme: 'light',
+    sidebarOpen: false
+  });
+  
+  return (
+    <AppStateContext.Provider value={state}>
+      <AppDispatchContext.Provider value={dispatch}>
+        {children}
+      </AppDispatchContext.Provider>
+    </AppStateContext.Provider>
+  );
+}
+
+// Custom hooks
+function useAppState() {
+  const context = useContext(AppStateContext);
+  if (!context) {
+    throw new Error('useAppState must be used within AppProvider');
+  }
+  return context;
+}
+
+function useAppDispatch() {
+  const context = useContext(AppDispatchContext);
+  if (!context) {
+    throw new Error('useAppDispatch must be used within AppProvider');
+  }
+  return context;
+}
+
+// 4. Lazy Context Loading
+function createLazyContext(loader) {
+  const LazyContext = createContext();
+  
+  function Provider({ children }) {
+    const [state, setState] = useState(null);
+    const [loading, setLoading] = useState(false);
+    
+    const loadData = useCallback(async () => {
+      if (!state && !loading) {
+        setLoading(true);
+        try {
+          const data = await loader();
+          setState(data);
+        } finally {
+          setLoading(false);
+        }
+      }
+    }, [state, loading]);
+    
+    const value = useMemo(() => ({
+      state,
+      loading,
+      loadData
+    }), [state, loading, loadData]);
+    
+    return (
+      <LazyContext.Provider value={value}>
+        {children}
+      </LazyContext.Provider>
+    );
+  }
+  
+  function useLazyContext() {
+    return useContext(LazyContext);
+  }
+  
+  return { Provider, useLazyContext };
+}
+
+// Usage
+const { Provider: ConfigProvider, useLazyContext: useConfig } = createLazyContext(
+  () => fetch('/api/config').then(res => res.json())
+);
+
+function ConfigConsumer() {
+  const { state: config, loading, loadData } = useConfig();
+  
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+  
+  if (loading) return <div>Loading config...</div>;
+  return <div>{config?.appName}</div>;
+}
+
+// 5. Context Debugging and DevTools
+function createDebuggableContext(name, initialState) {
+  const Context = createContext();
+  
+  function Provider({ children }) {
+    const [state, setState] = useState(initialState);
+    
+    // Debug logging
+    useEffect(() => {
+      if (process.env.NODE_ENV === 'development') {
+        console.log(`${name} Context updated:`, state);
+      }
+    }, [state]);
+    
+    const value = useMemo(() => ({
+      state,
+      setState,
+      _debug: {
+        name,
+        timestamp: Date.now()
+      }
+    }), [state]);
+    
+    return (
+      <Context.Provider value={value}>
+        {children}
+      </Context.Provider>
+    );
+  }
+  
+  return { Provider, Context };
+}
+
+// 6. Performance Monitoring
+function useContextPerformance(contextName, dependencies) {
+  const renderCount = useRef(0);
+  const lastRender = useRef(Date.now());
+  
+  useEffect(() => {
+    renderCount.current++;
+    const now = Date.now();
+    const timeSinceLastRender = now - lastRender.current;
+    
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`${contextName} render #${renderCount.current}, time since last: ${timeSinceLastRender}ms`);
+    }
+    
+    lastRender.current = now;
+  }, dependencies);
+}
+
+// Usage in components
+function ExpensiveComponent() {
+  const { user } = useAppState();
+  
+  useContextPerformance('ExpensiveComponent', [user]);
+  
+  return <div>{user?.name}</div>;
+}
+```
+</details>
+
 - **Q2:** How do you implement multiple contexts efficiently?
+<details>
+<summary>Answer</summary>
+```jsx
+// 1. Context Composition Pattern
+function createContextComposer() {
+  const providers = [];
+  
+  const addProvider = (Provider) => {
+    providers.push(Provider);
+    return composer;
+  };
+  
+  const Compose = ({ children }) => {
+    return providers.reduceRight(
+      (acc, Provider) => <Provider>{acc}</Provider>,
+      children
+    );
+  };
+  
+  const composer = { addProvider, Compose };
+  return composer;
+}
+
+// Usage
+const AppProviders = createContextComposer()
+  .addProvider(AuthProvider)
+  .addProvider(ThemeProvider)
+  .addProvider(I18nProvider)
+  .addProvider(NotificationProvider);
+
+function App() {
+  return (
+    <AppProviders.Compose>
+      <MainApp />
+    </AppProviders.Compose>
+  );
+}
+
+// 2. Factory Pattern for Context Creation
+function createContextProvider(name, initialState, reducer) {
+  const StateContext = createContext();
+  const DispatchContext = createContext();
+  
+  function Provider({ children }) {
+    const [state, dispatch] = useReducer(reducer, initialState);
+    
+    return (
+      <StateContext.Provider value={state}>
+        <DispatchContext.Provider value={dispatch}>
+          {children}
+        </DispatchContext.Provider>
+      </StateContext.Provider>
+    );
+  }
+  
+  function useContextState() {
+    const context = useContext(StateContext);
+    if (!context) {
+      throw new Error(`use${name}State must be used within ${name}Provider`);
+    }
+    return context;
+  }
+  
+  function useContextDispatch() {
+    const context = useContext(DispatchContext);
+    if (!context) {
+      throw new Error(`use${name}Dispatch must be used within ${name}Provider`);
+    }
+    return context;
+  }
+  
+  return {
+    Provider,
+    useContextState,
+    useContextDispatch
+  };
+}
+
+// Create multiple contexts
+const {
+  Provider: TodoProvider,
+  useContextState: useTodos,
+  useContextDispatch: useTodoDispatch
+} = createContextProvider('Todo', [], todosReducer);
+
+const {
+  Provider: UserProvider,
+  useContextState: useUser,
+  useContextDispatch: useUserDispatch
+} = createContextProvider('User', null, userReducer);
+
+// 3. Hierarchical Context Structure
+function createHierarchicalContext() {
+  const contexts = new Map();
+  
+  const registerContext = (name, Provider) => {
+    contexts.set(name, Provider);
+  };
+  
+  const ContextTree = ({ structure, children }) => {
+    const buildTree = (node, child) => {
+      if (typeof node === 'string') {
+        const Provider = contexts.get(node);
+        return Provider ? <Provider>{child}</Provider> : child;
+      }
+      
+      if (Array.isArray(node)) {
+        return node.reduceRight((acc, item) => buildTree(item, acc), child);
+      }
+      
+      return child;
+    };
+    
+    return buildTree(structure, children);
+  };
+  
+  return { registerContext, ContextTree };
+}
+
+// Usage
+const { registerContext, ContextTree } = createHierarchicalContext();
+
+registerContext('auth', AuthProvider);
+registerContext('theme', ThemeProvider);
+registerContext('i18n', I18nProvider);
+
+function App() {
+  return (
+    <ContextTree structure={['auth', ['theme', 'i18n']]}>
+      <MainApp />
+    </ContextTree>
+  );
+}
+
+// 4. Conditional Context Providers
+function ConditionalProviders({ children, features = {} }) {
+  let app = children;
+  
+  if (features.auth) {
+    app = <AuthProvider>{app}</AuthProvider>;
+  }
+  
+  if (features.theme) {
+    app = <ThemeProvider>{app}</ThemeProvider>;
+  }
+  
+  if (features.analytics) {
+    app = <AnalyticsProvider>{app}</AnalyticsProvider>;
+  }
+  
+  return app;
+}
+
+// Usage
+function App() {
+  const features = {
+    auth: true,
+    theme: true,
+    analytics: process.env.NODE_ENV === 'production'
+  };
+  
+  return (
+    <ConditionalProviders features={features}>
+      <MainApp />
+    </ConditionalProviders>
+  );
+}
+
+// 5. Context Registry with Dependency Injection
+class ContextRegistry {
+  constructor() {
+    this.contexts = new Map();
+    this.dependencies = new Map();
+  }
+  
+  register(name, Provider, deps = []) {
+    this.contexts.set(name, Provider);
+    this.dependencies.set(name, deps);
+  }
+  
+  resolve(names) {
+    const sorted = this.topologicalSort(names);
+    
+    return ({ children }) => {
+      return sorted.reduce((acc, name) => {
+        const Provider = this.contexts.get(name);
+        return Provider ? <Provider>{acc}</Provider> : acc;
+      }, children);
+    };
+  }
+  
+  topologicalSort(names) {
+    const visited = new Set();
+    const result = [];
+    
+    const visit = (name) => {
+      if (visited.has(name)) return;
+      visited.add(name);
+      
+      const deps = this.dependencies.get(name) || [];
+      deps.forEach(visit);
+      
+      result.push(name);
+    };
+    
+    names.forEach(visit);
+    return result;
+  }
+}
+
+// Usage
+const registry = new ContextRegistry();
+
+registry.register('auth', AuthProvider);
+registry.register('theme', ThemeProvider, ['auth']); // theme depends on auth
+registry.register('notifications', NotificationProvider, ['auth']);
+
+const AppProviders = registry.resolve(['auth', 'theme', 'notifications']);
+
+function App() {
+  return (
+    <AppProviders>
+      <MainApp />
+    </AppProviders>
+  );
+}
+
+// 6. Performance-Optimized Multi-Context
+function createOptimizedContexts(configs) {
+  const contexts = {};
+  
+  configs.forEach(({ name, initialState, actions }) => {
+    const StateContext = createContext();
+    const ActionsContext = createContext();
+    
+    function Provider({ children }) {
+      const [state, setState] = useState(initialState);
+      
+      const memoizedActions = useMemo(() => {
+        const actionHandlers = {};
+        
+        Object.entries(actions).forEach(([actionName, actionFn]) => {
+          actionHandlers[actionName] = (...args) => {
+            setState(prevState => actionFn(prevState, ...args));
+          };
+        });
+        
+        return actionHandlers;
+      }, []);
+      
+      return (
+        <StateContext.Provider value={state}>
+          <ActionsContext.Provider value={memoizedActions}>
+            {children}
+          </ActionsContext.Provider>
+        </StateContext.Provider>
+      );
+    }
+    
+    contexts[name] = {
+      Provider,
+      useState: () => useContext(StateContext),
+      useActions: () => useContext(ActionsContext)
+    };
+  });
+  
+  return contexts;
+}
+
+// Usage
+const { user, todo, theme } = createOptimizedContexts([
+  {
+    name: 'user',
+    initialState: null,
+    actions: {
+      setUser: (state, user) => user,
+      updateUser: (state, updates) => ({ ...state, ...updates }),
+      clearUser: () => null
+    }
+  },
+  {
+    name: 'todo',
+    initialState: [],
+    actions: {
+      addTodo: (state, todo) => [...state, todo],
+      removeTodo: (state, id) => state.filter(t => t.id !== id),
+      toggleTodo: (state, id) => state.map(t => 
+        t.id === id ? { ...t, completed: !t.completed } : t
+      )
+    }
+  }
+]);
+
+function UserComponent() {
+  const currentUser = user.useState();
+  const { setUser, updateUser } = user.useActions();
+  
+  return <div>{currentUser?.name}</div>;
+}
+```
+</details>
 
 ---
 
@@ -4038,12 +6095,691 @@ function ProtectedRouteGuard({ children, canAccess }) {
 
 #### **📋 Beginner:**
 - **Q1:** What are the main differences between Context and Redux?
+<details>
+<summary>Answer</summary>
+| Feature | Context API | Redux |
+|---------|-------------|--------|
+| **Purpose** | Built-in React feature for prop drilling | External state management library |
+| **Boilerplate** | Minimal setup | More setup (actions, reducers, store) |
+| **Learning Curve** | Easy - React concepts | Steeper - additional concepts |
+| **Bundle Size** | 0KB (built-in) | ~2.5KB (Redux Toolkit) |
+| **DevTools** | Limited | Excellent Redux DevTools |
+| **Time Travel** | Not built-in | Yes, with DevTools |
+| **Middleware** | No built-in support | Rich middleware ecosystem |
+| **Performance** | Can cause unnecessary re-renders | Optimized with selectors |
+| **Async Handling** | Manual (useEffect + useState) | Built-in with middleware (Thunk, Saga) |
+| **State Structure** | Flexible, any shape | Encourages normalized state |
+
+```jsx
+// Context API Example
+const UserContext = createContext();
+
+function UserProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(false);
+  
+  const login = async (credentials) => {
+    setLoading(true);
+    try {
+      const userData = await api.login(credentials);
+      setUser(userData);
+    } finally {
+      setLoading(false);
+    }
+  };
+  
+  return (
+    <UserContext.Provider value={{ user, loading, login }}>
+      {children}
+    </UserContext.Provider>
+  );
+}
+
+// Redux Example
+// Actions
+const loginStart = () => ({ type: 'LOGIN_START' });
+const loginSuccess = (user) => ({ type: 'LOGIN_SUCCESS', payload: user });
+const loginFailure = (error) => ({ type: 'LOGIN_FAILURE', payload: error });
+
+// Reducer
+function userReducer(state = { user: null, loading: false }, action) {
+  switch (action.type) {
+    case 'LOGIN_START':
+      return { ...state, loading: true };
+    case 'LOGIN_SUCCESS':
+      return { user: action.payload, loading: false, error: null };
+    case 'LOGIN_FAILURE':
+      return { ...state, loading: false, error: action.payload };
+    default:
+      return state;
+  }
+}
+
+// Thunk action creator
+const login = (credentials) => async (dispatch) => {
+  dispatch(loginStart());
+  try {
+    const user = await api.login(credentials);
+    dispatch(loginSuccess(user));
+  } catch (error) {
+    dispatch(loginFailure(error.message));
+  }
+};
+```
+</details>
+
 - **Q2:** When would you choose Context over Redux?
+<details>
+<summary>Answer</summary>
+**Choose Context when:**
+
+1. **Simple state management** - Few state values, minimal complexity
+2. **Small to medium apps** - Limited number of components
+3. **Prop drilling solution** - Main goal is avoiding prop passing
+4. **React-only project** - No external dependencies preferred
+5. **Quick prototyping** - Fast development, minimal setup
+6. **Theme/UI state** - Simple global UI preferences
+
+```jsx
+// Good Context use cases
+
+// 1. Theme Management
+const ThemeContext = createContext();
+
+function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+  
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+// 2. Authentication State
+const AuthContext = createContext();
+
+function AuthProvider({ children }) {
+  const [user, setUser] = useState(null);
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  
+  const login = (userData) => {
+    setUser(userData);
+    setIsAuthenticated(true);
+  };
+  
+  const logout = () => {
+    setUser(null);
+    setIsAuthenticated(false);
+  };
+  
+  return (
+    <AuthContext.Provider value={{ user, isAuthenticated, login, logout }}>
+      {children}
+    </AuthContext.Provider>
+  );
+}
+
+// 3. Language/Internationalization
+const I18nContext = createContext();
+
+function I18nProvider({ children }) {
+  const [language, setLanguage] = useState('en');
+  const [translations, setTranslations] = useState({});
+  
+  const t = (key) => translations[key] || key;
+  
+  return (
+    <I18nContext.Provider value={{ language, setLanguage, t }}>
+      {children}
+    </I18nContext.Provider>
+  );
+}
+
+// 4. Simple Shopping Cart
+const CartContext = createContext();
+
+function CartProvider({ children }) {
+  const [items, setItems] = useState([]);
+  
+  const addItem = (item) => setItems(prev => [...prev, item]);
+  const removeItem = (id) => setItems(prev => prev.filter(item => item.id !== id));
+  const clearCart = () => setItems([]);
+  
+  const total = items.reduce((sum, item) => sum + item.price, 0);
+  
+  return (
+    <CartContext.Provider value={{ items, addItem, removeItem, clearCart, total }}>
+      {children}
+    </CartContext.Provider>
+  );
+}
+```
+
+**Context advantages:**
+- **Zero configuration** - Works out of the box
+- **Type safety** - Easy TypeScript integration
+- **React integration** - Follows React patterns
+- **Bundle size** - No additional dependencies
+- **Simple mental model** - Just props at distance
+</details>
+
 - **Q3:** When would you choose Redux over Context?
+<details>
+<summary>Answer</summary>
+**Choose Redux when:**
+
+1. **Complex state logic** - Multiple reducers, complex updates
+2. **Large applications** - Many components, deep nesting
+3. **Time travel debugging** - Need to replay actions
+4. **Middleware needs** - Logging, analytics, side effects
+5. **Performance critical** - Need fine-grained optimizations
+6. **Team collaboration** - Standardized patterns, predictable structure
+
+```jsx
+// Good Redux use cases
+
+// 1. Complex E-commerce State
+const store = configureStore({
+  reducer: {
+    user: userReducer,
+    products: productsReducer,
+    cart: cartReducer,
+    orders: ordersReducer,
+    ui: uiReducer,
+    notifications: notificationsReducer
+  },
+  middleware: (getDefaultMiddleware) =>
+    getDefaultMiddleware().concat(
+      loggerMiddleware,
+      analyticsMiddleware
+    )
+});
+
+// 2. Real-time Data Management
+const socketMiddleware = (store) => (next) => (action) => {
+  if (action.type === 'SOCKET_CONNECT') {
+    const socket = io();
+    socket.on('message', (data) => {
+      store.dispatch({ type: 'MESSAGE_RECEIVED', payload: data });
+    });
+  }
+  return next(action);
+};
+
+// 3. Complex Forms with Validation
+const formReducer = (state = initialState, action) => {
+  switch (action.type) {
+    case 'FIELD_CHANGE':
+      return {
+        ...state,
+        values: { ...state.values, [action.field]: action.value },
+        errors: validateField(action.field, action.value, state.values)
+      };
+    case 'SUBMIT_START':
+      return { ...state, submitting: true };
+    case 'SUBMIT_SUCCESS':
+      return { ...state, submitting: false, submitted: true };
+    default:
+      return state;
+  }
+};
+
+// 4. Data Normalization
+const postsAdapter = createEntityAdapter();
+
+const postsSlice = createSlice({
+  name: 'posts',
+  initialState: postsAdapter.getInitialState(),
+  reducers: {
+    postsReceived: postsAdapter.setAll,
+    postAdded: postsAdapter.addOne,
+    postUpdated: postsAdapter.updateOne
+  }
+});
+
+// Selectors for optimized access
+const selectAllPosts = postsAdapter.getSelectors().selectAll;
+const selectPostById = (state, postId) => 
+  postsAdapter.getSelectors().selectById(state, postId);
+```
+
+**Redux advantages:**
+- **Predictable state** - Pure functions, immutable updates
+- **DevTools** - Time travel, action replay, state inspection
+- **Ecosystem** - Rich middleware, tools, patterns
+- **Performance** - Memoized selectors, optimized updates
+- **Testing** - Pure functions easy to test
+- **Scalability** - Handles complex state relationships
+
+**Decision Matrix:**
+```jsx
+const decisionGuide = {
+  projectSize: {
+    small: "Context",
+    medium: "Context or Redux",
+    large: "Redux"
+  },
+  stateComplexity: {
+    simple: "Context",
+    moderate: "Context with useReducer",
+    complex: "Redux"
+  },
+  teamSize: {
+    solo: "Context",
+    small: "Either",
+    large: "Redux (consistency)"
+  },
+  debuggingNeeds: {
+    basic: "Context",
+    advanced: "Redux"
+  },
+  performanceRequirements: {
+    basic: "Context",
+    critical: "Redux with selectors"
+  }
+};
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do the performance characteristics of Context and Redux compare?
+<details>
+<summary>Answer</summary>
+**Performance Comparison:**
+
+| Aspect | Context API | Redux |
+|--------|-------------|--------|
+| **Re-render Scope** | All consumers re-render | Only connected components |
+| **Optimization** | Manual (useMemo, split contexts) | Built-in (selectors, React-Redux) |
+| **Bundle Impact** | 0KB | ~2.5KB (RTK) |
+| **Update Efficiency** | Object equality checks | Shallow equality with selectors |
+| **Memory Usage** | Lower overhead | Higher (normalized state) |
+
+```jsx
+// Context Performance Issues
+function UserContext() {
+  const [user, setUser] = useState({ name: 'John', theme: 'light' });
+  
+  // ❌ All consumers re-render when any part changes
+  const value = {
+    user,
+    setUser,
+    updateName: (name) => setUser(prev => ({ ...prev, name })),
+    updateTheme: (theme) => setUser(prev => ({ ...prev, theme }))
+  };
+  
+  return (
+    <UserContext.Provider value={value}>
+      <App />
+    </UserContext.Provider>
+  );
+}
+
+// All these components re-render when user.name OR user.theme changes
+function UserName() {
+  const { user } = useContext(UserContext);
+  return <span>{user.name}</span>; // Only needs name
+}
+
+function ThemeButton() {
+  const { user, updateTheme } = useContext(UserContext);
+  return <button onClick={() => updateTheme('dark')}>{user.theme}</button>;
+}
+
+// ✅ Context Performance Solutions
+// 1. Split contexts by concern
+const UserNameContext = createContext();
+const UserThemeContext = createContext();
+
+function OptimizedProvider({ children }) {
+  const [name, setName] = useState('John');
+  const [theme, setTheme] = useState('light');
+  
+  return (
+    <UserNameContext.Provider value={{ name, setName }}>
+      <UserThemeContext.Provider value={{ theme, setTheme }}>
+        {children}
+      </UserThemeContext.Provider>
+    </UserNameContext.Provider>
+  );
+}
+
+// 2. Memoize context values
+function MemoizedProvider({ children }) {
+  const [user, setUser] = useState({ name: 'John', theme: 'light' });
+  
+  const nameContext = useMemo(() => ({
+    name: user.name,
+    setName: (name) => setUser(prev => ({ ...prev, name }))
+  }), [user.name]);
+  
+  const themeContext = useMemo(() => ({
+    theme: user.theme,
+    setTheme: (theme) => setUser(prev => ({ ...prev, theme }))
+  }), [user.theme]);
+  
+  return (
+    <UserNameContext.Provider value={nameContext}>
+      <UserThemeContext.Provider value={themeContext}>
+        {children}
+      </UserThemeContext.Provider>
+    </UserNameContext.Provider>
+  );
+}
+
+// Redux Performance Advantages
+function UserComponent() {
+  // Only re-renders when user.name changes
+  const userName = useSelector(state => state.user.name);
+  
+  return <span>{userName}</span>;
+}
+
+function ThemeComponent() {
+  // Only re-renders when user.theme changes
+  const theme = useSelector(state => state.user.theme);
+  const dispatch = useDispatch();
+  
+  return (
+    <button onClick={() => dispatch(setTheme('dark'))}>
+      {theme}
+    </button>
+  );
+}
+
+// Advanced Redux Performance
+// Memoized selectors with Reselect
+const selectUser = (state) => state.user;
+const selectUserPosts = (state) => state.posts;
+
+const selectUserWithPostCount = createSelector(
+  [selectUser, selectUserPosts],
+  (user, posts) => ({
+    ...user,
+    postCount: posts.filter(post => post.authorId === user.id).length
+  })
+);
+
+// Component only re-renders when user data or relevant posts change
+function UserProfile() {
+  const userWithPosts = useSelector(selectUserWithPostCount);
+  return <div>{userWithPosts.name} ({userWithPosts.postCount} posts)</div>;
+}
+
+// Performance Measurement
+function PerformanceTest() {
+  const [contextRenders, setContextRenders] = useState(0);
+  const [reduxRenders, setReduxRenders] = useState(0);
+  
+  useEffect(() => {
+    console.log(`Context renders: ${contextRenders}, Redux renders: ${reduxRenders}`);
+  });
+  
+  return (
+    <div>
+      <ContextComponent onRender={() => setContextRenders(c => c + 1)} />
+      <ReduxComponent onRender={() => setReduxRenders(c => c + 1)} />
+    </div>
+  );
+}
+
+// Context with performance monitoring
+function useRenderCount(name) {
+  const renderCount = useRef(0);
+  useEffect(() => {
+    renderCount.current++;
+    console.log(`${name} rendered ${renderCount.current} times`);
+  });
+}
+
+function ContextComponent() {
+  useRenderCount('ContextComponent');
+  const { user } = useContext(UserContext);
+  return <div>{user.name}</div>;
+}
+```
+
+**Performance Best Practices:**
+
+**Context:**
+- Split contexts by update frequency
+- Memoize context values
+- Use React.memo for consumer components
+- Consider useCallback for functions
+
+**Redux:**
+- Use specific selectors
+- Memoize expensive selectors with Reselect
+- Normalize state shape
+- Use RTK Query for API state
+</details>
+
 - **Q2:** How do you decide between Context, Redux, and other state management solutions?
+<details>
+<summary>Answer</summary>
+**Decision Framework:**
+
+```jsx
+// Decision Tree Function
+function chooseStateManagement(requirements) {
+  const {
+    appSize,
+    stateComplexity,
+    teamSize,
+    performanceNeeds,
+    debuggingNeeds,
+    asyncOperations,
+    serverState,
+    realTimeUpdates
+  } = requirements;
+  
+  // Local State - useState/useReducer
+  if (stateComplexity === 'simple' && appSize === 'small') {
+    return 'useState';
+  }
+  
+  if (stateComplexity === 'moderate' && appSize === 'small') {
+    return 'useReducer';
+  }
+  
+  // Context API
+  if (
+    appSize === 'small-medium' &&
+    stateComplexity === 'simple' &&
+    !performanceNeeds.critical &&
+    !debuggingNeeds.advanced
+  ) {
+    return 'Context API';
+  }
+  
+  // Redux/Redux Toolkit
+  if (
+    appSize === 'large' ||
+    stateComplexity === 'complex' ||
+    debuggingNeeds.advanced ||
+    teamSize === 'large'
+  ) {
+    return 'Redux Toolkit';
+  }
+  
+  // Zustand
+  if (
+    appSize === 'medium' &&
+    stateComplexity === 'moderate' &&
+    performanceNeeds.good
+  ) {
+    return 'Zustand';
+  }
+  
+  // React Query/SWR for server state
+  if (serverState.heavy) {
+    return 'React Query + ' + chooseStateManagement({
+      ...requirements,
+      serverState: { heavy: false }
+    });
+  }
+  
+  return 'Context API'; // Default fallback
+}
+
+// Usage examples
+const smallApp = chooseStateManagement({
+  appSize: 'small',
+  stateComplexity: 'simple',
+  teamSize: 'solo',
+  performanceNeeds: { critical: false },
+  debuggingNeeds: { advanced: false },
+  serverState: { heavy: false }
+});
+// Result: "useState"
+
+const enterpriseApp = chooseStateManagement({
+  appSize: 'large',
+  stateComplexity: 'complex',
+  teamSize: 'large',
+  performanceNeeds: { critical: true },
+  debuggingNeeds: { advanced: true },
+  serverState: { heavy: true }
+});
+// Result: "React Query + Redux Toolkit"
+```
+
+**State Management Solutions Comparison:**
+
+| Solution | Best For | Pros | Cons |
+|----------|----------|------|------|
+| **useState** | Component-local state | Simple, built-in | Limited scope |
+| **useReducer** | Complex local state | Predictable updates | Still local |
+| **Context** | Simple global state | No dependencies, React-native | Performance issues |
+| **Redux Toolkit** | Complex apps, large teams | DevTools, ecosystem, predictable | Learning curve, boilerplate |
+| **Zustand** | Medium complexity | Small bundle, simple API | Smaller ecosystem |
+| **Jotai** | Atomic state | Fine-grained reactivity | New paradigm |
+| **Valtio** | Mutable state | Proxy-based, intuitive | Less predictable |
+| **React Query** | Server state | Caching, synchronization | Only for server state |
+
+```jsx
+// Practical Examples
+
+// 1. Simple Counter - useState
+function Counter() {
+  const [count, setCount] = useState(0);
+  return (
+    <div>
+      <span>{count}</span>
+      <button onClick={() => setCount(c => c + 1)}>+</button>
+    </div>
+  );
+}
+
+// 2. Form with validation - useReducer
+function useForm(initialState, validations) {
+  const [state, dispatch] = useReducer(formReducer, {
+    values: initialState,
+    errors: {},
+    touched: {},
+    isValid: false
+  });
+  
+  const updateField = (name, value) => {
+    dispatch({ type: 'UPDATE_FIELD', payload: { name, value } });
+    
+    if (validations[name]) {
+      const error = validations[name](value);
+      dispatch({ type: 'SET_ERROR', payload: { name, error } });
+    }
+  };
+  
+  return { state, updateField };
+}
+
+// 3. Theme system - Context
+const ThemeContext = createContext();
+
+function ThemeProvider({ children }) {
+  const [theme, setTheme] = useState('light');
+  return (
+    <ThemeContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeContext.Provider>
+  );
+}
+
+// 4. E-commerce app - Redux Toolkit
+const store = configureStore({
+  reducer: {
+    auth: authSlice.reducer,
+    products: productsSlice.reducer,
+    cart: cartSlice.reducer,
+    orders: ordersSlice.reducer
+  }
+});
+
+// 5. Quick prototype - Zustand
+const useStore = create((set) => ({
+  count: 0,
+  increment: () => set((state) => ({ count: state.count + 1 })),
+  decrement: () => set((state) => ({ count: state.count - 1 }))
+}));
+
+// 6. Atomic state - Jotai
+const countAtom = atom(0);
+const doubleCountAtom = atom((get) => get(countAtom) * 2);
+
+function Counter() {
+  const [count, setCount] = useAtom(countAtom);
+  const doubleCount = useAtomValue(doubleCountAtom);
+  
+  return (
+    <div>
+      <div>Count: {count}</div>
+      <div>Double: {doubleCount}</div>
+      <button onClick={() => setCount(c => c + 1)}>+</button>
+    </div>
+  );
+}
+
+// 7. Server state - React Query
+function UserProfile({ userId }) {
+  const { data: user, isLoading, error } = useQuery({
+    queryKey: ['user', userId],
+    queryFn: () => fetchUser(userId),
+    staleTime: 5 * 60 * 1000 // 5 minutes
+  });
+  
+  if (isLoading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error.message}</div>;
+  
+  return <div>Welcome, {user.name}!</div>;
+}
+
+// Hybrid approach for complex apps
+function App() {
+  return (
+    <QueryClient client={queryClient}>
+      <Provider store={reduxStore}>
+        <ThemeProvider>
+          <Router>
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/profile" element={<Profile />} />
+            </Routes>
+          </Router>
+        </ThemeProvider>
+      </Provider>
+    </QueryClient>
+  );
+}
+```
+
+**Decision Guidelines:**
+1. **Start simple** - Begin with local state (useState/useReducer)
+2. **Identify pain points** - Prop drilling, complex updates, performance
+3. **Choose incrementally** - Add state management as needed
+4. **Consider team** - Experience level, preferences, standards
+5. **Evaluate ecosystem** - DevTools, middleware, community support
+6. **Plan for growth** - How will requirements change over time
+</details>
 
 ---
 
@@ -4055,12 +6791,238 @@ function ProtectedRouteGuard({ children, canAccess }) {
 
 #### **📋 Beginner:**
 - **Q1:** How do you fetch data in React components?
+<details>
+<summary>Answer</summary>
+Use **useEffect** for data fetching on mount:
+
+```jsx
+function UserProfile({ userId }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    const fetchUser = async () => {
+      try {
+        const response = await fetch(`/api/users/${userId}`);
+        const userData = await response.json();
+        setUser(userData);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchUser();
+  }, [userId]);
+  
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  return <div>Welcome, {user?.name}</div>;
+}
+```
+
+**Key patterns:**
+- Fetch in `useEffect`, not render
+- Handle loading/error states
+- Include dependencies in dependency array
+</details>
+
 - **Q2:** Why shouldn't you fetch data directly in the render method?
+<details>
+<summary>Answer</summary>
+**Problems with fetching in render:**
+- **Infinite requests** - Component re-renders trigger new fetches
+- **Performance** - Blocks rendering
+- **Side effects** - Render should be pure
+
+```jsx
+// ❌ Wrong - fetches on every render
+function BadComponent() {
+  const [data, setData] = useState(null);
+  
+  // This runs on every render!
+  fetch('/api/data').then(res => res.json()).then(setData);
+  
+  return <div>{data?.message}</div>;
+}
+
+// ✅ Correct - fetch in useEffect
+function GoodComponent() {
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    fetch('/api/data').then(res => res.json()).then(setData);
+  }, []); // Runs once on mount
+  
+  return <div>{data?.message}</div>;
+}
+```
+</details>
+
 - **Q3:** What's the difference between fetch and axios for React applications?
+<details>
+<summary>Answer</summary>
+| Feature | fetch | axios |
+|---------|-------|-------|
+| **Bundle size** | Built-in (0KB) | ~13KB |
+| **JSON parsing** | Manual | Automatic |
+| **Error handling** | Only network errors | HTTP errors too |
+| **Request/Response interceptors** | No | Yes |
+| **Request cancellation** | AbortController | CancelToken |
+| **Timeout** | Manual | Built-in |
+
+```jsx
+// fetch
+const fetchData = async () => {
+  const response = await fetch('/api/data');
+  if (!response.ok) {
+    throw new Error('Request failed');
+  }
+  return response.json();
+};
+
+// axios
+const fetchData = async () => {
+  const response = await axios.get('/api/data');
+  return response.data; // Already parsed
+};
+```
+
+**Choose fetch for:** Simple requests, smaller bundle size
+**Choose axios for:** Complex apps, interceptors, better DX
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you handle race conditions when fetching data?
+<details>
+<summary>Answer</summary>
+**Race condition:** Multiple requests in flight, latest request might not be last response.
+
+```jsx
+// ❌ Race condition problem
+function SearchResults({ query }) {
+  const [results, setResults] = useState([]);
+  
+  useEffect(() => {
+    if (query) {
+      searchAPI(query).then(setResults); // Race condition!
+    }
+  }, [query]);
+  
+  return <div>{results.map(r => <div key={r.id}>{r.title}</div>)}</div>;
+}
+
+// ✅ Solution 1: Ignore stale requests
+function SearchResults({ query }) {
+  const [results, setResults] = useState([]);
+  
+  useEffect(() => {
+    let ignore = false;
+    
+    if (query) {
+      searchAPI(query).then(data => {
+        if (!ignore) setResults(data);
+      });
+    }
+    
+    return () => { ignore = true; };
+  }, [query]);
+  
+  return <div>{results.map(r => <div key={r.id}>{r.title}</div>)}</div>;
+}
+
+// ✅ Solution 2: AbortController
+function SearchResults({ query }) {
+  const [results, setResults] = useState([]);
+  
+  useEffect(() => {
+    const controller = new AbortController();
+    
+    if (query) {
+      fetch(`/api/search?q=${query}`, { signal: controller.signal })
+        .then(res => res.json())
+        .then(setResults)
+        .catch(err => {
+          if (err.name !== 'AbortError') console.error(err);
+        });
+    }
+    
+    return () => controller.abort();
+  }, [query]);
+  
+  return <div>{results.map(r => <div key={r.id}>{r.title}</div>)}</div>;
+}
+```
+</details>
+
 - **Q2:** How do you implement request cancellation?
+<details>
+<summary>Answer</summary>
+```jsx
+// Method 1: AbortController (fetch)
+function DataComponent() {
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    const controller = new AbortController();
+    
+    fetch('/api/data', { signal: controller.signal })
+      .then(res => res.json())
+      .then(setData)
+      .catch(err => {
+        if (err.name !== 'AbortError') {
+          console.error('Fetch failed:', err);
+        }
+      });
+    
+    return () => controller.abort();
+  }, []);
+  
+  return <div>{data?.message}</div>;
+}
+
+// Method 2: Axios cancellation
+import axios from 'axios';
+
+function DataComponent() {
+  const [data, setData] = useState(null);
+  
+  useEffect(() => {
+    const source = axios.CancelToken.source();
+    
+    axios.get('/api/data', { cancelToken: source.token })
+      .then(response => setData(response.data))
+      .catch(err => {
+        if (!axios.isCancel(err)) {
+          console.error('Request failed:', err);
+        }
+      });
+    
+    return () => source.cancel('Request cancelled');
+  }, []);
+  
+  return <div>{data?.message}</div>;
+}
+
+// Custom hook for cancellable requests
+function useCancellableRequest() {
+  const controller = useRef();
+  
+  useEffect(() => {
+    controller.current = new AbortController();
+    return () => controller.current?.abort();
+  }, []);
+  
+  const request = useCallback(async (url) => {
+    return fetch(url, { signal: controller.current.signal });
+  }, []);
+  
+  return request;
+}
+```
+</details>
 
 ---
 
@@ -4068,12 +7030,293 @@ function ProtectedRouteGuard({ children, canAccess }) {
 
 #### **📋 Beginner:**
 - **Q1:** Can you make the useEffect callback function async?
+<details>
+<summary>Answer</summary>
+**No, you cannot make the useEffect callback async directly.**
+
+```jsx
+// ❌ Wrong - useEffect callback cannot be async
+useEffect(async () => {
+  const data = await fetch('/api/data');
+  setData(data);
+}, []); // Error: Effect callbacks are synchronous
+
+// ✅ Correct - define async function inside
+useEffect(() => {
+  const fetchData = async () => {
+    const response = await fetch('/api/data');
+    const data = await response.json();
+    setData(data);
+  };
+  
+  fetchData();
+}, []);
+
+// ✅ Alternative - IIFE (Immediately Invoked Function Expression)
+useEffect(() => {
+  (async () => {
+    const response = await fetch('/api/data');
+    const data = await response.json();
+    setData(data);
+  })();
+}, []);
+```
+
+**Why?** useEffect expects either nothing or a cleanup function to be returned, not a Promise.
+</details>
+
 - **Q2:** How do you properly handle async operations in useEffect?
+<details>
+<summary>Answer</summary>
+```jsx
+function DataComponent() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
+  
+  useEffect(() => {
+    let isCancelled = false;
+    
+    const fetchData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        const response = await fetch('/api/data');
+        if (!response.ok) throw new Error('Failed to fetch');
+        
+        const result = await response.json();
+        
+        // Check if component is still mounted
+        if (!isCancelled) {
+          setData(result);
+        }
+      } catch (err) {
+        if (!isCancelled) {
+          setError(err.message);
+        }
+      } finally {
+        if (!isCancelled) {
+          setLoading(false);
+        }
+      }
+    };
+    
+    fetchData();
+    
+    // Cleanup function
+    return () => {
+      isCancelled = true;
+    };
+  }, []);
+  
+  if (loading) return <div>Loading...</div>;
+  if (error) return <div>Error: {error}</div>;
+  return <div>{JSON.stringify(data)}</div>;
+}
+```
+
+**Best practices:**
+- Use cancellation flags
+- Handle loading/error states
+- Cleanup on unmount
+</details>
+
 - **Q3:** How do you clean up async operations in useEffect?
+<details>
+<summary>Answer</summary>
+```jsx
+// Method 1: Cancellation flag
+useEffect(() => {
+  let cancelled = false;
+  
+  const fetchData = async () => {
+    const data = await api.getData();
+    if (!cancelled) setData(data);
+  };
+  
+  fetchData();
+  
+  return () => { cancelled = true; };
+}, []);
+
+// Method 2: AbortController
+useEffect(() => {
+  const controller = new AbortController();
+  
+  fetch('/api/data', { signal: controller.signal })
+    .then(res => res.json())
+    .then(setData)
+    .catch(err => {
+      if (err.name !== 'AbortError') console.error(err);
+    });
+  
+  return () => controller.abort();
+}, []);
+
+// Method 3: Custom hook for cleanup
+function useAsyncEffect(asyncFn, deps) {
+  useEffect(() => {
+    let cancelled = false;
+    
+    asyncFn().then(result => {
+      if (!cancelled) return result;
+    });
+    
+    return () => { cancelled = true; };
+  }, deps);
+}
+
+// Usage
+function Component() {
+  const [data, setData] = useState(null);
+  
+  useAsyncEffect(async () => {
+    const result = await fetch('/api/data').then(r => r.json());
+    setData(result);
+  }, []);
+  
+  return <div>{data?.message}</div>;
+}
+```
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you handle component unmounting during async operations?
+<details>
+<summary>Answer</summary>
+```jsx
+// Custom hook for safe async operations
+function useSafeAsync() {
+  const mountedRef = useRef(true);
+  
+  useEffect(() => {
+    return () => { mountedRef.current = false; };
+  }, []);
+  
+  const safeSetState = useCallback((setter) => {
+    if (mountedRef.current) setter();
+  }, []);
+  
+  return safeSetState;
+}
+
+// Usage
+function DataComponent() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const safeSetState = useSafeAsync();
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      safeSetState(() => setLoading(true));
+      
+      try {
+        const result = await fetch('/api/data').then(r => r.json());
+        safeSetState(() => {
+          setData(result);
+          setLoading(false);
+        });
+      } catch (error) {
+        safeSetState(() => setLoading(false));
+      }
+    };
+    
+    fetchData();
+  }, [safeSetState]);
+  
+  return loading ? <div>Loading...</div> : <div>{data?.message}</div>;
+}
+
+// Alternative: useIsMounted hook
+function useIsMounted() {
+  const isMounted = useRef(true);
+  
+  useEffect(() => {
+    return () => { isMounted.current = false; };
+  }, []);
+  
+  return useCallback(() => isMounted.current, []);
+}
+```
+</details>
+
 - **Q2:** How do you implement proper error handling for async useEffect operations?
+<details>
+<summary>Answer</summary>
+```jsx
+function useAsyncError() {
+  const [, setError] = useState();
+  
+  return useCallback((error) => {
+    setError(() => { throw error; });
+  }, []);
+}
+
+function DataComponent() {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const throwError = useAsyncError();
+  
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      
+      try {
+        const response = await fetch('/api/data');
+        
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+        
+        const result = await response.json();
+        setData(result);
+      } catch (error) {
+        // This will be caught by Error Boundary
+        throwError(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchData();
+  }, [throwError]);
+  
+  return loading ? <div>Loading...</div> : <div>{data?.message}</div>;
+}
+
+// Enhanced error handling with retry
+function useAsyncOperation() {
+  const [state, setState] = useState({
+    data: null,
+    loading: false,
+    error: null
+  });
+  
+  const execute = useCallback(async (asyncFn, retries = 3) => {
+    setState(prev => ({ ...prev, loading: true, error: null }));
+    
+    for (let attempt = 1; attempt <= retries; attempt++) {
+      try {
+        const result = await asyncFn();
+        setState({ data: result, loading: false, error: null });
+        return result;
+      } catch (error) {
+        if (attempt === retries) {
+          setState(prev => ({ ...prev, loading: false, error }));
+          throw error;
+        }
+        
+        // Wait before retry
+        await new Promise(resolve => setTimeout(resolve, 1000 * attempt));
+      }
+    }
+  }, []);
+  
+  return { ...state, execute };
+}
+```
+</details>
 
 ---
 
@@ -4081,12 +7324,328 @@ function ProtectedRouteGuard({ children, canAccess }) {
 
 #### **📋 Beginner:**
 - **Q1:** How will Suspense work with data fetching?
+<details>
+<summary>Answer</summary>
+**Suspense** allows components to "wait" for data and show fallback UI while loading.
+
+```jsx
+// Component that uses Suspense-compatible data fetching
+function UserProfile({ userId }) {
+  const user = useSuspenseQuery(['user', userId], () => 
+    fetch(`/api/users/${userId}`).then(r => r.json())
+  );
+  
+  return <div>Welcome, {user.name}</div>;
+}
+
+// Wrap with Suspense boundary
+function App() {
+  return (
+    <Suspense fallback={<div>Loading user...</div>}>
+      <UserProfile userId={1} />
+    </Suspense>
+  );
+}
+
+// Multiple components can share loading state
+function Dashboard() {
+  return (
+    <Suspense fallback={<div>Loading dashboard...</div>}>
+      <UserProfile userId={1} />
+      <UserPosts userId={1} />
+      <UserSettings userId={1} />
+    </Suspense>
+  );
+}
+```
+
+**Benefits:**
+- Declarative loading states
+- Coordinated loading (multiple components)
+- Better UX with concurrent features
+</details>
+
 - **Q2:** What is concurrent rendering and how does it relate to Suspense?
+<details>
+<summary>Answer</summary>
+**Concurrent rendering** allows React to pause and resume work, making apps more responsive.
+
+```jsx
+// Before: Blocking rendering
+function App() {
+  const [count, setCount] = useState(0);
+  const [data, setData] = useState(null);
+  
+  // This blocks everything until data loads
+  useEffect(() => {
+    fetch('/api/data').then(setData);
+  }, []);
+  
+  return (
+    <div>
+      <button onClick={() => setCount(c => c + 1)}>
+        Count: {count}
+      </button>
+      {data ? <DataView data={data} /> : <div>Loading...</div>}
+    </div>
+  );
+}
+
+// After: Non-blocking with Suspense
+function App() {
+  const [count, setCount] = useState(0);
+  
+  return (
+    <div>
+      <button onClick={() => setCount(c => c + 1)}>
+        Count: {count} {/* This stays responsive */}
+      </button>
+      <Suspense fallback={<div>Loading...</div>}>
+        <DataView /> {/* This can suspend without blocking */}
+      </Suspense>
+    </div>
+  );
+}
+
+// Concurrent features
+function DataView() {
+  const data = useSuspenseQuery(['data'], fetchData);
+  
+  return (
+    <div>
+      {/* React can interrupt this render if higher priority work comes in */}
+      {data.items.map(item => <ExpensiveItem key={item.id} item={item} />)}
+    </div>
+  );
+}
+```
+
+**Key concepts:**
+- **Interruptible rendering** - React can pause work
+- **Priority-based updates** - Urgent updates interrupt less urgent ones
+- **Time slicing** - Break work into chunks
+</details>
+
 - **Q3:** What are the current limitations of Suspense for data fetching?
+<details>
+<summary>Answer</summary>
+**Current limitations:**
+
+1. **Limited library support** - Only React Query, SWR, Relay support it
+2. **No built-in data fetching** - Need third-party libraries
+3. **SSR complexity** - Server-side rendering needs special handling
+4. **Error boundaries required** - Need error boundaries for error handling
+
+```jsx
+// ❌ Won't work - regular fetch doesn't support Suspense
+function UserProfile() {
+  const [user, setUser] = useState(null);
+  
+  useEffect(() => {
+    fetch('/api/user').then(setUser);
+  }, []);
+  
+  return <div>{user?.name}</div>;
+}
+
+// ✅ Works - using library with Suspense support
+function UserProfile() {
+  const { data: user } = useSuspenseQuery(['user'], fetchUser);
+  return <div>{user.name}</div>;
+}
+
+// Need Error Boundary for error handling
+function App() {
+  return (
+    <ErrorBoundary fallback={<div>Something went wrong</div>}>
+      <Suspense fallback={<div>Loading...</div>}>
+        <UserProfile />
+      </Suspense>
+    </ErrorBoundary>
+  );
+}
+```
+
+**Workarounds:**
+- Use React Query/SWR with Suspense mode
+- Implement custom Suspense-compatible wrappers
+- Wait for more ecosystem support
+</details>
 
 #### **🚀 Intermediate:**
 - **Q1:** How do you implement data fetching libraries that work with Suspense?
+<details>
+<summary>Answer</summary>
+```jsx
+// Basic Suspense-compatible cache
+class SuspenseCache {
+  constructor() {
+    this.cache = new Map();
+  }
+  
+  read(key, fetcher) {
+    if (this.cache.has(key)) {
+      const entry = this.cache.get(key);
+      
+      if (entry.status === 'resolved') {
+        return entry.data;
+      } else if (entry.status === 'rejected') {
+        throw entry.error;
+      } else {
+        throw entry.promise; // Suspense expects a Promise
+      }
+    }
+    
+    // Start the request
+    const promise = fetcher()
+      .then(data => {
+        this.cache.set(key, { status: 'resolved', data });
+      })
+      .catch(error => {
+        this.cache.set(key, { status: 'rejected', error });
+      });
+    
+    this.cache.set(key, { status: 'pending', promise });
+    throw promise; // Suspend until resolved
+  }
+}
+
+const cache = new SuspenseCache();
+
+// Hook that works with Suspense
+function useSuspenseData(key, fetcher) {
+  return cache.read(key, fetcher);
+}
+
+// Usage
+function UserProfile({ userId }) {
+  const user = useSuspenseData(
+    `user-${userId}`,
+    () => fetch(`/api/users/${userId}`).then(r => r.json())
+  );
+  
+  return <div>Welcome, {user.name}</div>;
+}
+
+// Advanced: Resource pattern
+function createResource(fetcher) {
+  let status = 'pending';
+  let result;
+  
+  const promise = fetcher()
+    .then(data => {
+      status = 'resolved';
+      result = data;
+    })
+    .catch(error => {
+      status = 'rejected';
+      result = error;
+    });
+  
+  return {
+    read() {
+      if (status === 'pending') throw promise;
+      if (status === 'rejected') throw result;
+      return result;
+    }
+  };
+}
+
+const userResource = createResource(() => 
+  fetch('/api/user').then(r => r.json())
+);
+
+function UserProfile() {
+  const user = userResource.read();
+  return <div>{user.name}</div>;
+}
+```
+</details>
+
 - **Q2:** How do you handle error boundaries with Suspense data fetching?
+<details>
+<summary>Answer</summary>
+```jsx
+// Suspense-aware Error Boundary
+class SuspenseErrorBoundary extends Component {
+  constructor(props) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+  
+  static getDerivedStateFromError(error) {
+    return { hasError: true, error };
+  }
+  
+  componentDidCatch(error, errorInfo) {
+    console.error('Suspense error:', error, errorInfo);
+  }
+  
+  render() {
+    if (this.state.hasError) {
+      return (
+        <div>
+          <h2>Something went wrong</h2>
+          <p>{this.state.error?.message}</p>
+          <button onClick={() => this.setState({ hasError: false, error: null })}>
+            Try again
+          </button>
+        </div>
+      );
+    }
+    
+    return this.props.children;
+  }
+}
+
+// Usage with nested boundaries
+function App() {
+  return (
+    <SuspenseErrorBoundary>
+      <Suspense fallback={<div>Loading app...</div>}>
+        <Header />
+        
+        <SuspenseErrorBoundary>
+          <Suspense fallback={<div>Loading user data...</div>}>
+            <UserProfile />
+          </Suspense>
+        </SuspenseErrorBoundary>
+        
+        <SuspenseErrorBoundary>
+          <Suspense fallback={<div>Loading posts...</div>}>
+            <PostsList />
+          </Suspense>
+        </SuspenseErrorBoundary>
+      </Suspense>
+    </SuspenseErrorBoundary>
+  );
+}
+
+// Hook for resetting error boundaries
+function useErrorReset() {
+  const [resetKey, setResetKey] = useState(0);
+  
+  const reset = useCallback(() => {
+    setResetKey(prev => prev + 1);
+  }, []);
+  
+  return [resetKey, reset];
+}
+
+function AppWithReset() {
+  const [resetKey, resetError] = useErrorReset();
+  
+  return (
+    <SuspenseErrorBoundary key={resetKey}>
+      <Suspense fallback={<div>Loading...</div>}>
+        <DataComponent />
+        <button onClick={resetError}>Reset</button>
+      </Suspense>
+    </SuspenseErrorBoundary>
+  );
+}
+```
+</details>
 
 ---
 
