@@ -2030,15 +2030,227 @@ const nullCreated = Object.create(null); // prototype: null
 
 **Intermediate: Q2** - Compare ES6 classes with constructor functions for object creation.
 
+<details>
+<summary>Answer</summary>
+
+ES6 classes are syntactic sugar over constructor functions:
+
+```javascript
+// Constructor Function
+function Person(name, age) {
+    this.name = name;
+    this.age = age;
+}
+
+Person.prototype.greet = function() {
+    return `Hi, I'm ${this.name}`;
+};
+
+// ES6 Class
+class PersonClass {
+    constructor(name, age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    greet() {
+        return `Hi, I'm ${this.name}`;
+    }
+}
+
+// Both create similar objects
+const person1 = new Person('John', 30);
+const person2 = new PersonClass('Jane', 25);
+
+// Key differences:
+// 1. Hoisting: Functions are hoisted, classes are not
+console.log(new Person('Test')); // Works
+// console.log(new PersonClass('Test')); // ReferenceError
+
+// 2. Strict mode: Classes automatically use strict mode
+// 3. Enumerable: Class methods are non-enumerable
+// 4. Constructor calls: Classes must be called with 'new'
+
+// PersonClass(); // TypeError: Class constructor cannot be invoked without 'new'
+```
+</details>
+
 ## Prototype chain & inheritance
 
 **Beginner: Q1** - What is the prototype chain in JavaScript?
 
+<details>
+<summary>Answer</summary>
+
+The prototype chain is JavaScript's inheritance mechanism where objects can access properties/methods from their prototype objects.
+
+```javascript
+// Every object has a prototype
+const obj = { name: 'John' };
+console.log(obj.__proto__ === Object.prototype); // true
+
+// Prototype chain lookup
+console.log(obj.toString()); // Inherited from Object.prototype
+
+// Constructor function prototype
+function Person(name) {
+    this.name = name;
+}
+
+Person.prototype.greet = function() {
+    return `Hello, ${this.name}`;
+};
+
+const person = new Person('John');
+
+// Chain: person -> Person.prototype -> Object.prototype -> null
+console.log(person.greet()); // Found on Person.prototype
+console.log(person.toString()); // Found on Object.prototype
+console.log(person.nonExistent); // undefined (not found anywhere)
+```
+</details>
+
 **Beginner: Q2** - How do you add a method to all instances of a constructor function?
+
+<details>
+<summary>Answer</summary>
+
+Add methods to the constructor's `prototype` property:
+
+```javascript
+function Car(brand, model) {
+    this.brand = brand;
+    this.model = model;
+}
+
+// Add method to prototype (shared by all instances)
+Car.prototype.getInfo = function() {
+    return `${this.brand} ${this.model}`;
+};
+
+Car.prototype.start = function() {
+    return `${this.brand} is starting...`;
+};
+
+const car1 = new Car('Toyota', 'Camry');
+const car2 = new Car('Honda', 'Civic');
+
+console.log(car1.getInfo()); // "Toyota Camry"
+console.log(car2.start()); // "Honda is starting..."
+
+// Method exists on prototype, not on instance
+console.log(car1.hasOwnProperty('getInfo')); // false
+console.log(Car.prototype.hasOwnProperty('getInfo')); // true
+
+// More efficient than adding to each instance
+function BadCar(brand) {
+    this.brand = brand;
+    this.getInfo = function() { // Creates new function for each instance
+        return this.brand;
+    };
+}
+```
+</details>
 
 **Beginner: Q3** - What happens when you try to access a property that doesn't exist on an object?
 
+<details>
+<summary>Answer</summary>
+
+JavaScript searches up the prototype chain, returns `undefined` if not found:
+
+```javascript
+const person = { name: 'John' };
+
+// Property lookup process:
+// 1. Check person object
+// 2. Check person.__proto__ (Object.prototype)
+// 3. Check Object.prototype.__proto__ (null)
+// 4. Return undefined if not found
+
+console.log(person.name); // 'John' (found on object)
+console.log(person.toString); // function (found on Object.prototype)
+console.log(person.nonExistent); // undefined (not found anywhere)
+
+// Prototype chain example
+function Animal(name) {
+    this.name = name;
+}
+
+Animal.prototype.species = 'Unknown';
+
+function Dog(name, breed) {
+    Animal.call(this, name);
+    this.breed = breed;
+}
+
+Dog.prototype = Object.create(Animal.prototype);
+Dog.prototype.sound = 'Woof';
+
+const dog = new Dog('Buddy', 'Golden Retriever');
+
+console.log(dog.name); // 'Buddy' (own property)
+console.log(dog.breed); // 'Golden Retriever' (own property)
+console.log(dog.sound); // 'Woof' (Dog.prototype)
+console.log(dog.species); // 'Unknown' (Animal.prototype)
+console.log(dog.toString); // function (Object.prototype)
+console.log(dog.flying); // undefined (not found)
+```
+</details>
+
 **Intermediate: Q1** - Explain prototypal inheritance with an example.
+
+<details>
+<summary>Answer</summary>
+
+Prototypal inheritance allows objects to inherit properties from other objects:
+
+```javascript
+// Parent constructor
+function Animal(name) {
+    this.name = name;
+}
+
+Animal.prototype.eat = function() {
+    return `${this.name} is eating`;
+};
+
+Animal.prototype.sleep = function() {
+    return `${this.name} is sleeping`;
+};
+
+// Child constructor
+function Dog(name, breed) {
+    Animal.call(this, name); // Call parent constructor
+    this.breed = breed;
+}
+
+// Set up inheritance
+Dog.prototype = Object.create(Animal.prototype);
+Dog.prototype.constructor = Dog; // Fix constructor reference
+
+// Add child-specific methods
+Dog.prototype.bark = function() {
+    return `${this.name} says Woof!`;
+};
+
+// Override parent method
+Dog.prototype.eat = function() {
+    return `${this.name} the ${this.breed} is eating dog food`;
+};
+
+const dog = new Dog('Buddy', 'Labrador');
+
+console.log(dog.bark()); // "Buddy says Woof!" (own method)
+console.log(dog.eat()); // "Buddy the Labrador is eating dog food" (overridden)
+console.log(dog.sleep()); // "Buddy is sleeping" (inherited)
+
+// Prototype chain: dog -> Dog.prototype -> Animal.prototype -> Object.prototype -> null
+console.log(dog instanceof Dog); // true
+console.log(dog instanceof Animal); // true
+console.log(dog instanceof Object); // true
+```
+</details>
 
 **Intermediate: Q2** - What will be the output of this code?
 ```javascript
@@ -2055,25 +2267,394 @@ delete Dog.prototype.speak;
 console.log(dog.speak());
 ```
 
+<details>
+<summary>Answer</summary>
+
+Output:
+```
+"Dog barks"
+"Animal speaks"
+```
+
+Explanation:
+
+```javascript
+function Animal() {}
+Animal.prototype.speak = function() { return 'Animal speaks'; };
+
+function Dog() {}
+Dog.prototype = Object.create(Animal.prototype);
+Dog.prototype.speak = function() { return 'Dog barks'; };
+
+const dog = new Dog();
+
+// First call: dog.speak() finds method on Dog.prototype
+console.log(dog.speak()); // "Dog barks"
+
+// Delete removes the method from Dog.prototype
+delete Dog.prototype.speak;
+
+// Second call: dog.speak() doesn't find method on Dog.prototype,
+// so it looks up the prototype chain and finds it on Animal.prototype
+console.log(dog.speak()); // "Animal speaks"
+
+// Prototype chain lookup:
+// dog -> Dog.prototype (no speak method after delete) -> Animal.prototype (has speak method)
+```
+</details>
+
 ## __proto__ vs prototype
 
 **Beginner: Q1** - What is the difference between `__proto__` and `prototype`?
 
+<details>
+<summary>Answer</summary>
+
+- `prototype`: Property of constructor functions, defines what instances will inherit
+- `__proto__`: Property of objects, points to the object it inherits from
+
+```javascript
+function Person(name) {
+    this.name = name;
+}
+
+Person.prototype.greet = function() {
+    return `Hello, ${this.name}`;
+};
+
+const john = new Person('John');
+
+// prototype: Only on constructor functions
+console.log(Person.prototype); // { greet: function, constructor: Person }
+console.log(john.prototype); // undefined (instances don't have prototype)
+
+// __proto__: On all objects, points to prototype
+console.log(john.__proto__ === Person.prototype); // true
+console.log(Person.__proto__ === Function.prototype); // true
+
+// Relationship
+// john.__proto__ -> Person.prototype -> Object.prototype -> null
+```
+</details>
+
 **Beginner: Q2** - When you create an object with `new`, what does `__proto__` point to?
+
+<details>
+<summary>Answer</summary>
+
+When using `new`, the object's `__proto__` points to the constructor's `prototype`:
+
+```javascript
+function Car(brand) {
+    this.brand = brand;
+}
+
+Car.prototype.start = function() {
+    return `${this.brand} is starting`;
+};
+
+const myCar = new Car('Toyota');
+
+// __proto__ points to constructor's prototype
+console.log(myCar.__proto__ === Car.prototype); // true
+console.log(myCar.__proto__.start === Car.prototype.start); // true
+
+// This is how inheritance works
+console.log(myCar.start()); // "Toyota is starting"
+
+// What happens with new:
+// 1. Create empty object: {}
+// 2. Set __proto__: newObj.__proto__ = Car.prototype
+// 3. Call constructor: Car.call(newObj, 'Toyota')
+// 4. Return the object
+
+// Different constructors, different __proto__
+function Bike(brand) { this.brand = brand; }
+const myBike = new Bike('Honda');
+
+console.log(myCar.__proto__ === Car.prototype); // true
+console.log(myBike.__proto__ === Bike.prototype); // true
+console.log(myCar.__proto__ === myBike.__proto__); // false
+```
+</details>
 
 **Beginner: Q3** - Is `__proto__` a standard property or should you avoid using it?
 
+<details>
+<summary>Answer</summary>
+
+`__proto__` is deprecated. Use `Object.getPrototypeOf()` and `Object.setPrototypeOf()` instead:
+
+```javascript
+function Person(name) {
+    this.name = name;
+}
+
+const john = new Person('John');
+
+// ❌ Avoid: __proto__ (deprecated)
+console.log(john.__proto__);
+john.__proto__ = Person.prototype;
+
+// ✅ Use: Object.getPrototypeOf()
+console.log(Object.getPrototypeOf(john) === Person.prototype); // true
+
+// ✅ Use: Object.setPrototypeOf()
+const newProto = { species: 'Human' };
+Object.setPrototypeOf(john, newProto);
+console.log(john.species); // 'Human'
+
+// ✅ Use: Object.create() for creating with specific prototype
+const jane = Object.create(Person.prototype);
+jane.name = 'Jane';
+
+// ✅ Use: instanceof for prototype checking
+console.log(john instanceof Person); // true
+
+// Why avoid __proto__:
+// 1. Not standardized in older versions
+// 2. Performance implications
+// 3. Better alternatives available
+```
+</details>
+
 **Intermediate: Q1** - Explain the relationship between `__proto__`, `prototype`, and `constructor`.
 
+<details>
+<summary>Answer</summary>
+
+These three properties form JavaScript's prototype system:
+
+```javascript
+function Person(name) {
+    this.name = name;
+}
+
+const john = new Person('John');
+
+// 1. Constructor function has 'prototype' property
+console.log(Person.prototype); // Object with constructor property
+
+// 2. prototype has 'constructor' pointing back to function
+console.log(Person.prototype.constructor === Person); // true
+
+// 3. Instance has '__proto__' pointing to constructor's prototype
+console.log(john.__proto__ === Person.prototype); // true
+
+// 4. Instance can access constructor through __proto__
+console.log(john.constructor === Person); // true
+console.log(john.constructor === john.__proto__.constructor); // true
+
+// Complete relationship:
+// Person (function)
+//   ├── prototype ──→ Person.prototype (object)
+//   │                     ├── constructor ──→ Person
+//   │                     └── other methods...
+//   └── __proto__ ──→ Function.prototype
+//
+// john (instance)
+//   ├── name: 'John' (own property)
+//   ├── __proto__ ──→ Person.prototype
+//   └── constructor ──→ Person (inherited)
+
+// Circular references
+console.log(Person.prototype.constructor.prototype === Person.prototype); // true
+
+// All functions have prototype property
+function test() {}
+console.log(test.prototype.constructor === test); // true
+```
+</details>
+
 **Intermediate: Q2** - What is the difference between `Object.getPrototypeOf()` and accessing `__proto__`?
+
+<details>
+<summary>Answer</summary>
+
+Both access the same thing, but `Object.getPrototypeOf()` is the standard way:
+
+```javascript
+function Animal(name) {
+    this.name = name;
+}
+
+const dog = new Animal('Buddy');
+
+// Both return the same object
+console.log(dog.__proto__ === Object.getPrototypeOf(dog)); // true
+console.log(dog.__proto__ === Animal.prototype); // true
+console.log(Object.getPrototypeOf(dog) === Animal.prototype); // true
+
+// Key differences:
+
+// 1. Standards compliance
+// __proto__ - deprecated, non-standard
+// Object.getPrototypeOf() - ES5 standard
+
+// 2. Browser support
+// __proto__ - not supported in some old browsers
+// Object.getPrototypeOf() - widely supported
+
+// 3. Performance
+// __proto__ - can be slower in some engines
+// Object.getPrototypeOf() - optimized
+
+// 4. Setting prototypes
+// __proto__ assignment (avoid)
+dog.__proto__ = {};
+
+// Object.setPrototypeOf() (preferred)
+Object.setPrototypeOf(dog, Animal.prototype);
+
+// 5. Null prototype objects
+const nullObj = Object.create(null);
+console.log(nullObj.__proto__); // undefined
+console.log(Object.getPrototypeOf(nullObj)); // null
+
+// Best practice
+function getProto(obj) {
+    return Object.getPrototypeOf(obj);
+}
+
+function setProto(obj, proto) {
+    Object.setPrototypeOf(obj, proto);
+}
+```
+</details>
 
 ## this keyword
 
 **Beginner: Q1** - What does the `this` keyword refer to in different contexts?
 
+<details>
+<summary>Answer</summary>
+
+`this` refers to different objects depending on how and where it's called:
+
+```javascript
+// 1. Global context
+console.log(this); // Window (browser) or global (Node.js)
+
+// 2. Object method
+const obj = {
+    name: 'John',
+    greet() {
+        console.log(this.name); // 'John' - this refers to obj
+    }
+};
+
+// 3. Constructor function
+function Person(name) {
+    this.name = name; // this refers to new instance
+}
+
+// 4. Event handler
+button.addEventListener('click', function() {
+    console.log(this); // this refers to button element
+});
+
+// 5. Arrow functions (lexical this)
+const arrowObj = {
+    name: 'Jane',
+    greet: () => {
+        console.log(this.name); // undefined - this from outer scope
+    }
+};
+
+// 6. Call/apply/bind
+function sayHello() {
+    console.log(this.name);
+}
+sayHello.call({ name: 'Alice' }); // 'Alice'
+```
+</details>
+
 **Beginner: Q2** - What will `this` refer to inside a regular function vs an arrow function?
 
+<details>
+<summary>Answer</summary>
+
+Regular functions have dynamic `this`, arrow functions have lexical `this`:
+
+```javascript
+const obj = {
+    name: 'John',
+    
+    // Regular function - dynamic this
+    regularMethod: function() {
+        console.log(this.name); // 'John' - this is obj
+        
+        function innerFunction() {
+            console.log(this.name); // undefined - this is global/window
+        }
+        innerFunction();
+    },
+    
+    // Arrow function - lexical this
+    arrowMethod: () => {
+        console.log(this.name); // undefined - this from outer scope (global)
+    },
+    
+    // Mixed approach
+    mixedMethod: function() {
+        console.log(this.name); // 'John' - this is obj
+        
+        const arrowInside = () => {
+            console.log(this.name); // 'John' - inherits this from mixedMethod
+        };
+        arrowInside();
+    }
+};
+
+obj.regularMethod(); // 'John', undefined
+obj.arrowMethod(); // undefined
+obj.mixedMethod(); // 'John', 'John'
+
+// Key difference:
+// Regular function: this determined at call time
+// Arrow function: this inherited from enclosing scope
+```
+</details>
+
 **Beginner: Q3** - How does the value of `this` change when a method is called vs when it's assigned to a variable?
+
+<details>
+<summary>Answer</summary>
+
+Method call vs function reference affects `this` binding:
+
+```javascript
+const person = {
+    name: 'John',
+    greet: function() {
+        console.log(`Hello, I'm ${this.name}`);
+    }
+};
+
+// Method call - this refers to person
+person.greet(); // "Hello, I'm John"
+
+// Assigned to variable - this refers to global/window
+const greetFunc = person.greet;
+greetFunc(); // "Hello, I'm undefined" (strict mode: TypeError)
+
+// Solutions:
+// 1. Use bind
+const boundGreet = person.greet.bind(person);
+boundGreet(); // "Hello, I'm John"
+
+// 2. Use call
+greetFunc.call(person); // "Hello, I'm John"
+
+// 3. Arrow function wrapper
+const wrappedGreet = () => person.greet();
+wrappedGreet(); // "Hello, I'm John"
+
+// Common scenario - event handlers
+button.addEventListener('click', person.greet); // this = button
+button.addEventListener('click', person.greet.bind(person)); // this = person
+```
+</details>
 
 **Intermediate: Q1** - What will be the output of this code?
 ```javascript
@@ -2090,17 +2671,300 @@ obj.greet();
 obj.greetArrow();
 ```
 
+<details>
+<summary>Answer</summary>
+
+Output:
+```
+John
+undefined
+```
+
+Explanation:
+
+```javascript
+const obj = {
+    name: 'John',
+    greet: function() {
+        console.log(this.name); // 'John'
+    },
+    greetArrow: () => {
+        console.log(this.name); // undefined
+    }
+};
+
+// obj.greet() - regular function
+// this refers to obj, so this.name = 'John'
+obj.greet(); // "John"
+
+// obj.greetArrow() - arrow function
+// Arrow functions don't have their own this
+// this is inherited from outer scope (global scope)
+// In global scope, this.name is undefined
+obj.greetArrow(); // undefined
+
+// To fix arrow function:
+const obj2 = {
+    name: 'Jane',
+    init: function() {
+        this.greetArrow = () => {
+            console.log(this.name); // Now this refers to obj2
+        };
+    }
+};
+
+obj2.init();
+obj2.greetArrow(); // "Jane"
+```
+</details>
+
 **Intermediate: Q2** - How does `this` behave in strict mode vs non-strict mode?
+
+<details>
+<summary>Answer</summary>
+
+Strict mode affects `this` binding in functions:
+
+```javascript
+// Non-strict mode
+function regularFunction() {
+    console.log(this); // Window object (browser)
+}
+
+regularFunction(); // Window
+
+// Strict mode
+'use strict';
+function strictFunction() {
+    console.log(this); // undefined
+}
+
+strictFunction(); // undefined
+
+// Object methods - same in both modes
+const obj = {
+    method: function() {
+        'use strict';
+        console.log(this); // obj (same in both modes)
+    }
+};
+
+obj.method(); // obj
+
+// Constructor functions
+function Person(name) {
+    'use strict';
+    this.name = name; // Works fine with 'new'
+}
+
+new Person('John'); // Creates person instance
+
+// Calling constructor without 'new'
+// Non-strict: this = window (creates global variables)
+// Strict: this = undefined (throws TypeError)
+
+function StrictConstructor(name) {
+    'use strict';
+    this.name = name; // TypeError if called without 'new'
+}
+
+// StrictConstructor('John'); // TypeError in strict mode
+
+// Key differences:
+// 1. Function calls: this = window vs undefined
+// 2. Safety: strict mode prevents accidental global variables
+// 3. Constructor calls: strict mode throws error if 'new' forgotten
+```
+</details>
 
 ## call, apply, bind
 
 **Beginner: Q1** - What is the difference between `call()`, `apply()`, and `bind()`?
 
+<details>
+<summary>Answer</summary>
+
+All three methods control `this` context, but differ in execution and parameters:
+
+```javascript
+function greet(greeting, punctuation) {
+    console.log(`${greeting} ${this.name}${punctuation}`);
+}
+
+const person = { name: 'John' };
+
+// call() - executes immediately, parameters individually
+greet.call(person, 'Hello', '!'); // "Hello John!"
+
+// apply() - executes immediately, parameters as array
+greet.apply(person, ['Hi', '?']); // "Hi John?"
+
+// bind() - returns new function, doesn't execute
+const boundGreet = greet.bind(person, 'Hey');
+boundGreet('!!!'); // "Hey John!!!" (executed later)
+
+// Summary:
+// call:  fn.call(thisArg, arg1, arg2, ...)
+// apply: fn.apply(thisArg, [arg1, arg2, ...])
+// bind:  fn.bind(thisArg, arg1, arg2, ...) -> returns function
+```
+</details>
+
 **Beginner: Q2** - How do you use `call()` to invoke a function with a specific `this` value?
+
+<details>
+<summary>Answer</summary>
+
+`call()` immediately invokes a function with specified `this` and arguments:
+
+```javascript
+function introduce() {
+    console.log(`I'm ${this.name}, ${this.age} years old`);
+}
+
+const person1 = { name: 'Alice', age: 25 };
+const person2 = { name: 'Bob', age: 30 };
+
+// Use call to set this context
+introduce.call(person1); // "I'm Alice, 25 years old"
+introduce.call(person2); // "I'm Bob, 30 years old"
+
+// With parameters
+function greetWith(greeting, time) {
+    console.log(`${greeting} ${this.name}! Good ${time}!`);
+}
+
+greetWith.call(person1, 'Hello', 'morning'); // "Hello Alice! Good morning!"
+
+// Common use case - borrowing methods
+const array1 = [1, 2, 3];
+const array2 = [4, 5, 6];
+
+// Borrow push method
+Array.prototype.push.call(array1, ...array2);
+console.log(array1); // [1, 2, 3, 4, 5, 6]
+
+// Convert array-like objects
+function example() {
+    const args = Array.prototype.slice.call(arguments);
+    console.log(args); // [1, 2, 3]
+}
+example(1, 2, 3);
+```
+</details>
 
 **Beginner: Q3** - When would you use `bind()` instead of `call()` or `apply()`?
 
+<details>
+<summary>Answer</summary>
+
+Use `bind()` when you need a function for later execution with fixed `this`:
+
+```javascript
+const person = {
+    name: 'John',
+    greet() {
+        console.log(`Hello, I'm ${this.name}`);
+    }
+};
+
+// Problem: losing this context
+const greetFunc = person.greet;
+greetFunc(); // "Hello, I'm undefined"
+
+// Solution: bind creates new function with fixed this
+const boundGreet = person.greet.bind(person);
+boundGreet(); // "Hello, I'm John"
+
+// Use cases:
+
+// 1. Event handlers
+button.addEventListener('click', person.greet.bind(person));
+
+// 2. Callback functions
+setTimeout(person.greet.bind(person), 1000);
+
+// 3. Partial application
+function multiply(a, b) {
+    return a * b;
+}
+
+const double = multiply.bind(null, 2);
+console.log(double(5)); // 10
+
+// 4. Method borrowing for later use
+const logger = console.log.bind(console, '[LOG]');
+logger('This is a message'); // "[LOG] This is a message"
+
+// bind vs call/apply:
+// bind: Returns function for later execution
+// call/apply: Execute immediately
+```
+</details>
+
 **Intermediate: Q1** - Implement your own version of the `bind()` method.
+
+<details>
+<summary>Answer</summary>
+
+```javascript
+// Custom bind implementation
+Function.prototype.myBind = function(context, ...bindArgs) {
+    const originalFunction = this;
+    
+    return function(...callArgs) {
+        // Combine bind-time args with call-time args
+        const allArgs = [...bindArgs, ...callArgs];
+        
+        // Use apply to set context and pass arguments
+        return originalFunction.apply(context, allArgs);
+    };
+};
+
+// Test implementation
+function greet(greeting, punctuation) {
+    console.log(`${greeting} ${this.name}${punctuation}`);
+}
+
+const person = { name: 'John' };
+
+// Using custom bind
+const boundGreet = greet.myBind(person, 'Hello');
+boundGreet('!'); // "Hello John!"
+
+// More advanced version handling 'new' operator
+Function.prototype.myBindAdvanced = function(context, ...bindArgs) {
+    const fn = this;
+    
+    function bound(...callArgs) {
+        const allArgs = [...bindArgs, ...callArgs];
+        
+        // Check if called with 'new'
+        if (new.target) {
+            // Create new instance and call original constructor
+            return new fn(...allArgs);
+        }
+        
+        return fn.apply(context, allArgs);
+    }
+    
+    // Maintain prototype chain
+    bound.prototype = Object.create(fn.prototype);
+    
+    return bound;
+};
+
+// Test with constructor
+function Person(name, age) {
+    this.name = name;
+    this.age = age;
+}
+
+const BoundPerson = Person.myBindAdvanced(null, 'John');
+const john = new BoundPerson(25);
+console.log(john.name); // "John"
+```
+</details>
 
 **Intermediate: Q2** - What will be the output of this code?
 ```javascript
@@ -2112,25 +2976,420 @@ const boundGreet = greet.bind(person);
 boundGreet.call({ greeting: 'Hi', name: 'Jane' });
 ```
 
+<details>
+<summary>Answer</summary>
+
+Output: `"Hello John"`
+
+Explanation:
+
+```javascript
+function greet() {
+    console.log(`${this.greeting} ${this.name}`);
+}
+const person = { greeting: 'Hello', name: 'John' };
+const boundGreet = greet.bind(person);
+
+// bind() permanently sets the this context
+// Once bound, the this context cannot be changed by call(), apply(), or bind()
+
+boundGreet.call({ greeting: 'Hi', name: 'Jane' });
+// Output: "Hello John" (not "Hi Jane")
+
+// The call() method tries to change this to { greeting: 'Hi', name: 'Jane' }
+// But bind() has already locked this to { greeting: 'Hello', name: 'John' }
+
+// Demonstration:
+const unboundGreet = greet;
+unboundGreet.call({ greeting: 'Hi', name: 'Jane' }); // "Hi Jane"
+
+const boundGreet2 = greet.bind(person);
+boundGreet2.call({ greeting: 'Hi', name: 'Jane' }); // "Hello John"
+boundGreet2.apply({ greeting: 'Hey', name: 'Bob' }); // "Hello John"
+
+// Key point: bind() creates a permanently bound function
+// Subsequent call/apply/bind attempts are ignored
+```
+</details>
+
 ## Object.keys, values, entries
 
 **Beginner: Q1** - What do `Object.keys()`, `Object.values()`, and `Object.entries()` return?
 
+<details>
+<summary>Answer</summary>
+
+These methods extract different parts of an object:
+
+```javascript
+const person = {
+    name: 'John',
+    age: 30,
+    city: 'New York'
+};
+
+// Object.keys() - returns array of property names
+console.log(Object.keys(person)); // ['name', 'age', 'city']
+
+// Object.values() - returns array of property values
+console.log(Object.values(person)); // ['John', 30, 'New York']
+
+// Object.entries() - returns array of [key, value] pairs
+console.log(Object.entries(person)); 
+// [['name', 'John'], ['age', 30], ['city', 'New York']]
+
+// All return arrays, not the original object
+// All only include own enumerable properties (not inherited)
+
+const obj = { a: 1, b: 2 };
+Object.defineProperty(obj, 'c', { 
+    value: 3, 
+    enumerable: false 
+});
+
+console.log(Object.keys(obj)); // ['a', 'b'] (c is not enumerable)
+```
+</details>
+
 **Beginner: Q2** - How would you iterate over an object's properties using these methods?
+
+<details>
+<summary>Answer</summary>
+
+Each method enables different iteration patterns:
+
+```javascript
+const user = {
+    name: 'Alice',
+    age: 25,
+    email: 'alice@example.com'
+};
+
+// 1. Iterate over keys
+Object.keys(user).forEach(key => {
+    console.log(`Key: ${key}`);
+});
+
+// 2. Iterate over values
+Object.values(user).forEach(value => {
+    console.log(`Value: ${value}`);
+});
+
+// 3. Iterate over key-value pairs
+Object.entries(user).forEach(([key, value]) => {
+    console.log(`${key}: ${value}`);
+});
+
+// Using for...of loop
+for (const key of Object.keys(user)) {
+    console.log(`${key}: ${user[key]}`);
+}
+
+for (const [key, value] of Object.entries(user)) {
+    console.log(`${key}: ${value}`);
+}
+
+// Map over object properties
+const uppercaseKeys = Object.keys(user).map(key => key.toUpperCase());
+const doubledValues = Object.values(user).map(val => 
+    typeof val === 'number' ? val * 2 : val
+);
+
+// Convert back to object
+const uppercasedObj = Object.fromEntries(
+    Object.entries(user).map(([key, value]) => [key.toUpperCase(), value])
+);
+```
+</details>
 
 **Beginner: Q3** - Do these methods include inherited properties?
 
+<details>
+<summary>Answer</summary>
+
+No, these methods only return own enumerable properties, not inherited ones:
+
+```javascript
+// Parent object
+const parent = {
+    inherited: 'I am inherited'
+};
+
+// Child object
+const child = Object.create(parent);
+child.own = 'I am own property';
+
+console.log(child.inherited); // 'I am inherited' (accessible)
+console.log(child.own); // 'I am own property'
+
+// Object methods only return own properties
+console.log(Object.keys(child)); // ['own'] (inherited not included)
+console.log(Object.values(child)); // ['I am own property']
+console.log(Object.entries(child)); // [['own', 'I am own property']]
+
+// To get inherited properties, use for...in
+console.log('Using for...in:');
+for (const key in child) {
+    console.log(key); // 'own', 'inherited'
+}
+
+// Check if property is own vs inherited
+for (const key in child) {
+    if (child.hasOwnProperty(key)) {
+        console.log(`Own: ${key}`);
+    } else {
+        console.log(`Inherited: ${key}`);
+    }
+}
+
+// Get all property names (including inherited)
+function getAllKeys(obj) {
+    const keys = [];
+    for (const key in obj) {
+        keys.push(key);
+    }
+    return keys;
+}
+
+console.log(getAllKeys(child)); // ['own', 'inherited']
+```
+</details>
+
 **Intermediate: Q1** - What's the difference between `for...in` loop and `Object.keys()`?
 
+<details>
+<summary>Answer</summary>
+
+Key differences in property enumeration:
+
+```javascript
+const parent = { inherited: 'parent property' };
+const child = Object.create(parent);
+child.own = 'child property';
+
+// Add non-enumerable property
+Object.defineProperty(child, 'hidden', {
+    value: 'not enumerable',
+    enumerable: false
+});
+
+// 1. for...in - includes inherited enumerable properties
+console.log('for...in:');
+for (const key in child) {
+    console.log(key); // 'own', 'inherited'
+}
+
+// 2. Object.keys() - only own enumerable properties
+console.log('Object.keys():');
+console.log(Object.keys(child)); // ['own']
+
+// Comparison table:
+//                    | for...in | Object.keys()
+// Own properties    |    ✓     |      ✓
+// Inherited props   |    ✓     |      ✗
+// Non-enumerable    |    ✗     |      ✗
+// Returns array     |    ✗     |      ✓
+
+// Filter for...in to own properties only
+for (const key in child) {
+    if (child.hasOwnProperty(key)) {
+        console.log(`Own: ${key}`);
+    }
+}
+
+// Get all own properties (including non-enumerable)
+console.log(Object.getOwnPropertyNames(child)); // ['own', 'hidden']
+
+// Performance: Object.keys() is generally faster
+// Use case: 
+// - for...in: When you need inherited properties
+// - Object.keys(): When you only want own properties
+```
+</details>
+
 **Intermediate: Q2** - How would you convert an array of key-value pairs back to an object?
+
+<details>
+<summary>Answer</summary>
+
+Use `Object.fromEntries()` to convert key-value pairs back to an object:
+
+```javascript
+// Array of key-value pairs
+const entries = [
+    ['name', 'John'],
+    ['age', 30],
+    ['city', 'New York']
+];
+
+// Convert to object
+const obj = Object.fromEntries(entries);
+console.log(obj); // { name: 'John', age: 30, city: 'New York' }
+
+// Round trip: object -> entries -> object
+const original = { a: 1, b: 2, c: 3 };
+const converted = Object.fromEntries(Object.entries(original));
+console.log(converted); // { a: 1, b: 2, c: 3 }
+
+// Practical examples:
+
+// 1. Transform object values
+const prices = { apple: 1.2, banana: 0.8, orange: 1.5 };
+const discounted = Object.fromEntries(
+    Object.entries(prices).map(([fruit, price]) => [fruit, price * 0.9])
+);
+
+// 2. Filter object properties
+const user = { name: 'John', age: 30, password: 'secret' };
+const publicUser = Object.fromEntries(
+    Object.entries(user).filter(([key]) => key !== 'password')
+);
+
+// 3. Convert Map to object
+const map = new Map([['x', 1], ['y', 2]]);
+const objFromMap = Object.fromEntries(map);
+
+// 4. Manual implementation (before Object.fromEntries)
+function fromEntries(entries) {
+    const obj = {};
+    entries.forEach(([key, value]) => {
+        obj[key] = value;
+    });
+    return obj;
+}
+```
+</details>
 
 ## Object.freeze, seal, assign
 
 **Beginner: Q1** - What does `Object.freeze()` do? Can you modify a frozen object?
 
+<details>
+<summary>Answer</summary>
+
+`Object.freeze()` makes an object immutable - no modifications allowed:
+
+```javascript
+const obj = { name: 'John', age: 30 };
+
+// Freeze the object
+Object.freeze(obj);
+
+// Attempts to modify will fail silently (or throw in strict mode)
+obj.name = 'Jane'; // Ignored
+obj.city = 'NYC'; // Ignored
+delete obj.age; // Ignored
+
+console.log(obj); // { name: 'John', age: 30 } - unchanged
+
+// Check if object is frozen
+console.log(Object.isFrozen(obj)); // true
+
+// In strict mode, modifications throw errors
+'use strict';
+// obj.name = 'Jane'; // TypeError: Cannot assign to read only property
+
+// Freeze is shallow - nested objects can still be modified
+const user = {
+    name: 'John',
+    address: { city: 'NYC', zip: 10001 }
+};
+
+Object.freeze(user);
+user.address.city = 'LA'; // This works!
+console.log(user.address.city); // 'LA'
+```
+</details>
+
 **Beginner: Q2** - What is the difference between `Object.freeze()` and `Object.seal()`?
 
+<details>
+<summary>Answer</summary>
+
+Both prevent modifications, but `seal()` allows changing existing property values:
+
+```javascript
+const frozenObj = { a: 1, b: 2 };
+const sealedObj = { a: 1, b: 2 };
+
+Object.freeze(frozenObj);
+Object.seal(sealedObj);
+
+// Modifying existing properties
+frozenObj.a = 10; // Ignored
+sealedObj.a = 10; // Works!
+
+console.log(frozenObj.a); // 1 (unchanged)
+console.log(sealedObj.a); // 10 (changed)
+
+// Adding new properties
+frozenObj.c = 3; // Ignored
+sealedObj.c = 3; // Ignored
+
+// Deleting properties
+delete frozenObj.b; // Ignored
+delete sealedObj.b; // Ignored
+
+// Comparison table:
+//                    | freeze() | seal()
+// Modify existing    |    ✗     |   ✓
+// Add new props      |    ✗     |   ✗
+// Delete props       |    ✗     |   ✗
+// Configure props    |    ✗     |   ✗
+
+// Check methods
+console.log(Object.isFrozen(frozenObj)); // true
+console.log(Object.isSealed(sealedObj)); // true
+console.log(Object.isSealed(frozenObj)); // true (frozen is also sealed)
+```
+</details>
+
 **Beginner: Q3** - How do you copy properties from one object to another?
+
+<details>
+<summary>Answer</summary>
+
+Several ways to copy object properties:
+
+```javascript
+const source = { a: 1, b: 2 };
+const target = { c: 3 };
+
+// 1. Object.assign() - modifies target
+Object.assign(target, source);
+console.log(target); // { c: 3, a: 1, b: 2 }
+
+// 2. Spread operator - creates new object
+const combined = { ...target, ...source };
+console.log(combined); // { c: 3, a: 1, b: 2 }
+
+// 3. Multiple sources
+const source1 = { a: 1 };
+const source2 = { b: 2 };
+const result = Object.assign({}, source1, source2);
+
+// 4. Copy with overrides
+const user = { name: 'John', age: 30 };
+const updated = { ...user, age: 31, city: 'NYC' };
+console.log(updated); // { name: 'John', age: 31, city: 'NYC' }
+
+// 5. Manual copying
+function copyProperties(target, source) {
+    for (const key in source) {
+        if (source.hasOwnProperty(key)) {
+            target[key] = source[key];
+        }
+    }
+    return target;
+}
+
+// Note: All these methods create shallow copies
+const original = { data: { count: 1 } };
+const copy = { ...original };
+copy.data.count = 2;
+console.log(original.data.count); // 2 (shared reference!)
+```
+</details>
 
 **Intermediate: Q1** - What will happen in this code?
 ```javascript
@@ -2140,27 +3399,604 @@ obj.b.c = 3;
 console.log(obj.b.c);
 ```
 
+<details>
+<summary>Answer</summary>
+
+Output: `3`
+
+Explanation - `Object.freeze()` is shallow, nested objects remain mutable:
+
+```javascript
+const obj = { a: 1, b: { c: 2 } };
+Object.freeze(obj);
+
+// This fails - top-level property is frozen
+obj.a = 10; // Ignored
+console.log(obj.a); // 1
+
+// This works - nested object is NOT frozen
+obj.b.c = 3; // Success!
+console.log(obj.b.c); // 3
+
+// The nested object 'b' itself is still mutable
+obj.b.newProp = 'new'; // Works!
+console.log(obj.b); // { c: 3, newProp: 'new' }
+
+// To freeze deeply, you need recursive freezing
+function deepFreeze(obj) {
+    Object.getOwnPropertyNames(obj).forEach(prop => {
+        if (obj[prop] !== null && typeof obj[prop] === 'object') {
+            deepFreeze(obj[prop]);
+        }
+    });
+    return Object.freeze(obj);
+}
+
+const deepObj = { a: 1, b: { c: 2 } };
+deepFreeze(deepObj);
+deepObj.b.c = 99; // Now this is ignored
+console.log(deepObj.b.c); // 2 (unchanged)
+```
+</details>
+
 **Intermediate: Q2** - How is `Object.assign()` different from the spread operator for object copying?
+
+<details>
+<summary>Answer</summary>
+
+Both perform shallow copying but have different behaviors:
+
+```javascript
+const source = { a: 1, b: 2 };
+const target = { c: 3 };
+
+// 1. Object.assign() - mutates target object
+Object.assign(target, source);
+console.log(target); // { c: 3, a: 1, b: 2 } - target modified
+
+// 2. Spread operator - creates new object
+const target2 = { c: 3 };
+const result = { ...target2, ...source };
+console.log(target2); // { c: 3 } - target2 unchanged
+console.log(result); // { c: 3, a: 1, b: 2 } - new object
+
+// Key differences:
+
+// Mutation:
+const original = { x: 1 };
+Object.assign(original, { y: 2 }); // Mutates original
+const spread = { ...original, z: 3 }; // Creates new object
+
+// Getters/Setters:
+const obj = {
+    get prop() { return this._prop; },
+    set prop(value) { this._prop = value; }
+};
+
+// Object.assign copies getter result, not getter itself
+const assigned = Object.assign({}, obj);
+console.log(assigned); // { prop: undefined }
+
+// Spread copies descriptors
+const spreaded = { ...obj }; // Also copies getter result
+
+// Performance:
+// Object.assign: Generally faster for large objects
+// Spread: More readable, functional style
+
+// Use cases:
+// Object.assign: When you want to mutate existing object
+// Spread: When you want immutable operations
+```
+</details>
 
 ## Shallow vs deep copy
 
 **Beginner: Q1** - What is the difference between shallow copy and deep copy?
 
+<details>
+<summary>Answer</summary>
+
+- **Shallow copy**: Copies only the first level, nested objects share references
+- **Deep copy**: Copies all levels, completely independent objects
+
+```javascript
+const original = {
+    name: 'John',
+    address: {
+        city: 'NYC',
+        zip: 10001
+    },
+    hobbies: ['reading', 'coding']
+};
+
+// Shallow copy
+const shallowCopy = { ...original };
+
+// Modify nested object
+shallowCopy.address.city = 'LA';
+shallowCopy.hobbies.push('gaming');
+
+console.log(original.address.city); // 'LA' - changed!
+console.log(original.hobbies); // ['reading', 'coding', 'gaming'] - changed!
+
+// Deep copy (simple method)
+const deepCopy = JSON.parse(JSON.stringify(original));
+
+// Modify nested object
+deepCopy.address.city = 'Chicago';
+deepCopy.hobbies.push('swimming');
+
+console.log(original.address.city); // 'NYC' - unchanged
+console.log(original.hobbies); // ['reading', 'coding'] - unchanged
+
+// Visual representation:
+// Shallow: obj1.nested → [same object] ← obj2.nested
+// Deep:    obj1.nested → [object A], obj2.nested → [object B]
+```
+</details>
+
 **Beginner: Q2** - Give an example where shallow copying would cause issues.
+
+<details>
+<summary>Answer</summary>
+
+Shallow copying causes unintended side effects when modifying nested data:
+
+```javascript
+// Problem scenario: User preferences
+const defaultSettings = {
+    theme: 'light',
+    notifications: {
+        email: true,
+        sms: false,
+        push: true
+    },
+    permissions: ['read', 'write']
+};
+
+// Create user settings with shallow copy
+const userSettings = { ...defaultSettings };
+
+// User changes notification preferences
+userSettings.notifications.email = false;
+userSettings.permissions.push('admin');
+
+// BUG: Default settings are also modified!
+console.log(defaultSettings.notifications.email); // false (should be true)
+console.log(defaultSettings.permissions); // ['read', 'write', 'admin']
+
+// This affects all other users who use defaultSettings!
+
+// Another example: Shopping cart items
+const product = {
+    id: 1,
+    name: 'Laptop',
+    specs: { ram: '8GB', storage: '256GB' }
+};
+
+const cart = [];
+const item1 = { ...product, quantity: 1 };
+const item2 = { ...product, quantity: 2 };
+
+// Customize item1
+item1.specs.ram = '16GB'; // Modifies original product specs!
+
+console.log(item2.specs.ram); // '16GB' (should be '8GB')
+
+// Solution: Deep copy
+function deepCopy(obj) {
+    return JSON.parse(JSON.stringify(obj));
+}
+
+const safeItem1 = { ...deepCopy(product), quantity: 1 };
+```
+</details>
 
 **Beginner: Q3** - How would you create a shallow copy of an object?
 
+<details>
+<summary>Answer</summary>
+
+Multiple methods for shallow copying:
+
+```javascript
+const original = { a: 1, b: { c: 2 } };
+
+// 1. Spread operator (most common)
+const copy1 = { ...original };
+
+// 2. Object.assign()
+const copy2 = Object.assign({}, original);
+
+// 3. Object.create() with descriptors
+const copy3 = Object.create(
+    Object.getPrototypeOf(original),
+    Object.getOwnPropertyDescriptors(original)
+);
+
+// 4. Manual copying
+const copy4 = {};
+for (const key in original) {
+    if (original.hasOwnProperty(key)) {
+        copy4[key] = original[key];
+    }
+}
+
+// All create shallow copies
+copy1.b.c = 99;
+console.log(original.b.c); // 99 (modified original!)
+
+// For arrays:
+const arr = [1, { x: 2 }, 3];
+
+// Array shallow copy methods
+const arrCopy1 = [...arr];
+const arrCopy2 = arr.slice();
+const arrCopy3 = Array.from(arr);
+const arrCopy4 = arr.concat();
+
+// All have same shallow copy behavior
+arrCopy1[1].x = 99;
+console.log(arr[1].x); // 99 (modified original!)
+```
+</details>
+
 **Intermediate: Q1** - Implement a function to create a deep copy of an object.
 
+<details>
+<summary>Answer</summary>
+
+```javascript
+function deepCopy(obj) {
+    // Handle primitive types and null
+    if (obj === null || typeof obj !== 'object') {
+        return obj;
+    }
+    
+    // Handle Date
+    if (obj instanceof Date) {
+        return new Date(obj.getTime());
+    }
+    
+    // Handle Array
+    if (Array.isArray(obj)) {
+        return obj.map(item => deepCopy(item));
+    }
+    
+    // Handle Object
+    const copy = {};
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            copy[key] = deepCopy(obj[key]);
+        }
+    }
+    
+    return copy;
+}
+
+// Advanced version handling more types
+function advancedDeepCopy(obj, visited = new WeakMap()) {
+    // Handle primitives and null
+    if (obj === null || typeof obj !== 'object') {
+        return obj;
+    }
+    
+    // Handle circular references
+    if (visited.has(obj)) {
+        return visited.get(obj);
+    }
+    
+    // Handle Date
+    if (obj instanceof Date) {
+        return new Date(obj.getTime());
+    }
+    
+    // Handle RegExp
+    if (obj instanceof RegExp) {
+        return new RegExp(obj.source, obj.flags);
+    }
+    
+    // Handle Array
+    if (Array.isArray(obj)) {
+        const copy = [];
+        visited.set(obj, copy);
+        obj.forEach((item, index) => {
+            copy[index] = advancedDeepCopy(item, visited);
+        });
+        return copy;
+    }
+    
+    // Handle Object
+    const copy = {};
+    visited.set(obj, copy);
+    
+    for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+            copy[key] = advancedDeepCopy(obj[key], visited);
+        }
+    }
+    
+    return copy;
+}
+
+// Test with complex object
+const complex = {
+    date: new Date(),
+    regex: /test/gi,
+    nested: { deep: { value: 42 } },
+    array: [1, { x: 2 }]
+};
+
+const copied = advancedDeepCopy(complex);
+copied.nested.deep.value = 99;
+console.log(complex.nested.deep.value); // 42 (unchanged)
+```
+</details>
+
 **Intermediate: Q2** - What are the limitations of using `JSON.parse(JSON.stringify())` for deep copying?
+
+<details>
+<summary>Answer</summary>
+
+`JSON.parse(JSON.stringify())` has several limitations:
+
+```javascript
+const obj = {
+    // 1. Functions are lost
+    method: function() { return 'hello'; },
+    
+    // 2. undefined values are lost
+    undefined: undefined,
+    
+    // 3. Symbol keys/values are lost
+    [Symbol('key')]: 'symbol value',
+    symbolValue: Symbol('test'),
+    
+    // 4. Date becomes string
+    date: new Date(),
+    
+    // 5. RegExp becomes empty object
+    regex: /test/gi,
+    
+    // 6. Infinity/NaN become null
+    infinity: Infinity,
+    nan: NaN,
+    
+    // 7. Only enumerable properties
+    normal: 'value'
+};
+
+// Add non-enumerable property
+Object.defineProperty(obj, 'hidden', {
+    value: 'not copied',
+    enumerable: false
+});
+
+const copy = JSON.parse(JSON.stringify(obj));
+
+console.log(copy);
+// Result: { date: "2023-...", regex: {}, infinity: null, nan: null, normal: "value" }
+// Missing: method, undefined, Symbol properties, hidden property
+
+// 8. Circular references cause errors
+const circular = { a: 1 };
+circular.self = circular;
+
+// JSON.stringify(circular); // TypeError: Converting circular structure
+
+// 9. Prototype chain is lost
+function Person(name) {
+    this.name = name;
+}
+Person.prototype.greet = function() { return `Hello ${this.name}`; };
+
+const person = new Person('John');
+const personCopy = JSON.parse(JSON.stringify(person));
+
+console.log(person.greet()); // "Hello John"
+// console.log(personCopy.greet()); // TypeError: not a function
+
+// When JSON method is acceptable:
+// - Plain objects with primitive values
+// - No functions, dates, or special objects
+// - No circular references
+// - Performance is critical (JSON is faster)
+```
+</details>
 
 ## Arrow functions
 
 **Beginner: Q1** - What is the syntax for arrow functions? Give examples of different forms.
 
+<details>
+<summary>Answer</summary>
+
+Arrow functions have multiple syntax forms:
+
+```javascript
+// 1. Basic syntax
+const add = (a, b) => a + b;
+
+// 2. Single parameter (parentheses optional)
+const square = x => x * x;
+const squareWithParens = (x) => x * x;
+
+// 3. No parameters
+const sayHello = () => 'Hello!';
+
+// 4. Multiple statements (requires braces and return)
+const calculate = (x, y) => {
+    const sum = x + y;
+    const product = x * y;
+    return { sum, product };
+};
+
+// 5. Returning object literal (wrap in parentheses)
+const createUser = (name, age) => ({ name, age });
+
+// 6. Multi-line arrow function
+const processData = (data) => {
+    if (!data) return null;
+    return data
+        .filter(item => item.active)
+        .map(item => item.name)
+        .join(', ');
+};
+
+// 7. Higher-order functions
+const multiply = (factor) => (number) => number * factor;
+const double = multiply(2);
+console.log(double(5)); // 10
+
+// 8. Array methods
+const numbers = [1, 2, 3, 4, 5];
+const evens = numbers.filter(n => n % 2 === 0);
+const doubled = numbers.map(n => n * 2);
+
+// Regular function equivalent
+function addRegular(a, b) {
+    return a + b;
+}
+```
+</details>
+
 **Beginner: Q2** - How do arrow functions handle the `this` keyword differently from regular functions?
 
+<details>
+<summary>Answer</summary>
+
+Arrow functions inherit `this` from enclosing scope (lexical `this`):
+
+```javascript
+const obj = {
+    name: 'John',
+    
+    // Regular function - dynamic this
+    regularMethod: function() {
+        console.log(this.name); // 'John'
+        
+        setTimeout(function() {
+            console.log(this.name); // undefined (this = window/global)
+        }, 100);
+    },
+    
+    // Arrow function - lexical this
+    arrowMethod: function() {
+        console.log(this.name); // 'John'
+        
+        setTimeout(() => {
+            console.log(this.name); // 'John' (inherits from arrowMethod)
+        }, 100);
+    }
+};
+
+// Event handlers
+class Button {
+    constructor(element) {
+        this.element = element;
+        this.clickCount = 0;
+        
+        // Problem with regular function
+        this.element.addEventListener('click', function() {
+            this.clickCount++; // this = element, not Button instance
+        });
+        
+        // Solution with arrow function
+        this.element.addEventListener('click', () => {
+            this.clickCount++; // this = Button instance
+        });
+    }
+}
+
+// Class methods
+class Counter {
+    constructor() {
+        this.count = 0;
+    }
+    
+    increment() {
+        this.count++; // this = Counter instance
+    }
+    
+    // Arrow function as property
+    incrementArrow = () => {
+        this.count++; // this = Counter instance (always)
+    }
+}
+
+const counter = new Counter();
+const incrementFunc = counter.increment;
+incrementFunc(); // this = undefined (lost context)
+
+const incrementArrowFunc = counter.incrementArrow;
+incrementArrowFunc(); // this = counter (preserved context)
+```
+</details>
+
 **Beginner: Q3** - Can arrow functions be used as constructors?
+
+<details>
+<summary>Answer</summary>
+
+No, arrow functions cannot be used as constructors:
+
+```javascript
+// Regular function - works as constructor
+function Person(name) {
+    this.name = name;
+}
+
+const person1 = new Person('John'); // Works
+
+// Arrow function - cannot be constructor
+const PersonArrow = (name) => {
+    this.name = name;
+};
+
+// const person2 = new PersonArrow('Jane'); // TypeError: PersonArrow is not a constructor
+
+// Why arrow functions can't be constructors:
+// 1. No prototype property
+console.log(Person.prototype); // { constructor: Person }
+console.log(PersonArrow.prototype); // undefined
+
+// 2. No own 'this' binding
+// Regular functions get new 'this' when called with 'new'
+// Arrow functions always use lexical 'this'
+
+// 3. No 'new.target'
+function RegularFunc() {
+    console.log(new.target); // Shows constructor when called with 'new'
+}
+
+const ArrowFunc = () => {
+    // console.log(new.target); // SyntaxError in arrow function
+};
+
+// Alternatives for object creation:
+// 1. Factory function
+const createPerson = (name) => ({ name });
+
+// 2. Class with arrow methods
+class PersonClass {
+    constructor(name) {
+        this.name = name;
+    }
+    
+    // Arrow method for 'this' binding
+    greet = () => {
+        return `Hello, I'm ${this.name}`;
+    }
+}
+
+// 3. Object literal
+const personObj = {
+    name: 'John',
+    greet: () => 'Hello!' // Note: arrow function here loses 'this'
+};
+```
+</details>
 
 **Intermediate: Q1** - What will be the output of this code?
 ```javascript
@@ -2170,6 +4006,161 @@ const obj = {
         const inner = () => {
             return this.name;
         };
+        return inner();
+    }
+};
+console.log(obj.getName());
+```
+
+<details>
+<summary>Answer</summary>
+
+Output: `"Test"`
+
+Explanation:
+
+```javascript
+const obj = {
+    name: 'Test',
+    getName: function() {
+        // Regular function: this = obj
+        console.log('Outer this.name:', this.name); // "Test"
+        
+        const inner = () => {
+            // Arrow function: inherits this from getName()
+            // So this = obj (same as outer function)
+            return this.name;
+        };
+        return inner();
+    }
+};
+
+console.log(obj.getName()); // "Test"
+
+// Step-by-step execution:
+// 1. obj.getName() is called
+// 2. getName() is a regular function, so this = obj
+// 3. inner is an arrow function defined inside getName()
+// 4. Arrow functions inherit this from enclosing scope
+// 5. So inner's this = getName's this = obj
+// 6. this.name = obj.name = "Test"
+
+// Compare with regular function inside:
+const obj2 = {
+    name: 'Test',
+    getName: function() {
+        function inner() {
+            return this.name; // this = undefined (strict) or window
+        }
+        return inner();
+    }
+};
+
+console.log(obj2.getName()); // undefined (strict mode)
+
+// Fix with bind:
+const obj3 = {
+    name: 'Test',
+    getName: function() {
+        function inner() {
+            return this.name;
+        }
+        return inner.call(this); // or inner.bind(this)()
+    }
+};
+```
+</details>
+
+**Intermediate: Q2** - When should you use arrow functions and when should you avoid them?
+
+<details>
+<summary>Answer</summary>
+
+**Use arrow functions when:**
+
+```javascript
+// 1. Array methods and functional programming
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(n => n * 2);
+const evens = numbers.filter(n => n % 2 === 0);
+
+// 2. Callbacks that need to preserve 'this'
+class Timer {
+    constructor() {
+        this.seconds = 0;
+        setInterval(() => {
+            this.seconds++; // 'this' refers to Timer instance
+        }, 1000);
+    }
+}
+
+// 3. Short, simple functions
+const add = (a, b) => a + b;
+const isEven = n => n % 2 === 0;
+
+// 4. Promise chains
+fetch('/api/data')
+    .then(response => response.json())
+    .then(data => data.filter(item => item.active))
+    .then(filtered => console.log(filtered));
+```
+
+**Avoid arrow functions when:**
+
+```javascript
+// 1. Object methods (lose 'this' context)
+const person = {
+    name: 'John',
+    greet: () => {
+        console.log(`Hello, ${this.name}`); // 'this' is not person
+    }
+};
+
+// Better:
+const person2 = {
+    name: 'John',
+    greet() {
+        console.log(`Hello, ${this.name}`); // 'this' is person2
+    }
+};
+
+// 2. Event handlers needing element context
+button.addEventListener('click', function() {
+    this.classList.toggle('active'); // 'this' is button
+});
+
+// 3. Functions needing 'arguments' object
+function sum() {
+    return Array.from(arguments).reduce((a, b) => a + b, 0);
+}
+
+// Arrow functions don't have 'arguments'
+// const sumArrow = () => {
+//     return Array.from(arguments); // ReferenceError
+// };
+
+// 4. Constructor functions
+function Person(name) {
+    this.name = name; // Can use with 'new'
+}
+
+// 5. Functions needing to be hoisted
+// Function declarations are hoisted, arrow functions are not
+console.log(hoisted()); // Works
+
+function hoisted() {
+    return 'I am hoisted';
+}
+
+// console.log(notHoisted()); // ReferenceError
+// const notHoisted = () => 'I am not hoisted';
+
+// 6. Prototype methods
+Person.prototype.greet = function() {
+    return `Hello, I'm ${this.name}`;
+};
+```
+</details>
         return inner();
     }
 };
@@ -2218,25 +4209,704 @@ console.log(first, third, rest);
 
 **Beginner: Q1** - What are template literals and how are they different from regular strings?
 
+<details>
+<summary>Answer</summary>
+
+Template literals use backticks and support embedded expressions and multi-line strings:
+
+```javascript
+// Regular strings
+const name = 'John';
+const regular = 'Hello ' + name + '!';
+const multiLine = 'Line 1\n' + 'Line 2';
+
+// Template literals
+const template = `Hello ${name}!`;
+const multiLineTemplate = `Line 1
+Line 2`;
+
+// Key differences:
+// 1. Syntax: backticks (`) vs quotes (' or ")
+// 2. Expression embedding: ${expression}
+// 3. Multi-line support without escape characters
+// 4. Preserve whitespace and formatting
+
+const user = { name: 'Alice', age: 30 };
+const info = `
+    Name: ${user.name}
+    Age: ${user.age}
+    Status: ${user.age >= 18 ? 'Adult' : 'Minor'}
+`;
+
+console.log(info);
+// Output:
+//     Name: Alice
+//     Age: 30
+//     Status: Adult
+```
+</details>
+
 **Beginner: Q2** - How do you embed expressions in template literals?
+
+<details>
+<summary>Answer</summary>
+
+Use `${expression}` syntax to embed any JavaScript expression:
+
+```javascript
+const a = 5;
+const b = 10;
+
+// Basic expressions
+console.log(`Sum: ${a + b}`); // "Sum: 15"
+console.log(`Product: ${a * b}`); // "Product: 50"
+
+// Function calls
+function greet(name) {
+    return `Hello, ${name}`;
+}
+console.log(`${greet('John')}!`); // "Hello, John!"
+
+// Object properties
+const user = { name: 'Alice', age: 25 };
+console.log(`User: ${user.name}, Age: ${user.age}`);
+
+// Conditional expressions
+const score = 85;
+console.log(`Grade: ${score >= 90 ? 'A' : score >= 80 ? 'B' : 'C'}`);
+
+// Array methods
+const numbers = [1, 2, 3];
+console.log(`Numbers: ${numbers.join(', ')}`);
+
+// Nested template literals
+const items = ['apple', 'banana'];
+const list = `Items: ${items.map(item => `• ${item}`).join('\n')}`;
+
+// Complex expressions
+const price = 19.99;
+const tax = 0.08;
+console.log(`Total: $${(price * (1 + tax)).toFixed(2)}`);
+```
+</details>
 
 **Beginner: Q3** - Can template literals span multiple lines?
 
+<details>
+<summary>Answer</summary>
+
+Yes, template literals preserve line breaks and whitespace:
+
+```javascript
+// Multi-line template literal
+const multiLine = `This is line 1
+This is line 2
+This is line 3`;
+
+console.log(multiLine);
+// Output:
+// This is line 1
+// This is line 2
+// This is line 3
+
+// HTML template
+const html = `
+<div class="user-card">
+    <h2>${user.name}</h2>
+    <p>Age: ${user.age}</p>
+    <p>Email: ${user.email}</p>
+</div>`;
+
+// SQL query
+const query = `
+SELECT name, age, email
+FROM users
+WHERE age > ${minAge}
+ORDER BY name ASC
+`;
+
+// Preserves indentation
+const indented = `
+    Level 1
+        Level 2
+            Level 3
+`;
+
+// Compare with regular strings (harder to read)
+const regularMultiLine = 'This is line 1\n' +
+                         'This is line 2\n' +
+                         'This is line 3';
+
+// Remove leading whitespace if needed
+function dedent(str) {
+    const lines = str.split('\n');
+    const minIndent = Math.min(
+        ...lines.filter(line => line.trim()).map(line => 
+            line.match(/^\s*/)[0].length
+        )
+    );
+    return lines.map(line => line.slice(minIndent)).join('\n').trim();
+}
+
+const clean = dedent(`
+    Indented text
+        More indented
+    Back to normal
+`);
+```
+</details>
+
 **Intermediate: Q1** - What are tagged template literals and how do they work?
 
+<details>
+<summary>Answer</summary>
+
+Tagged templates call a function with template literal parts and expressions:
+
+```javascript
+// Basic tagged template
+function highlight(strings, ...values) {
+    console.log('Strings:', strings); // Array of string parts
+    console.log('Values:', values);   // Array of expressions
+    
+    return strings.reduce((result, string, i) => {
+        const value = values[i] ? `<mark>${values[i]}</mark>` : '';
+        return result + string + value;
+    }, '');
+}
+
+const name = 'John';
+const age = 30;
+const result = highlight`Hello ${name}, you are ${age} years old!`;
+// Strings: ['Hello ', ', you are ', ' years old!']
+// Values: ['John', 30]
+// Result: "Hello <mark>John</mark>, you are <mark>30</mark> years old!"
+
+// Practical examples:
+
+// 1. Safe HTML escaping
+function safeHtml(strings, ...values) {
+    return strings.reduce((result, string, i) => {
+        const value = values[i] 
+            ? String(values[i]).replace(/[&<>"']/g, match => ({
+                '&': '&amp;', '<': '&lt;', '>': '&gt;',
+                '"': '&quot;', "'": '&#39;'
+            })[match])
+            : '';
+        return result + string + value;
+    }, '');
+}
+
+const userInput = '<script>alert("xss")</script>';
+const safe = safeHtml`<div>${userInput}</div>`;
+// Result: "<div>&lt;script&gt;alert(&quot;xss&quot;)&lt;/script&gt;</div>"
+
+// 2. CSS styling
+function css(strings, ...values) {
+    return strings.reduce((result, string, i) => {
+        return result + string + (values[i] || '');
+    }, '');
+}
+
+const color = 'blue';
+const size = '16px';
+const styles = css`
+    color: ${color};
+    font-size: ${size};
+    font-weight: bold;
+`;
+
+// 3. SQL query builder
+function sql(strings, ...values) {
+    // Escape SQL values to prevent injection
+    const escaped = values.map(value => 
+        typeof value === 'string' 
+            ? `'${value.replace(/'/g, "''")}'`
+            : value
+    );
+    
+    return strings.reduce((query, string, i) => {
+        return query + string + (escaped[i] || '');
+    }, '');
+}
+
+const userId = 123;
+const query = sql`SELECT * FROM users WHERE id = ${userId}`;
+```
+</details>
+
 **Intermediate: Q2** - Write a tagged template function that highlights variables in a string.
+
+<details>
+<summary>Answer</summary>
+
+```javascript
+// Simple highlight function
+function highlight(strings, ...values) {
+    return strings.reduce((result, string, i) => {
+        const value = values[i] !== undefined 
+            ? `**${values[i]}**` 
+            : '';
+        return result + string + value;
+    }, '');
+}
+
+// Advanced highlight with options
+function createHighlighter(options = {}) {
+    const { 
+        prefix = '**', 
+        suffix = '**', 
+        transform = (value) => value 
+    } = options;
+    
+    return function highlight(strings, ...values) {
+        return strings.reduce((result, string, i) => {
+            if (values[i] !== undefined) {
+                const transformed = transform(values[i]);
+                const highlighted = `${prefix}${transformed}${suffix}`;
+                return result + string + highlighted;
+            }
+            return result + string;
+        }, '');
+    };
+}
+
+// HTML highlighter
+const htmlHighlight = createHighlighter({
+    prefix: '<span class="highlight">',
+    suffix: '</span>',
+    transform: (value) => String(value).toUpperCase()
+});
+
+// Console color highlighter
+const colorHighlight = createHighlighter({
+    prefix: '\x1b[33m', // Yellow color
+    suffix: '\x1b[0m',  // Reset color
+});
+
+// Markdown highlighter
+const markdownHighlight = createHighlighter({
+    prefix: '`',
+    suffix: '`',
+    transform: (value) => typeof value === 'object' 
+        ? JSON.stringify(value) 
+        : String(value)
+});
+
+// Usage examples
+const name = 'Alice';
+const age = 25;
+const score = 95.5;
+
+console.log(highlight`Hello ${name}, you scored ${score}%!`);
+// Output: "Hello **Alice**, you scored **95.5**%!"
+
+console.log(htmlHighlight`User ${name} is ${age} years old`);
+// Output: "User <span class="highlight">ALICE</span> is <span class="highlight">25</span> years old"
+
+console.log(colorHighlight`Processing ${name}...`);
+// Output: "Processing [yellow]Alice[reset]..." (with actual colors in terminal)
+
+const data = { id: 1, active: true };
+console.log(markdownHighlight`User data: ${data}`);
+// Output: "User data: `{\"id\":1,\"active\":true}`"
+
+// Debug highlighter
+function debug(strings, ...values) {
+    const result = strings.reduce((acc, string, i) => {
+        const value = values[i];
+        const valueInfo = value !== undefined 
+            ? ` [${typeof value}: ${JSON.stringify(value)}] `
+            : '';
+        return acc + string + valueInfo;
+    }, '');
+    
+    console.log('DEBUG:', result);
+    return result;
+}
+
+debug`User ${name} has score ${score}`;
+// Output: "DEBUG: User  [string: "Alice"]  has score  [number: 95.5] "
+```
+</details>
 
 ## Modules (import, export)
 
 **Beginner: Q1** - How do you export and import functions from modules in ES6?
 
+<details>
+<summary>Answer</summary>
+
+ES6 modules use `export` and `import` keywords:
+
+```javascript
+// math.js - Exporting functions
+export function add(a, b) {
+    return a + b;
+}
+
+export function multiply(a, b) {
+    return a * b;
+}
+
+export const PI = 3.14159;
+
+// main.js - Importing functions
+import { add, multiply, PI } from './math.js';
+
+console.log(add(2, 3)); // 5
+console.log(multiply(4, 5)); // 20
+console.log(PI); // 3.14159
+
+// Alternative export syntax
+function subtract(a, b) {
+    return a - b;
+}
+
+function divide(a, b) {
+    return a / b;
+}
+
+export { subtract, divide };
+
+// Importing with aliases
+import { subtract as sub, divide as div } from './math.js';
+
+console.log(sub(10, 3)); // 7
+console.log(div(10, 2)); // 5
+```
+</details>
+
 **Beginner: Q2** - What is the difference between named exports and default exports?
+
+<details>
+<summary>Answer</summary>
+
+Named exports allow multiple exports, default export allows one main export:
+
+```javascript
+// utils.js - Named exports
+export function formatDate(date) {
+    return date.toLocaleDateString();
+}
+
+export function formatTime(date) {
+    return date.toLocaleTimeString();
+}
+
+export const version = '1.0.0';
+
+// user.js - Default export
+class User {
+    constructor(name) {
+        this.name = name;
+    }
+}
+
+export default User; // One default export per module
+
+// Mixed exports
+export function validateEmail(email) {
+    return email.includes('@');
+}
+
+// Importing named exports (exact names, use braces)
+import { formatDate, formatTime, version } from './utils.js';
+
+// Importing default export (any name, no braces)
+import User from './user.js';
+import MyUser from './user.js'; // Can rename default import
+
+// Mixed imports
+import User, { validateEmail } from './user.js';
+
+// Export patterns:
+
+// 1. Inline named exports
+export const config = { api: 'url' };
+export function helper() {}
+
+// 2. Grouped named exports
+const a = 1;
+const b = 2;
+export { a, b };
+
+// 3. Default export variations
+export default function() {} // Anonymous function
+export default class {} // Anonymous class
+export default 42; // Primitive value
+export default { name: 'Object' }; // Object literal
+
+// Key differences:
+// Named: import { exact, names } from 'module'
+// Default: import anyName from 'module'
+```
+</details>
 
 **Beginner: Q3** - How do you import all exports from a module?
 
+<details>
+<summary>Answer</summary>
+
+Use `import * as` syntax to import all named exports:
+
+```javascript
+// math.js
+export function add(a, b) { return a + b; }
+export function subtract(a, b) { return a - b; }
+export function multiply(a, b) { return a * b; }
+export const PI = 3.14159;
+export default function calculate() { return 'Calculator ready'; }
+
+// Import all named exports as namespace object
+import * as math from './math.js';
+
+console.log(math.add(2, 3)); // 5
+console.log(math.PI); // 3.14159
+console.log(math.multiply(4, 5)); // 20
+
+// Note: Default export is NOT included in namespace import
+// Import default separately
+import calculate, * as math from './math.js';
+console.log(calculate()); // 'Calculator ready'
+
+// Different import patterns:
+
+// 1. Import everything (named exports only)
+import * as utils from './utils.js';
+
+// 2. Import specific named exports
+import { add, subtract } from './math.js';
+
+// 3. Import default only
+import calculator from './math.js';
+
+// 4. Import default + specific named
+import calculator, { PI, add } from './math.js';
+
+// 5. Import default + all named
+import calculator, * as math from './math.js';
+
+// 6. Import for side effects only (no assignments)
+import './polyfills.js'; // Runs the module code
+
+// Real-world example
+// lodash.js (hypothetical)
+export function debounce() {}
+export function throttle() {}
+export function cloneDeep() {}
+
+// Usage
+import * as _ from './lodash.js';
+const debouncedFn = _.debounce(myFunction, 300);
+
+// Or destructure from namespace
+const { debounce, throttle } = await import('./lodash.js');
+```
+</details>
+
 **Intermediate: Q1** - What is dynamic import and when would you use it?
 
+<details>
+<summary>Answer</summary>
+
+Dynamic import loads modules at runtime, returns a Promise:
+
+```javascript
+// Static import (load time)
+import utils from './utils.js'; // Always loaded
+
+// Dynamic import (runtime)
+const utils = await import('./utils.js'); // Loaded when needed
+
+// Basic dynamic import
+async function loadMath() {
+    const math = await import('./math.js');
+    console.log(math.add(2, 3)); // 5
+    console.log(math.default()); // Default export
+}
+
+// Conditional loading
+async function loadFeature(featureName) {
+    if (featureName === 'charts') {
+        const chartLib = await import('./charts.js');
+        return new chartLib.Chart();
+    } else if (featureName === 'maps') {
+        const mapLib = await import('./maps.js');
+        return new mapLib.Map();
+    }
+}
+
+// Use cases:
+
+// 1. Code splitting / lazy loading
+async function handleButtonClick() {
+    const { heavyFunction } = await import('./heavy-module.js');
+    heavyFunction();
+}
+
+// 2. Conditional polyfills
+if (!Array.prototype.includes) {
+    await import('./array-includes-polyfill.js');
+}
+
+// 3. Dynamic module paths
+const locale = 'en';
+const translations = await import(`./locales/${locale}.js`);
+
+// 4. Feature detection
+if (supportsWebGL) {
+    const { WebGLRenderer } = await import('./webgl-renderer.js');
+    new WebGLRenderer();
+} else {
+    const { CanvasRenderer } = await import('./canvas-renderer.js');
+    new CanvasRenderer();
+}
+
+// 5. Plugin system
+class PluginManager {
+    async loadPlugin(pluginName) {
+        try {
+            const plugin = await import(`./plugins/${pluginName}.js`);
+            return plugin.default;
+        } catch (error) {
+            console.error(`Failed to load plugin: ${pluginName}`);
+        }
+    }
+}
+
+// 6. Route-based loading (React/Vue)
+const routes = [
+    {
+        path: '/home',
+        component: () => import('./components/Home.js')
+    },
+    {
+        path: '/about',
+        component: () => import('./components/About.js')
+    }
+];
+
+// Error handling
+try {
+    const module = await import('./maybe-missing.js');
+} catch (error) {
+    console.error('Module failed to load:', error);
+}
+
+// Benefits:
+// - Smaller initial bundle size
+// - Faster page load
+// - Load features on demand
+// - Better user experience
+```
+</details>
+
 **Intermediate: Q2** - How do ES6 modules differ from CommonJS modules?
+
+<details>
+<summary>Answer</summary>
+
+Key differences between ES6 modules and CommonJS:
+
+```javascript
+// COMMONJS (Node.js)
+// Exporting
+function add(a, b) { return a + b; }
+module.exports = { add };
+// or
+exports.add = add;
+
+// Importing
+const { add } = require('./math');
+const math = require('./math');
+
+// ES6 MODULES
+// Exporting
+export function add(a, b) { return a + b; }
+export default Calculator;
+
+// Importing
+import { add } from './math.js';
+import Calculator from './calculator.js';
+
+// Key Differences:
+
+// 1. Syntax
+// CommonJS: require() / module.exports
+// ES6: import / export
+
+// 2. Loading behavior
+// CommonJS: Synchronous, runtime
+const fs = require('fs'); // Loaded immediately
+
+// ES6: Asynchronous, compile-time
+import fs from 'fs'; // Analyzed before execution
+
+// 3. Static vs Dynamic
+// CommonJS: Dynamic (can be conditional)
+if (condition) {
+    const module = require('./module'); // Works
+}
+
+// ES6: Static (must be top-level)
+// if (condition) {
+//     import module from './module'; // SyntaxError
+// }
+
+// 4. Live bindings
+// CommonJS: Copy of value
+// counter.js (CommonJS)
+let count = 0;
+function increment() { count++; }
+module.exports = { count, increment };
+
+// main.js
+const { count, increment } = require('./counter');
+increment();
+console.log(count); // 0 (copy, not updated)
+
+// ES6: Live reference
+// counter.js (ES6)
+export let count = 0;
+export function increment() { count++; }
+
+// main.js
+import { count, increment } from './counter.js';
+increment();
+console.log(count); // 1 (live binding, updated)
+
+// 5. Tree shaking
+// CommonJS: No tree shaking
+const utils = require('./utils'); // Entire module loaded
+
+// ES6: Tree shaking possible
+import { onlyThis } from './utils.js'; // Only used exports bundled
+
+// 6. Interoperability
+// ES6 can import CommonJS
+import fs from 'fs'; // Works with Node.js modules
+
+// CommonJS can import ES6 (with dynamic import)
+const esmModule = await import('./esm-module.js');
+
+// 7. File extensions
+// CommonJS: .js (default)
+// ES6: .mjs or .js with "type": "module" in package.json
+
+// Migration example:
+// CommonJS -> ES6
+// Before
+const express = require('express');
+const { validateUser } = require('./utils');
+module.exports = function createApp() {};
+
+// After
+import express from 'express';
+import { validateUser } from './utils.js';
+export default function createApp() {}
+```
+</details>
 
 ## Classes & inheritance
 
