@@ -12,12 +12,15 @@
 - **Q1:** What is React and what problem does it solve?
 <details>
 <summary>Answer</summary>
+
 React is a JavaScript library for building user interfaces, particularly web applications. It solves the problem of efficiently updating and managing the UI when data changes. React uses a component-based architecture and virtual DOM to make UI updates predictable and performant.
 </details>
 
 - **Q2:** What are the main advantages of using React over vanilla JavaScript?
 <details>
 <summary>Answer</summary>
+
+
 - **Reusable Components**: Write once, use anywhere
 - **Virtual DOM**: Efficient updates and better performance
 - **Declarative**: Describe what UI should look like, not how to achieve it
@@ -28,8 +31,10 @@ React is a JavaScript library for building user interfaces, particularly web app
 - **Q3:** What is the difference between a library and a framework? Where does React fit?
 <details>
 <summary>Answer</summary>
+
 - **Library**: You call its functions when you need them (you control the flow)
 - **Framework**: It calls your code when needed (framework controls the flow)
+
 React is a **library** because you import and use React functions in your code, maintaining control over the application structure and flow.
 </details>
 
@@ -37,12 +42,14 @@ React is a **library** because you import and use React functions in your code, 
 - **Q1:** How does React's virtual DOM improve performance compared to direct DOM manipulation?
 <details>
 <summary>Answer</summary>
+
 The Virtual DOM is a JavaScript representation of the real DOM. React compares (diffs) the new virtual DOM with the previous version, calculates the minimum changes needed, and updates only those specific DOM nodes. This batch updating is much faster than frequent direct DOM manipulation, which triggers layout recalculations and repaints.
 </details>
 
 - **Q2:** What are the trade-offs of using React in a project?
 <details>
 <summary>Answer</summary>
+
 **Pros**: Component reusability, large ecosystem, good performance, strong community
 **Cons**: Steep learning curve, frequent updates, additional build complexity, larger bundle size for simple projects, JSX learning curve
 </details>
@@ -55,18 +62,21 @@ The Virtual DOM is a JavaScript representation of the real DOM. React compares (
 - **Q1:** What is JSX and why is it used in React?
 <details>
 <summary>Answer</summary>
+
 JSX (JavaScript XML) is a syntax extension that allows you to write HTML-like code in JavaScript. It makes React code more readable and allows you to write UI components in a familiar HTML-like syntax while maintaining the full power of JavaScript.
 </details>
 
 - **Q2:** Can browsers understand JSX directly? If not, how is it processed?
 <details>
 <summary>Answer</summary>
+
 No, browsers cannot understand JSX directly. JSX is transpiled (converted) to regular JavaScript function calls using tools like Babel. For example, `<h1>Hello</h1>` becomes `React.createElement('h1', null, 'Hello')`.
 </details>
 
 - **Q3:** What are the basic rules for writing JSX?
 <details>
 <summary>Answer</summary>
+
 - Must return a single parent element (or use React.Fragment)
 - Use `className` instead of `class`
 - Use `htmlFor` instead of `for`
@@ -85,6 +95,7 @@ No, browsers cannot understand JSX directly. JSX is transpiled (converted) to re
 const element = <h1 className="greeting">Hello, world!</h1>;
 ```
 
+Compiles to:
 
 ```javascript
 const element = React.createElement(
@@ -98,6 +109,7 @@ const element = React.createElement(
 - **Q2:** How do you handle events in JSX and what are synthetic events?
 <details>
 <summary>Answer</summary>
+
 Events in JSX are handled using camelCase event handlers like `onClick`. Synthetic events are React's wrapper around native events that provide consistent behavior across different browsers. They have the same interface as native events but are cross-browser compatible.
 
 
@@ -114,6 +126,7 @@ Events in JSX are handled using camelCase event handlers like `onClick`. Synthet
 - **Q1:** What is a React component and what are the two main types?
 <details>
 <summary>Answer</summary>
+
 A React component is a reusable piece of UI that accepts inputs (props) and returns JSX describing what should appear on screen. The two main types are:
 - **Functional components**: JavaScript functions that return JSX
 - **Class components**: ES6 classes that extend React.Component
@@ -154,6 +167,7 @@ class Welcome extends React.Component {
 - **Q1:** What are the advantages of functional components over class components?
 <details>
 <summary>Answer</summary>
+
 - **Simpler syntax**: Less boilerplate code
 - **Hooks support**: Can use state and lifecycle features with hooks
 - **Better performance**: Slightly better optimization in React
@@ -175,6 +189,7 @@ class Welcome extends React.Component {
 }
 ```
 
+Can be converted to:
 
 ```jsx
 function Welcome({ name }) {
@@ -196,6 +211,7 @@ const Welcome = ({ name }) => {
 - **Q1:** What are props in React and how do you pass them to components?
 <details>
 <summary>Answer</summary>
+
 Props (properties) are read-only inputs passed from parent to child components. They are passed as attributes:
 
 
@@ -213,6 +229,7 @@ function Welcome(props) {
 - **Q2:** What is state and how is it different from props?
 <details>
 <summary>Answer</summary>
+
 State is mutable data that belongs to a component and can change over time. 
 - **Props**: Immutable, passed from parent, read-only
 - **State**: Mutable, owned by component, can be updated
@@ -227,6 +244,7 @@ const [count, setCount] = useState(0); // State
 - **Q3:** Can you modify props inside a component? Why or why not?
 <details>
 <summary>Answer</summary>
+
 No, props are **read-only** and should never be modified. This ensures:
 - **Predictable data flow**: Data flows down from parent to child
 - **Pure components**: Same props always produce same output
@@ -237,12 +255,14 @@ No, props are **read-only** and should never be modified. This ensures:
 - **Q1:** What happens when you try to modify props directly in a component?
 <details>
 <summary>Answer</summary>
+
 React will throw an error in development mode: "Cannot assign to read only property". In production, it may silently fail or cause unexpected behavior. Props are frozen in development to enforce immutability.
 </details>
 
 - **Q2:** Explain the concept of "lifting state up" with an example scenario.
 <details>
 <summary>Answer</summary>
+
 When multiple child components need to share state, move the state to their closest common parent. The parent manages the state and passes it down as props.
 
 
@@ -285,6 +305,7 @@ ReactDOM.render(<App />, document.getElementById('root'));
 - **Q2:** What is the root element in a React application?
 <details>
 <summary>Answer</summary>
+
 The root element is the DOM element where React mounts and manages the entire application. It's typically a div with id "root" in the HTML file:
 ```html
 <div id="root"></div>
@@ -294,6 +315,7 @@ The root element is the DOM element where React mounts and manages the entire ap
 - **Q3:** Can you have multiple React apps on the same page?
 <details>
 <summary>Answer</summary>
+
 Yes, you can have multiple React roots on the same page by creating multiple root elements and rendering different applications to each:
 
 
@@ -309,6 +331,7 @@ root2.render(<App2 />);
 - **Q1:** What is the difference between ReactDOM.render() and ReactDOM.createRoot()?
 <details>
 <summary>Answer</summary>
+
 - **ReactDOM.render()**: Legacy API (React 17 and earlier), synchronous rendering
 - **createRoot()**: New API (React 18+), enables concurrent features like automatic batching, transitions, and Suspense
 
@@ -326,6 +349,7 @@ root.render(<App />);
 - **Q2:** How does React decide when to re-render components?
 <details>
 <summary>Answer</summary>
+
 React re-renders components when:
 - **State changes** (via setState or hooks)
 - **Props change** from parent
@@ -342,6 +366,7 @@ React re-renders components when:
 - **Q1:** How do you conditionally render elements in React?
 <details>
 <summary>Answer</summary>
+
 You can conditionally render elements using JavaScript expressions:
 
 
@@ -364,6 +389,7 @@ if (isLoggedIn) {
 - **Q2:** What are three different ways to implement conditional rendering?
 <details>
 <summary>Answer</summary>
+
 1. **Logical AND (&&)**: `{condition && <Component />}`
 2. **Ternary operator**: `{condition ? <ComponentA /> : <ComponentB />}`
 3. **If-else statements**: Outside JSX, return different components
@@ -386,6 +412,7 @@ It will render nothing (no element). The logical AND operator returns `false` wh
 - **Q1:** What's the difference between using `&&` operator and ternary operator for conditional rendering?
 <details>
 <summary>Answer</summary>
+
 - **&& operator**: Renders component or nothing
   
 
@@ -403,6 +430,7 @@ It will render nothing (no element). The logical AND operator returns `false` wh
 - **Q2:** How do you handle multiple conditions in JSX efficiently?
 <details>
 <summary>Answer</summary>
+
 Use helper functions or switch statements for complex conditions:
 
 
@@ -426,6 +454,7 @@ return <div>{renderContent()}</div>;
 - **Q1:** How do you render a list of items in React?
 <details>
 <summary>Answer</summary>
+
 Use the `map()` method to transform an array into JSX elements:
 
 
@@ -441,6 +470,7 @@ return <ul>{listItems}</ul>;
 - **Q2:** What are keys in React and why are they important?
 <details>
 <summary>Answer</summary>
+
 Keys are unique identifiers for list elements that help React identify which items have changed, been added, or removed. They improve performance by enabling efficient list updates and maintaining component state correctly during re-renders.
 
 
@@ -452,6 +482,7 @@ Keys are unique identifiers for list elements that help React identify which ite
 - **Q3:** What happens if you don't provide keys when rendering lists?
 <details>
 <summary>Answer</summary>
+
 React will show a warning in the console. Without keys, React can't efficiently update the DOM when list items change, potentially causing:
 - Poor performance
 - Incorrect component state preservation
@@ -462,6 +493,7 @@ React will show a warning in the console. Without keys, React can't efficiently 
 - **Q1:** Why should you avoid using array indices as keys?
 <details>
 <summary>Answer</summary>
+
 Using array indices as keys can cause issues when the list order changes:
 - React might incorrectly preserve component state
 - Performance degradation during reordering
@@ -480,6 +512,7 @@ Using array indices as keys can cause issues when the list order changes:
 - **Q2:** What makes a good key for list items?
 <details>
 <summary>Answer</summary>
+
 A good key should be:
 - **Unique**: Among siblings in the list
 - **Stable**: Doesn't change between renders
@@ -498,6 +531,7 @@ Examples: database IDs, UUIDs, or stable combinations of data fields.
 - **Q1:** What are the three main phases of a component lifecycle?
 <details>
 <summary>Answer</summary>
+
 1. **Mounting**: Component is being created and inserted into the DOM
 2. **Updating**: Component is being re-rendered as a result of changes to props or state
 3. **Unmounting**: Component is being removed from the DOM
@@ -506,6 +540,7 @@ Examples: database IDs, UUIDs, or stable combinations of data fields.
 - **Q2:** When does componentDidMount() execute and what is it commonly used for?
 <details>
 <summary>Answer</summary>
+
 `componentDidMount()` executes immediately after a component is mounted (inserted into the DOM tree). It's commonly used for:
 - Making API calls
 - Setting up subscriptions
@@ -516,6 +551,7 @@ Examples: database IDs, UUIDs, or stable combinations of data fields.
 - **Q3:** What is componentWillUnmount() used for?
 <details>
 <summary>Answer</summary>
+
 `componentWillUnmount()` is called just before a component is unmounted and destroyed. It's used for cleanup:
 - Cancelling network requests
 - Removing event listeners
@@ -527,6 +563,7 @@ Examples: database IDs, UUIDs, or stable combinations of data fields.
 - **Q1:** What's the difference between componentDidUpdate() and componentDidMount()?
 <details>
 <summary>Answer</summary>
+
 - **componentDidMount()**: Called once after initial render (mounting phase)
 - **componentDidUpdate()**: Called after every re-render (updating phase), receives prevProps and prevState as parameters
 
@@ -543,6 +580,7 @@ componentDidUpdate(prevProps, prevState) {
 - **Q2:** How do you prevent unnecessary re-renders using lifecycle methods?
 <details>
 <summary>Answer</summary>
+
 Use `shouldComponentUpdate()` or `React.PureComponent`:
 
 
@@ -570,6 +608,7 @@ class MyComponent extends React.PureComponent {
 - **Q1:** What is the useState hook and how do you use it?
 <details>
 <summary>Answer</summary>
+
 `useState` is a Hook that lets you add state to functional components. It returns an array with the current state value and a setter function.
 
 
@@ -590,6 +629,7 @@ function Counter() {
 - **Q2:** What does useState return?
 <details>
 <summary>Answer</summary>
+
 `useState` returns an array with exactly two elements:
 1. **Current state value**: The current value of the state
 2. **Setter function**: A function to update the state value
@@ -603,6 +643,7 @@ const [state, setState] = useState(initialValue);
 - **Q3:** How do you update state using useState?
 <details>
 <summary>Answer</summary>
+
 Call the setter function with the new value:
 
 
@@ -647,6 +688,7 @@ const handleClick = () => {
 - **Q2:** How do you update state based on previous state correctly?
 <details>
 <summary>Answer</summary>
+
 Use the functional update pattern:
 
 
@@ -668,6 +710,7 @@ setUser(prevUser => ({ ...prevUser, name: 'John' }));
 - **Q1:** What is useEffect and when does it run?
 <details>
 <summary>Answer</summary>
+
 `useEffect` is a Hook that lets you perform side effects in functional components. It runs:
 - After every render by default
 - After initial render (like componentDidMount)
@@ -684,6 +727,7 @@ useEffect(() => {
 - **Q2:** How do you make useEffect run only once?
 <details>
 <summary>Answer</summary>
+
 Pass an empty dependency array `[]` as the second argument:
 
 ```jsx
@@ -696,6 +740,7 @@ useEffect(() => {
 - **Q3:** What is the purpose of the dependency array in useEffect?
 <details>
 <summary>Answer</summary>
+
 The dependency array controls when the effect runs:
 - **No array**: Runs after every render
 - **Empty array `[]`**: Runs only once after initial render
@@ -712,6 +757,7 @@ useEffect(() => {
 - **Q1:** How do you clean up effects (like event listeners or subscriptions)?
 <details>
 <summary>Answer</summary>
+
 Return a cleanup function from the effect:
 
 ```jsx
@@ -752,24 +798,12 @@ This creates an **infinite loop**:
 ---
 
 ### 🎯 **useContext**
-1. Effect runs and updates `count`
-2. `count` change triggers effect again
-3. Effect runs and updates `count` again
-4. Process repeats infinitely
-
-**Fix**: Use functional update or different dependency.
-</details>
-
----
-
----
-
-### 🎯 **useContext**
 
 #### **📋 Beginner:**
 - **Q1:** What is useContext and how do you use it?
 <details>
 <summary>Answer</summary>
+
 `useContext` is a Hook that lets you consume context values in functional components without nesting:
 
 ```jsx
@@ -785,6 +819,7 @@ function MyComponent() {
 - **Q2:** How do you create a context in React?
 <details>
 <summary>Answer</summary>
+
 Use `React.createContext()`:
 
 ```jsx
@@ -806,6 +841,7 @@ function App() {
 - **Q3:** What is a Context Provider?
 <details>
 <summary>Answer</summary>
+
 A Context Provider is a component that supplies context values to all its descendant components. It accepts a `value` prop that will be available to all consuming components:
 
 ```jsx
@@ -819,6 +855,7 @@ A Context Provider is a component that supplies context values to all its descen
 - **Q1:** How do you avoid unnecessary re-renders when using Context?
 <details>
 <summary>Answer</summary>
+
 - **Split contexts**: Separate frequently changing data
 - **Memoize context value**: Use `useMemo` for object values
 - **Memoize components**: Use `React.memo` for consumers
@@ -826,12 +863,15 @@ A Context Provider is a component that supplies context values to all its descen
 ```jsx
 const value = useMemo(() => ({ user, settings }), [user, settings]);
 <UserContext.Provider value={value}>
+  {children}
+</UserContext.Provider>
 ```
 </details>
 
 - **Q2:** When should you split contexts instead of using one large context?
 <details>
 <summary>Answer</summary>
+
 Split contexts when:
 - Different parts of data change at different frequencies
 - Different components need different subsets of data
@@ -839,8 +879,18 @@ Split contexts when:
 
 ```jsx
 // Instead of one large context
-<UserContext.Provider> // Split into
-<ThemeContext.Provider> // multiple focused contexts
+<AppContext.Provider value={{ user, theme, settings }}>
+  {children}
+</AppContext.Provider>
+
+// Split into multiple focused contexts
+<UserContext.Provider value={user}>
+  <ThemeContext.Provider value={theme}>
+    <SettingsContext.Provider value={settings}>
+      {children}
+    </SettingsContext.Provider>
+  </ThemeContext.Provider>
+</UserContext.Provider>
 ```
 </details>
 
@@ -852,6 +902,7 @@ Split contexts when:
 - **Q1:** What is useReducer and when would you use it instead of useState?
 <details>
 <summary>Answer</summary>
+
 `useReducer` is a Hook for managing complex state logic. Use it instead of `useState` when:
 - State has multiple sub-values
 - Next state depends on the previous one
@@ -865,6 +916,7 @@ const [state, dispatch] = useReducer(reducer, initialState);
 - **Q2:** What are the arguments that useReducer takes?
 <details>
 <summary>Answer</summary>
+
 `useReducer` takes two required arguments and one optional:
 1. **reducer function**: `(state, action) => newState`
 2. **initial state**: The initial state value
@@ -878,6 +930,7 @@ const [state, dispatch] = useReducer(reducer, initialState, init);
 - **Q3:** What is a reducer function?
 <details>
 <summary>Answer</summary>
+
 A reducer is a pure function that takes current state and an action, then returns a new state:
 
 ```jsx
@@ -898,6 +951,7 @@ function reducer(state, action) {
 - **Q1:** How do you implement useReducer for a counter with increment, decrement, and reset actions?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 const initialState = { count: 0 };
@@ -932,6 +986,7 @@ function Counter() {
 - **Q2:** What are the benefits of using useReducer for complex state logic?
 <details>
 <summary>Answer</summary>
+
 - **Predictable**: All state changes go through the reducer
 - **Testable**: Reducer is a pure function, easy to test
 - **Scalable**: Better for complex state with multiple actions
@@ -947,6 +1002,7 @@ function Counter() {
 - **Q1:** What is useRef and what are its common use cases?
 <details>
 <summary>Answer</summary>
+
 `useRef` is a Hook that returns a mutable ref object. Common use cases:
 - **Accessing DOM elements**: Focus inputs, scroll to elements
 - **Storing mutable values**: Previous values, timers, any mutable data
@@ -961,6 +1017,7 @@ const countRef = useRef(0);
 - **Q2:** How do you access DOM elements using useRef?
 <details>
 <summary>Answer</summary>
+
 Assign the ref to an element's `ref` attribute:
 
 ```jsx
@@ -984,6 +1041,7 @@ function MyComponent() {
 - **Q3:** Does changing a ref's current value cause a re-render?
 <details>
 <summary>Answer</summary>
+
 **No**, changing `ref.current` does not cause a re-render. This is the key difference between refs and state:
 
 ```jsx
@@ -996,6 +1054,7 @@ countRef.current = 5; // No re-render triggered
 - **Q1:** How can you use useRef to store previous values?
 <details>
 <summary>Answer</summary>
+
 Use `useRef` with `useEffect` to track previous values:
 
 ```jsx
@@ -1017,6 +1076,7 @@ function MyComponent({ count }) {
 - **Q2:** What's the difference between useRef and useState for storing values?
 <details>
 <summary>Answer</summary>
+
 | useRef | useState |
 |--------|----------|
 | Mutable | Immutable |
@@ -1034,6 +1094,7 @@ function MyComponent({ count }) {
 - **Q1:** What is useMemo and when should you use it?
 <details>
 <summary>Answer</summary>
+
 `useMemo` is a Hook that memoizes (caches) the result of expensive calculations. Use it when:
 - You have expensive computations
 - You want to avoid recalculating on every render
@@ -1049,6 +1110,7 @@ const expensiveValue = useMemo(() => {
 - **Q2:** How does useMemo help with performance?
 <details>
 <summary>Answer</summary>
+
 `useMemo` helps performance by:
 - **Skipping expensive calculations** when dependencies haven't changed
 - **Preventing unnecessary object creation** that could trigger child re-renders
@@ -1059,6 +1121,7 @@ const expensiveValue = useMemo(() => {
 - **Q3:** What happens if you don't provide a dependency array to useMemo?
 <details>
 <summary>Answer</summary>
+
 **Error**: `useMemo` requires a dependency array as the second argument. Without it, React will throw an error. The dependency array determines when to recalculate the memoized value.
 </details>
 
@@ -1066,6 +1129,7 @@ const expensiveValue = useMemo(() => {
 - **Q1:** When can useMemo be an anti-pattern?
 <details>
 <summary>Answer</summary>
+
 `useMemo` can hurt performance when:
 - **Overused on cheap calculations**: The memoization overhead exceeds the benefit
 - **Dependencies change frequently**: Defeats the purpose of memoization
@@ -1080,6 +1144,7 @@ const sum = useMemo(() => a + b, [a, b]);
 - **Q2:** How do you decide what to include in useMemo's dependency array?
 <details>
 <summary>Answer</summary>
+
 Include all values from component scope that are used inside `useMemo`:
 - **Props** used in the calculation
 - **State variables** used in the calculation
@@ -1100,6 +1165,7 @@ const result = useMemo(() => {
 - **Q1:** What is useCallback and how is it related to useMemo?
 <details>
 <summary>Answer</summary>
+
 `useCallback` is a Hook that memoizes functions. It's related to `useMemo` but specifically for functions:
 - **useCallback**: Returns a memoized function
 - **useMemo**: Returns a memoized value
@@ -1119,6 +1185,7 @@ const memoizedCallback = useMemo(() => {
 - **Q2:** When should you use useCallback?
 <details>
 <summary>Answer</summary>
+
 Use `useCallback` when:
 - Passing functions to memoized child components
 - Functions are dependencies of other hooks
@@ -1140,6 +1207,7 @@ function Parent() {
 - **Q3:** What does useCallback return?
 <details>
 <summary>Answer</summary>
+
 `useCallback` returns a **memoized version of the function** that only changes if one of the dependencies has changed. It returns the same function reference between renders when dependencies don't change.
 </details>
 
@@ -1175,6 +1243,7 @@ const data = useMemo(() => ({ name: 'Button' }), []);
 - **Q2:** How can overusing useCallback hurt performance?
 <details>
 <summary>Answer</summary>
+
 Overusing `useCallback` can hurt performance by:
 - **Creating unnecessary closures**: Memory overhead for each memoized function
 - **Comparison overhead**: React must compare dependencies on each render
@@ -1190,6 +1259,7 @@ Overusing `useCallback` can hurt performance by:
 - **Q1:** What's the difference between useEffect and useLayoutEffect?
 <details>
 <summary>Answer</summary>
+
 - **useEffect**: Runs **asynchronously** after DOM mutations and browser paint
 - **useLayoutEffect**: Runs **synchronously** after DOM mutations but before browser paint
 
@@ -1207,6 +1277,7 @@ useLayoutEffect(() => {
 - **Q2:** When should you use useLayoutEffect?
 <details>
 <summary>Answer</summary>
+
 Use `useLayoutEffect` when you need to:
 - **Measure DOM elements** before the browser paints
 - **Make DOM mutations** that users should not see
@@ -1217,6 +1288,7 @@ Use `useLayoutEffect` when you need to:
 - **Q3:** What are the performance implications of useLayoutEffect?
 <details>
 <summary>Answer</summary>
+
 `useLayoutEffect` can hurt performance because:
 - **Blocks browser painting** until effect completes
 - **Synchronous execution** can delay visual updates
@@ -1228,6 +1300,7 @@ Use `useLayoutEffect` when you need to:
 - **Q1:** How would you measure DOM elements before the browser paints?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 function MyComponent() {
@@ -1253,6 +1326,7 @@ function MyComponent() {
 - **Q2:** Why might useLayoutEffect cause issues in SSR?
 <details>
 <summary>Answer</summary>
+
 `useLayoutEffect` can cause SSR hydration mismatches because:
 - **Server doesn't have DOM**: No layout information available
 - **Client-server differences**: Different measurements between server and client
@@ -1268,6 +1342,7 @@ function MyComponent() {
 - **Q1:** What is useImperativeHandle and with which hook is it typically used?
 <details>
 <summary>Answer</summary>
+
 `useImperativeHandle` is a Hook that customizes the instance value exposed to parent components when using `ref`. It's typically used with `forwardRef`:
 
 ```jsx
@@ -1285,6 +1360,7 @@ const MyInput = forwardRef((props, ref) => {
 - **Q2:** When would you need to use useImperativeHandle?
 <details>
 <summary>Answer</summary>
+
 Use `useImperativeHandle` when you need to:
 - **Expose specific methods** from child to parent component
 - **Create reusable components** with imperative APIs
@@ -1295,6 +1371,7 @@ Use `useImperativeHandle` when you need to:
 - **Q3:** How do you expose methods from a child component to its parent?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Child component
@@ -1331,6 +1408,7 @@ function Parent() {
 - **Q1:** Why should useImperativeHandle be used sparingly?
 <details>
 <summary>Answer</summary>
+
 `useImperativeHandle` should be used sparingly because:
 - **Breaks React's declarative paradigm** - makes code more imperative
 - **Tight coupling** between parent and child components
@@ -1342,6 +1420,7 @@ function Parent() {
 - **Q2:** How do you create a custom input component that exposes a focus method?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 const FocusableInput = forwardRef(({ placeholder, ...props }, ref) => {
@@ -1381,6 +1460,7 @@ const FocusableInput = forwardRef(({ placeholder, ...props }, ref) => {
 - **Q1:** What are custom hooks and what naming convention must they follow?
 <details>
 <summary>Answer</summary>
+
 Custom hooks are JavaScript functions that:
 - **Start with "use"** (naming convention)
 - **Can call other hooks** inside them
@@ -1398,6 +1478,7 @@ function useCounter(initialValue = 0) {
 - **Q2:** Why would you create a custom hook?
 <details>
 <summary>Answer</summary>
+
 Create custom hooks to:
 - **Share stateful logic** between multiple components
 - **Abstract complex logic** into reusable functions
@@ -1409,6 +1490,7 @@ Create custom hooks to:
 - **Q3:** Can custom hooks use other hooks?
 <details>
 <summary>Answer</summary>
+
 **Yes**, custom hooks can use any built-in hooks or other custom hooks:
 
 ```jsx
@@ -1429,6 +1511,7 @@ function useApi(url) {
 - **Q1:** Create a custom hook called useLocalStorage that manages localStorage state.
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 function useLocalStorage(key, initialValue) {
@@ -1465,6 +1548,7 @@ function App() {
 - **Q2:** How do you test custom hooks?
 <details>
 <summary>Answer</summary>
+
 Use React Testing Library's `renderHook`:
 
 ```jsx
@@ -1497,6 +1581,7 @@ test('should increment counter', () => {
 - **Q1:** What are the two main Rules of Hooks?
 <details>
 <summary>Answer</summary>
+
 1. **Only call hooks at the top level** - Don't call hooks inside loops, conditions, or nested functions
 2. **Only call hooks from React functions** - Call them from React function components or custom hooks, not regular JavaScript functions
 </details>
@@ -1504,6 +1589,7 @@ test('should increment counter', () => {
 - **Q2:** Why can't you call hooks inside loops or conditions?
 <details>
 <summary>Answer</summary>
+
 React relies on the **order of hook calls** to maintain state between renders. Calling hooks conditionally or in loops can change this order, causing:
 - **State to be associated with wrong variables**
 - **Unexpected behavior and bugs**
@@ -1526,6 +1612,7 @@ if (condition) {
 - **Q3:** Where can hooks be called?
 <details>
 <summary>Answer</summary>
+
 Hooks can only be called from:
 - **React function components**
 - **Custom hooks** (functions starting with "use")
@@ -1536,6 +1623,7 @@ Hooks can only be called from:
 - **Q1:** How does React keep track of hook state between renders?
 <details>
 <summary>Answer</summary>
+
 React uses a **linked list** to track hooks:
 - Each component instance has a **hooks list**
 - Hooks are called in the **same order** every render
@@ -1546,6 +1634,7 @@ React uses a **linked list** to track hooks:
 - **Q2:** What tools help enforce the Rules of Hooks?
 <details>
 <summary>Answer</summary>
+
 - **ESLint plugin**: `eslint-plugin-react-hooks` catches violations
 - **React DevTools**: Shows hook violations in development
 - **TypeScript**: Can help with some hook-related type safety
@@ -1570,6 +1659,7 @@ React uses a **linked list** to track hooks:
 - **Q1:** How do custom hooks help with code reuse?
 <details>
 <summary>Answer</summary>
+
 Custom hooks enable code reuse by:
 - **Extracting stateful logic** into reusable functions
 - **Sharing common patterns** across multiple components
@@ -1589,6 +1679,7 @@ function useToggle(initialValue = false) {
 - **Q2:** What's the difference between custom hooks and HOCs for sharing logic?
 <details>
 <summary>Answer</summary>
+
 | Custom Hooks | HOCs |
 |--------------|------|
 | Function-based | Component-based |
@@ -1602,6 +1693,7 @@ function useToggle(initialValue = false) {
 - **Q3:** Can custom hooks return JSX?
 <details>
 <summary>Answer</summary>
+
 **No**, custom hooks should **not return JSX**. They should return:
 - **State values and setters**
 - **Computed values**
@@ -1614,6 +1706,7 @@ If you need to share JSX, use **render props** or **compound components** instea
 - **Q1:** Design a custom hook for handling form input state.
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 function useForm(initialValues) {
@@ -1671,6 +1764,7 @@ function LoginForm() {
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 function useApiWithAuth(url) {
   const { user, isAuthenticated } = useAuth(); // First custom hook
@@ -1711,6 +1805,7 @@ function usePersistedCounter() {
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 // 1. Create context
 const ThemeContext = React.createContext('light');
@@ -1738,6 +1833,7 @@ function Header() {
 - **Q2:** What causes Context consumers to re-render?
 <details>
 <summary>Answer</summary>
+
 Context consumers re-render when:
 - **Context value changes** (reference comparison)
 - **Provider component re-renders** with a new value object
@@ -1756,6 +1852,7 @@ const value = useMemo(() => ({ user, theme }), [user, theme]);
 - **Q3:** How do you consume context in functional components?
 <details>
 <summary>Answer</summary>
+
 Use the `useContext` hook:
 
 ```jsx
@@ -1774,6 +1871,7 @@ function MyComponent() {
 - **Q1:** How do you optimize Context to prevent unnecessary re-renders?
 <details>
 <summary>Answer</summary>
+
 **Optimization strategies:**
 1. **Memoize context value**:
 
@@ -1804,6 +1902,7 @@ const ExpensiveComponent = React.memo(() => {
 - **Q2:** When should you use multiple contexts vs one large context?
 <details>
 <summary>Answer</summary>
+
 **Use multiple contexts when:**
 - Different parts of state change at **different frequencies**
 - Components need **different subsets** of data
@@ -1835,6 +1934,7 @@ const ExpensiveComponent = React.memo(() => {
 - **Q1:** What are the three core principles of Redux?
 <details>
 <summary>Answer</summary>
+
 1. **Single Source of Truth**: The entire application state is stored in one store
 2. **State is Read-Only**: State can only be changed by dispatching actions
 3. **Changes are made with Pure Functions**: Reducers are pure functions that specify how state changes
@@ -1843,6 +1943,7 @@ const ExpensiveComponent = React.memo(() => {
 - **Q2:** What is an action in Redux?
 <details>
 <summary>Answer</summary>
+
 An action is a **plain JavaScript object** that describes what happened. It must have a `type` property:
 
 ```jsx
@@ -1870,6 +1971,7 @@ const addTodo = (text) => ({
 - **Q3:** What is a reducer and what rules must it follow?
 <details>
 <summary>Answer</summary>
+
 A reducer is a **pure function** that takes current state and action, returns new state. Rules:
 - **Pure function**: No side effects, same input = same output
 - **Immutable updates**: Never mutate state directly
@@ -1897,6 +1999,7 @@ function todosReducer(state = [], action) {
 - **Q1:** How does middleware work in Redux?
 <details>
 <summary>Answer</summary>
+
 Middleware provides a **third-party extension point** between dispatching an action and reaching the reducer:
 
 ```jsx
@@ -1920,6 +2023,7 @@ const store = createStore(
 - **Q2:** What is the purpose of normalizing state in Redux?
 <details>
 <summary>Answer</summary>
+
 Normalizing state **flattens nested data** for better performance and easier updates:
 
 ```jsx
@@ -1948,6 +2052,7 @@ const state = {
   }
 };
 ```
+
 **Benefits**: Avoid duplication, easier updates, better performance
 </details>
 
@@ -1959,6 +2064,7 @@ const state = {
 - **Q1:** What problems does Redux Toolkit solve?
 <details>
 <summary>Answer</summary>
+
 Redux Toolkit (RTK) solves common Redux problems:
 - **Too much boilerplate**: Simplifies action creators and reducers
 - **Complex store setup**: Provides `configureStore` with good defaults
@@ -1970,6 +2076,7 @@ Redux Toolkit (RTK) solves common Redux problems:
 - **Q2:** What is createSlice and what does it generate?
 <details>
 <summary>Answer</summary>
+
 `createSlice` is a function that generates Redux logic. It creates:
 - **Action creators**: Automatically generated from reducer names
 - **Reducer function**: Handles the actions
@@ -2001,6 +2108,7 @@ export default counterSlice.reducer;
 - **Q3:** How does Redux Toolkit handle immutability?
 <details>
 <summary>Answer</summary>
+
 RTK uses **Immer** under the hood, which allows you to write "mutative" logic that actually produces immutable updates:
 
 ```jsx
@@ -2027,6 +2135,7 @@ const todosSlice = createSlice({
 - **Q1:** What is createAsyncThunk and when would you use it?
 <details>
 <summary>Answer</summary>
+
 `createAsyncThunk` creates thunks for async operations and automatically dispatches lifecycle actions:
 
 ```jsx
@@ -2061,12 +2170,14 @@ const usersSlice = createSlice({
   }
 });
 ```
+
 **Use for**: API calls, any async operations, consistent loading states
 </details>
 
 - **Q2:** How does RTK Query compare to other data fetching solutions?
 <details>
 <summary>Answer</summary>
+
 **RTK Query vs other solutions:**
 
 | Feature | RTK Query | React Query | Apollo |
@@ -2094,6 +2205,7 @@ const usersSlice = createSlice({
 - **Q1:** What is the Virtual DOM and why does React use it?
 <details>
 <summary>Answer</summary>
+
 The Virtual DOM is a **JavaScript representation** of the real DOM kept in memory. React uses it because:
 - **Performance**: Faster to manipulate JavaScript objects than DOM
 - **Predictability**: Declarative updates are easier to reason about
@@ -2104,6 +2216,7 @@ The Virtual DOM is a **JavaScript representation** of the real DOM kept in memor
 - **Q2:** How does the Virtual DOM improve performance?
 <details>
 <summary>Answer</summary>
+
 Virtual DOM improves performance through:
 1. **Diffing**: Compares new virtual DOM with previous version
 2. **Minimal updates**: Only changes necessary DOM nodes
@@ -2121,6 +2234,7 @@ Virtual DOM improves performance through:
 - **Q3:** Is the Virtual DOM always faster than direct DOM manipulation?
 <details>
 <summary>Answer</summary>
+
 **No**, Virtual DOM isn't always faster. It's slower for:
 - **Simple, targeted updates**: Direct DOM manipulation can be faster
 - **Single element changes**: Virtual DOM adds overhead
@@ -2136,6 +2250,7 @@ Virtual DOM is faster for:
 - **Q1:** Describe the process from state change to DOM update in React.
 <details>
 <summary>Answer</summary>
+
 1. **State change triggered** (setState, hooks)
 2. **Component re-render** scheduled
 3. **New Virtual DOM tree** created
@@ -2149,6 +2264,7 @@ Virtual DOM is faster for:
 - **Q2:** What are the limitations of the Virtual DOM approach?
 <details>
 <summary>Answer</summary>
+
 **Limitations:**
 - **Memory overhead**: Keeps two DOM trees in memory
 - **Not always optimal**: Can be slower for simple updates
@@ -2166,12 +2282,14 @@ Virtual DOM is faster for:
 - **Q1:** What is reconciliation in React?
 <details>
 <summary>Answer</summary>
+
 Reconciliation is the **process of comparing** the new Virtual DOM tree with the previous one and determining what changes need to be made to the real DOM. It's React's "diffing" algorithm that makes updates efficient.
 </details>
 
 - **Q2:** What triggers the reconciliation process?
 <details>
 <summary>Answer</summary>
+
 Reconciliation is triggered by:
 - **State updates** (useState, setState)
 - **Props changes** from parent components
@@ -2183,6 +2301,7 @@ Reconciliation is triggered by:
 - **Q3:** How does React handle different element types during reconciliation?
 <details>
 <summary>Answer</summary>
+
 React handles different scenarios:
 - **Same element type**: Compares attributes and recurses on children
 - **Different element types**: Destroys old tree and builds new one
@@ -2201,6 +2320,7 @@ React handles different scenarios:
 - **Q1:** How does React's reconciliation algorithm achieve O(n) complexity?
 <details>
 <summary>Answer</summary>
+
 React's algorithm is O(n) through these assumptions:
 1. **Different element types** produce different trees (no cross-comparison)
 2. **Keys help identify** which children have changed, moved, or removed
@@ -2213,6 +2333,7 @@ Without these assumptions, general tree diffing would be O(n³).
 - **Q2:** What happens when component types change during reconciliation?
 <details>
 <summary>Answer</summary>
+
 When component types change:
 1. **Old component unmounts** (componentWillUnmount, cleanup effects)
 2. **Old DOM nodes removed**
@@ -2234,6 +2355,7 @@ When component types change:
 - **Q1:** What assumptions does React's diffing algorithm make?
 <details>
 <summary>Answer</summary>
+
 React's diffing algorithm makes two key assumptions:
 1. **Elements of different types** will produce different trees
 2. **Developers can hint** at which child elements may be stable across renders using keys
@@ -2244,6 +2366,7 @@ These assumptions allow React to use a fast O(n) algorithm instead of O(n³).
 - **Q2:** How does React handle list reconciliation?
 <details>
 <summary>Answer</summary>
+
 For lists, React:
 1. **Compares children by position** if no keys provided
 2. **Uses keys to match elements** across renders when available
@@ -2262,6 +2385,7 @@ For lists, React:
 - **Q3:** Why are keys important for the diffing algorithm?
 <details>
 <summary>Answer</summary>
+
 Keys are important because they:
 - **Help React identify** which items have changed, moved, or been removed
 - **Preserve component state** during list reordering
@@ -2273,6 +2397,7 @@ Keys are important because they:
 - **Q1:** What are the performance implications of changing all keys in a list?
 <details>
 <summary>Answer</summary>
+
 Changing all keys forces React to:
 - **Unmount all existing components** in the list
 - **Mount completely new components** for each item
@@ -2295,6 +2420,7 @@ Changing all keys forces React to:
 - **Q2:** How can poor key choices lead to bugs?
 <details>
 <summary>Answer</summary>
+
 Poor key choices can cause:
 - **State preservation bugs**: Input values staying with wrong items
 - **Animation glitches**: Transitions applying to wrong elements
@@ -2320,6 +2446,7 @@ const [items, setItems] = useState([{name: 'A'}, {name: 'B'}]);
 - **Q1:** What's the difference between controlled and uncontrolled components?
 <details>
 <summary>Answer</summary>
+
 - **Controlled components**: Form data is handled by React state. React controls the input value.
 - **Uncontrolled components**: Form data is handled by the DOM itself. Uses refs to access values.
 
@@ -2347,6 +2474,7 @@ function UncontrolledInput() {
 - **Q2:** How do you create a controlled input component?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 function ControlledForm() {
@@ -2393,6 +2521,7 @@ function ControlledForm() {
 - **Q3:** When might you use an uncontrolled component?
 <details>
 <summary>Answer</summary>
+
 Use uncontrolled components when:
 - **Simple forms** where you only need the value on submit
 - **File inputs** (always uncontrolled in React)
@@ -2426,6 +2555,7 @@ function UncontrolledForm() {
 - **Q1:** What are the trade-offs between controlled and uncontrolled components?
 <details>
 <summary>Answer</summary>
+
 **Controlled Components:**
 - ✅ **Pros**: Immediate validation, dynamic behavior, consistent with React patterns
 - ❌ **Cons**: More code, potential performance issues with large forms
@@ -2445,6 +2575,7 @@ function UncontrolledForm() {
 - **Q2:** How do you handle file inputs (which are always uncontrolled)?
 <details>
 <summary>Answer</summary>
+
 File inputs are always uncontrolled because their value cannot be set programmatically for security reasons:
 
 ```jsx
@@ -2486,6 +2617,7 @@ function FileUpload() {
 - **Q1:** What is React.memo and when should you use it?
 <details>
 <summary>Answer</summary>
+
 `React.memo` is a **higher-order component** that memoizes the result of a component. It only re-renders if props change (shallow comparison):
 
 ```jsx
@@ -2511,6 +2643,7 @@ function Parent() {
 - **Q2:** How do React.memo, useMemo, and useCallback work together?
 <details>
 <summary>Answer</summary>
+
 They work together to optimize performance:
 - **React.memo**: Prevents component re-renders
 - **useMemo**: Memoizes expensive calculations
@@ -2556,6 +2689,7 @@ function Parent({ data }) {
 - **Q3:** When does React.memo not prevent re-renders?
 <details>
 <summary>Answer</summary>
+
 React.memo doesn't prevent re-renders when:
 - **Props contain new object/array references** each render
 - **Props contain functions** that are recreated each render
@@ -2581,6 +2715,7 @@ const style = useMemo(() => ({ color: 'red' }), []);
 - **Q1:** When can memoization actually hurt performance?
 <details>
 <summary>Answer</summary>
+
 Memoization can hurt performance when:
 - **Overused on cheap calculations**: Memoization overhead > calculation cost
 - **Dependencies change frequently**: Defeats the purpose
@@ -2602,6 +2737,7 @@ const expensiveCalculation = useMemo(() => {
 - **Q2:** How do you properly memoize a component with object props?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Option 1: Memoize the object prop
@@ -2640,6 +2776,7 @@ const UserCard = React.memo(({ name, age, theme }) => {
 - **Q1:** What is code splitting and why is it useful?
 <details>
 <summary>Answer</summary>
+
 Code splitting is **dividing your bundle** into smaller chunks that can be loaded on demand. Benefits:
 - **Faster initial load**: Only load what's needed immediately
 - **Better user experience**: App starts faster
@@ -2662,6 +2799,7 @@ const ContactPage = lazy(() => import('./ContactPage'));
 - **Q2:** How do you implement lazy loading with React.lazy?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 import { Suspense, lazy } from 'react';
@@ -2690,6 +2828,7 @@ function App() {
 - **Q3:** What is Suspense and how does it work with lazy loading?
 <details>
 <summary>Answer</summary>
+
 `Suspense` is a component that **handles loading states** for lazy components. It:
 - **Catches loading promises** from lazy components
 - **Shows fallback UI** while loading
@@ -2713,6 +2852,7 @@ function App() {
 - **Q1:** What are the best strategies for code splitting in a React app?
 <details>
 <summary>Answer</summary>
+
 **Effective code splitting strategies:**
 
 1. **Route-based splitting**: Split by pages/routes
@@ -2759,6 +2899,7 @@ const AdminTools = lazy(() =>
 - **Q2:** How do you handle loading errors with lazy components?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 import { Suspense, lazy } from 'react';
@@ -2822,6 +2963,7 @@ function App() {
 - **Q1:** What is Suspense and what can it be used for?
 <details>
 <summary>Answer</summary>
+
 `Suspense` is a React component that lets you **handle loading states** declaratively. Currently used for:
 - **Lazy loading components** with React.lazy
 - **Code splitting** at the component level
@@ -2838,6 +2980,7 @@ It catches "loading promises" thrown by components and shows fallback UI until r
 - **Q2:** How do you use Suspense with React.lazy?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 import { Suspense, lazy } from 'react';
@@ -2869,6 +3012,7 @@ function App() {
 - **Q3:** What is a fallback in Suspense?
 <details>
 <summary>Answer</summary>
+
 A **fallback** is the UI shown while suspended components are loading. It can be:
 - **Simple text**: `fallback="Loading..."`
 - **Components**: `fallback={<LoadingSpinner />}`
@@ -2891,6 +3035,7 @@ A **fallback** is the UI shown while suspended components are loading. It can be
 - **Q1:** How will Suspense work with data fetching in the future?
 <details>
 <summary>Answer</summary>
+
 **Future Suspense for data fetching** (experimental):
 - Components can **"suspend"** while data loads
 - **Declarative loading states** without useEffect
@@ -2921,6 +3066,7 @@ function App() {
 - **Q2:** How do you handle nested Suspense boundaries?
 <details>
 <summary>Answer</summary>
+
 Nested Suspense boundaries allow **granular loading states**:
 
 ```jsx
@@ -2972,6 +3118,7 @@ function App() {
 - **Q1:** What is React Router and why is it needed?
 <details>
 <summary>Answer</summary>
+
 React Router is a **client-side routing library** for React that enables navigation between different components/pages without full page refreshes. It's needed because:
 - **SPAs need routing**: Single Page Applications need to handle multiple views
 - **URL synchronization**: Keep URL in sync with UI state
@@ -2998,6 +3145,7 @@ function App() {
 - **Q2:** What's the difference between BrowserRouter and HashRouter?
 <details>
 <summary>Answer</summary>
+
 | BrowserRouter | HashRouter |
 |---------------|------------|
 | **URL format**: `/home/profile` | **URL format**: `/#/home/profile` |
@@ -3025,6 +3173,7 @@ function App() {
 - **Q3:** How do you create basic routes using Route components?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 import { BrowserRouter, Routes, Route } from 'react-router-dom';
@@ -3060,6 +3209,7 @@ function App() {
 - **Q1:** What's the difference between Link and regular anchor tags?
 <details>
 <summary>Answer</summary>
+
 | Link | Anchor Tag |
 |------|------------|
 | **Client-side navigation** | **Full page reload** |
@@ -3089,6 +3239,7 @@ function App() {
 - **Q2:** How do you implement nested routing layouts?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 import { Outlet } from 'react-router-dom';
@@ -3140,6 +3291,7 @@ function App() {
 - **Q1:** How do you define route parameters in React Router?
 <details>
 <summary>Answer</summary>
+
 Route parameters are defined using **colon (`:`) syntax** in the route path:
 
 ```jsx
@@ -3162,6 +3314,7 @@ Route parameters are defined using **colon (`:`) syntax** in the route path:
 - **Q2:** How do you access route parameters in your components?
 <details>
 <summary>Answer</summary>
+
 Use the `useParams` hook to access route parameters:
 
 ```jsx
@@ -3199,6 +3352,7 @@ function TypedComponent() {
 - **Q3:** What happens if a required parameter is missing?
 <details>
 <summary>Answer</summary>
+
 If a required parameter is missing, the route **won't match** and React Router will:
 - Continue to next route in the Routes list
 - Eventually show 404/catch-all route if no other routes match
@@ -3230,6 +3384,7 @@ function UserProfile() {
 - **Q1:** How do you handle optional route parameters?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Method 1: Optional parameter with ?
@@ -3266,6 +3421,7 @@ function ProductSearch() {
 - **Q2:** How do you validate route parameters?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Custom hook for parameter validation
@@ -3330,6 +3486,7 @@ const productLoader = ({ params }) => {
 - **Q1:** What are nested routes and how do you implement them?
 <details>
 <summary>Answer</summary>
+
 Nested routes allow you to render components inside other components based on URL structure. They create **hierarchical routing**:
 
 ```jsx
@@ -3364,6 +3521,7 @@ function Dashboard() {
 - **Q2:** How does the Outlet component work?
 <details>
 <summary>Answer</summary>
+
 `Outlet` is a **placeholder component** that renders the child route's element. It:
 - **Marks the spot** where child routes should render
 - **Passes context** to child routes
@@ -3405,6 +3563,7 @@ function ProfilePage() {
 - **Q3:** How do you structure components for nested routes?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // File structure
@@ -3455,6 +3614,7 @@ function App() {
 - **Q1:** How do you implement breadcrumbs with nested routes?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 import { useMatches } from 'react-router-dom';
@@ -3521,6 +3681,7 @@ function Breadcrumbs() {
 - **Q2:** How do you handle data loading for nested routes?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Using loaders (React Router v6.4+)
@@ -3611,6 +3772,7 @@ function useNestedData() {
 - **Q1:** How do you redirect users to different routes?
 <details>
 <summary>Answer</summary>
+
 You can redirect users using:
 
 **1. Navigate component (declarative)**:
@@ -3652,6 +3814,7 @@ function LoginForm() {
 - **Q2:** What's the difference between Navigate and useNavigate?
 <details>
 <summary>Answer</summary>
+
 | Navigate Component | useNavigate Hook |
 |-------------------|------------------|
 | **Declarative** | **Imperative** |
@@ -3683,6 +3846,7 @@ function LoginButton() {
 - **Q3:** How do you implement protected routes?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Protected Route component
@@ -3732,6 +3896,7 @@ function RoleProtectedRoute({ children, allowedRoles }) {
 - **Q1:** How do you preserve the intended destination after login redirects?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Protected route saves intended destination
@@ -3790,6 +3955,7 @@ function useRedirectAfterLogin() {
 - **Q2:** How do you handle programmatic navigation with state?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 function ProductList() {
@@ -3870,6 +4036,7 @@ function FormPage() {
 - **Q1:** What does useParams return and how do you use it?
 <details>
 <summary>Answer</summary>
+
 `useParams` returns an **object containing route parameters** as key-value pairs:
 
 ```jsx
@@ -3904,6 +4071,7 @@ function TypedComponent() {
 - **Q2:** How do you navigate programmatically using useNavigate?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 import { useNavigate } from 'react-router-dom';
@@ -3948,6 +4116,7 @@ function MyComponent() {
 - **Q3:** What other React Router hooks are commonly used?
 <details>
 <summary>Answer</summary>
+
 **Common React Router hooks:**
 
 
@@ -3992,6 +4161,7 @@ function ComponentUsingHooks() {
 - **Q1:** How do you access query parameters and location state?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 import { useSearchParams, useLocation } from 'react-router-dom';
@@ -4074,6 +4244,7 @@ function useSearchParam(key, defaultValue) {
 - **Q2:** How do you implement navigation guards with React Router hooks?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 import { useEffect, useCallback } from 'react';
@@ -4171,6 +4342,7 @@ function ProtectedRouteGuard({ children, canAccess }) {
 - **Q1:** What are Error Boundaries and what errors do they catch?
 <details>
 <summary>Answer</summary>
+
 Error Boundaries are **React components that catch JavaScript errors** anywhere in their child component tree. They catch errors during:
 - **Rendering**
 - **Lifecycle methods**
@@ -4211,6 +4383,7 @@ class ErrorBoundary extends React.Component {
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -4246,6 +4419,7 @@ class ErrorBoundary extends React.Component {
           {process.env.NODE_ENV === 'development' && (
             <details style={{ whiteSpace: 'pre-wrap' }}>
               <summary>Error details (dev only)</summary>
+
               {this.state.error && this.state.error.toString()}
               <br />
               {this.state.errorInfo.componentStack}
@@ -4264,6 +4438,7 @@ class ErrorBoundary extends React.Component {
 - **Q3:** What errors do Error Boundaries NOT catch?
 <details>
 <summary>Answer</summary>
+
 Error Boundaries **do NOT catch** errors in:
 - **Event handlers** (use try-catch instead)
 - **Asynchronous code** (setTimeout, promises, async/await)
@@ -4320,6 +4495,7 @@ function MyComponent() {
 - **Q1:** How do you implement error logging in Error Boundaries?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Error reporting service integration
@@ -4404,6 +4580,7 @@ class ErrorBoundary extends React.Component {
 - **Q2:** How do you reset Error Boundaries after an error?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 class ErrorBoundary extends React.Component {
@@ -4506,6 +4683,7 @@ function MyApp() {
 - **Q1:** What is componentDidCatch and when is it called?
 <details>
 <summary>Answer</summary>
+
 `componentDidCatch` is a **lifecycle method** called when an error is thrown by any component in the component tree below. It's called during the **"commit" phase** and allows you to:
 - **Log error information**
 - **Send error reports to services**
@@ -4532,6 +4710,8 @@ class ErrorBoundary extends React.Component {
 - **Q2:** What's the difference between componentDidCatch and getDerivedStateFromError?
 <details>
 <summary>Answer</summary>
+
+
 | componentDidCatch | getDerivedStateFromError |
 |-------------------|--------------------------|
 | **Side effects allowed** | **Pure function only** |
@@ -4580,6 +4760,7 @@ class ErrorBoundary extends React.Component {
 - **Q3:** Can functional components implement error boundaries?
 <details>
 <summary>Answer</summary>
+
 **No**, functional components **cannot be error boundaries**. Error boundaries require:
 - `getDerivedStateFromError` (static method)
 - `componentDidCatch` (lifecycle method)
@@ -4620,6 +4801,7 @@ function App() {
 - **Q1:** How do you integrate error boundaries with error monitoring services?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 import * as Sentry from '@sentry/react';
@@ -4692,6 +4874,7 @@ class ErrorBoundary extends React.Component {
           {this.state.eventId && (
             <details>
               <summary>Error Reference</summary>
+
               <p>Error ID: {this.state.eventId}</p>
             </details>
           )}
@@ -4738,6 +4921,7 @@ const SafeComponent = withErrorBoundary(MyComponent, {
 - **Q2:** How do you test error boundaries?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 import { render, screen } from '@testing-library/react';
@@ -4872,6 +5056,7 @@ test('integrates with Sentry', async () => {
 - **Q1:** Why don't Error Boundaries catch async errors?
 <details>
 <summary>Answer</summary>
+
 Error Boundaries **don't catch async errors** because:
 - They only catch errors during **React's render phase**
 - Async errors happen **outside the React call stack**
@@ -5017,6 +5202,7 @@ function ComponentWithAsyncError() {
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 function PromiseHandler() {
   const [data, setData] = useState(null);
@@ -5090,6 +5276,7 @@ function PromiseHandler() {
 - **Q1:** How do you create a global error handler for async operations?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Global error context
@@ -5203,6 +5390,7 @@ export function useAsyncOperation() {
 - **Q2:** How do you implement retry logic for failed async operations?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Custom hook with retry logic
@@ -5402,6 +5590,7 @@ function ComponentWithCircuitBreaker() {
 - **Q1:** What problem does Context API solve?
 <details>
 <summary>Answer</summary>
+
 The **Context API** solves the **prop drilling problem** - passing data through multiple component layers to reach a deeply nested component.
 
 **Problems Context solves:**
@@ -5497,6 +5686,7 @@ function UserInfo() {
 - **Q2:** How do you avoid prop drilling using Context?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Step 1: Create Context
@@ -5621,6 +5811,7 @@ function App() {
 - **Q3:** When should you use Context vs props?
 <details>
 <summary>Answer</summary>
+
 **Use Context when:**
 - Data is needed by **many components** at different nesting levels
 - **Prop drilling** becomes cumbersome (3+ levels deep)
@@ -5742,6 +5933,7 @@ const comparison = {
 - **Q1:** How do you optimize Context usage for large applications?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // 1. Split Context by Concern and Update Frequency
@@ -5996,6 +6188,7 @@ function ExpensiveComponent() {
 - **Q2:** How do you implement multiple contexts efficiently?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // 1. Context Composition Pattern
@@ -6305,6 +6498,7 @@ function UserComponent() {
 - **Q1:** What are the main differences between Context and Redux?
 <details>
 <summary>Answer</summary>
+
 | Feature | Context API | Redux |
 |---------|-------------|--------|
 | **Purpose** | Built-in React feature for prop drilling | External state management library |
@@ -6380,6 +6574,7 @@ const login = (credentials) => async (dispatch) => {
 - **Q2:** When would you choose Context over Redux?
 <details>
 <summary>Answer</summary>
+
 **Choose Context when:**
 
 1. **Simple state management** - Few state values, minimal complexity
@@ -6477,6 +6672,7 @@ function CartProvider({ children }) {
 - **Q3:** When would you choose Redux over Context?
 <details>
 <summary>Answer</summary>
+
 **Choose Redux when:**
 
 1. **Complex state logic** - Multiple reducers, complex updates
@@ -6598,6 +6794,7 @@ const decisionGuide = {
 - **Q1:** How do the performance characteristics of Context and Redux compare?
 <details>
 <summary>Answer</summary>
+
 **Performance Comparison:**
 
 | Aspect | Context API | Redux |
@@ -6771,6 +6968,7 @@ function ContextComponent() {
 - **Q2:** How do you decide between Context, Redux, and other state management solutions?
 <details>
 <summary>Answer</summary>
+
 **Decision Framework:**
 
 
@@ -7008,6 +7206,7 @@ function App() {
 - **Q1:** How do you fetch data in React components?
 <details>
 <summary>Answer</summary>
+
 Use **useEffect** for data fetching on mount:
 
 
@@ -7048,6 +7247,7 @@ function UserProfile({ userId }) {
 - **Q2:** Why shouldn't you fetch data directly in the render method?
 <details>
 <summary>Answer</summary>
+
 **Problems with fetching in render:**
 - **Infinite requests** - Component re-renders trigger new fetches
 - **Performance** - Blocks rendering
@@ -7081,6 +7281,7 @@ function GoodComponent() {
 - **Q3:** What's the difference between fetch and axios for React applications?
 <details>
 <summary>Answer</summary>
+
 | Feature | fetch | axios |
 |---------|-------|-------|
 | **Bundle size** | Built-in (0KB) | ~13KB |
@@ -7108,7 +7309,7 @@ const fetchData = async () => {
 };
 ```
 
-**Choose fetch for:** Simple requests, smaller bundle size
+**Choose fetch for:** Simple requests, smaller bundle size  
 **Choose axios for:** Complex apps, interceptors, better DX
 </details>
 
@@ -7116,8 +7317,8 @@ const fetchData = async () => {
 - **Q1:** How do you handle race conditions when fetching data?
 <details>
 <summary>Answer</summary>
-**Race condition:** Multiple requests in flight, latest request might not be last response.
 
+**Race condition:** Multiple requests in flight, latest request might not be last response.
 
 ```jsx
 // ❌ Race condition problem
@@ -7179,6 +7380,7 @@ function SearchResults({ query }) {
 - **Q2:** How do you implement request cancellation?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Method 1: AbortController (fetch)
@@ -7252,6 +7454,7 @@ function useCancellableRequest() {
 - **Q1:** Can you make the useEffect callback function async?
 <details>
 <summary>Answer</summary>
+
 **No, you cannot make the useEffect callback async directly.**
 
 
@@ -7289,6 +7492,7 @@ useEffect(() => {
 - **Q2:** How do you properly handle async operations in useEffect?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 function DataComponent() {
@@ -7347,6 +7551,7 @@ function DataComponent() {
 - **Q3:** How do you clean up async operations in useEffect?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Method 1: Cancellation flag
@@ -7409,6 +7614,7 @@ function Component() {
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 // Custom hook for safe async operations
 function useSafeAsync() {
@@ -7468,6 +7674,7 @@ function useIsMounted() {
 - **Q2:** How do you implement proper error handling for async useEffect operations?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 function useAsyncError() {
@@ -7551,6 +7758,7 @@ function useAsyncOperation() {
 - **Q1:** How will Suspense work with data fetching?
 <details>
 <summary>Answer</summary>
+
 **Suspense** allows components to "wait" for data and show fallback UI while loading.
 
 
@@ -7594,6 +7802,7 @@ function Dashboard() {
 - **Q2:** What is concurrent rendering and how does it relate to Suspense?
 <details>
 <summary>Answer</summary>
+
 **Concurrent rendering** allows React to pause and resume work, making apps more responsive.
 
 
@@ -7656,6 +7865,7 @@ function DataView() {
 - **Q3:** What are the current limitations of Suspense for data fetching?
 <details>
 <summary>Answer</summary>
+
 **Current limitations:**
 
 1. **Limited library support** - Only React Query, SWR, Relay support it
@@ -7704,6 +7914,7 @@ function App() {
 - **Q1:** How do you implement data fetching libraries that work with Suspense?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Basic Suspense-compatible cache
@@ -7794,6 +8005,7 @@ function UserProfile() {
 - **Q2:** How do you handle error boundaries with Suspense data fetching?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Suspense-aware Error Boundary
@@ -7889,6 +8101,7 @@ function AppWithReset() {
 - **Q1:** What is automatic batching in React 18?
 <details>
 <summary>Answer</summary>
+
 **Automatic batching** groups multiple state updates into a single re-render for better performance.
 
 
@@ -7932,6 +8145,7 @@ function App() {
 - **Q2:** How does automatic batching improve performance?
 <details>
 <summary>Answer</summary>
+
 **Performance improvements:**
 
 
@@ -7974,6 +8188,7 @@ function Component() {
 - **Q3:** What changed from React 17 to React 18 regarding batching?
 <details>
 <summary>Answer</summary>
+
 | Scenario | React 17 | React 18 |
 |----------|----------|----------|
 | **Event handlers** | ✅ Batched | ✅ Batched |
@@ -8024,6 +8239,7 @@ function Example() {
 - **Q1:** How do you opt out of automatic batching when needed?
 <details>
 <summary>Answer</summary>
+
 Use **flushSync** to force synchronous updates:
 
 
@@ -8089,6 +8305,7 @@ function FormWithValidation() {
 - **Q2:** What are the implications of automatic batching for testing?
 <details>
 <summary>Answer</summary>
+
 **Testing considerations:**
 
 
@@ -8173,6 +8390,7 @@ test('automatic batching reduces renders', () => {
 - **Q1:** What is useTransition and what problem does it solve?
 <details>
 <summary>Answer</summary>
+
 **useTransition** marks updates as non-urgent, letting React prioritize more important updates.
 
 
@@ -8223,6 +8441,7 @@ function SearchApp() {
 - **Q2:** How do you mark updates as transitions?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 function App() {
@@ -8282,6 +8501,7 @@ function SearchWithDeferred() {
 - **Q3:** What is the isPending value in useTransition?
 <details>
 <summary>Answer</summary>
+
 **isPending** indicates if any transition updates are currently pending.
 
 
@@ -8355,6 +8575,7 @@ function useTransitionState(initialState) {
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 function ContactList() {
   const [searchTerm, setSearchTerm] = useState('');
@@ -8427,6 +8648,7 @@ function OptimizedList({ items }) {
 - **Q2:** When should you avoid using transitions?
 <details>
 <summary>Answer</summary>
+
 **Avoid transitions for:**
 
 
@@ -8506,6 +8728,7 @@ function AnimatedButton({ onClick }) {
 - **Q1:** What is useDeferredValue and how does it work?
 <details>
 <summary>Answer</summary>
+
 **useDeferredValue** lets you defer updates to a value during urgent updates.
 
 
@@ -8555,6 +8778,7 @@ function SearchResults({ query }) {
 - **Q2:** How is useDeferredValue different from useTransition?
 <details>
 <summary>Answer</summary>
+
 | Feature | useTransition | useDeferredValue |
 |---------|---------------|------------------|
 | **Control** | You control when to defer | React controls timing |
@@ -8606,13 +8830,14 @@ function DeferredExample() {
 }
 ```
 
-**Choose useTransition when:** You want control and loading states
+**Choose useTransition when:** You want control and loading states  
 **Choose useDeferredValue when:** Optimizing child component props
 </details>
 
 - **Q3:** When would you use useDeferredValue?
 <details>
 <summary>Answer</summary>
+
 **Use useDeferredValue for:**
 
 
@@ -8688,6 +8913,7 @@ function MapWithSearch() {
 - **Q1:** How do you implement debounced search with useDeferredValue?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Method 1: Pure useDeferredValue (React handles timing)
@@ -8809,6 +9035,7 @@ function SmartSearch() {
 - **Q2:** What are the performance implications of useDeferredValue?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Performance monitoring with useDeferredValue
@@ -8943,6 +9170,7 @@ function OptimizedComponent() {
 - **Q1:** What is concurrent rendering in React 18?
 <details>
 <summary>Answer</summary>
+
 **Concurrent rendering** allows React to pause, resume, and prioritize work to keep the app responsive.
 
 
@@ -9004,6 +9232,7 @@ function App() {
 - **Q2:** How does concurrent rendering improve user experience?
 <details>
 <summary>Answer</summary>
+
 **UX improvements:**
 
 
@@ -9080,6 +9309,7 @@ function App() {
 - **Q3:** Do you need to change your code to benefit from concurrent rendering?
 <details>
 <summary>Answer</summary>
+
 **Minimal changes needed** - Most apps benefit automatically:
 
 
@@ -9145,6 +9375,7 @@ function OptimizedComponent() {
 - **Q1:** How does concurrent rendering affect component lifecycle?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Lifecycle methods may be called multiple times
@@ -9213,6 +9444,7 @@ function SafeComponent() {
 - **Q2:** What are the implications of concurrent rendering for third-party libraries?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Libraries need to be concurrent-safe
@@ -9316,6 +9548,7 @@ function TestConcurrentSafety() {
 - **Q1:** What is streaming server rendering?
 <details>
 <summary>Answer</summary>
+
 **Streaming SSR** sends HTML to the browser in chunks as it's generated, rather than waiting for the entire page:
 
 **Traditional SSR:**
@@ -9389,6 +9622,7 @@ async function BlogPosts() {
 - **Q2:** How does streaming SSR improve performance?
 <details>
 <summary>Answer</summary>
+
 **Performance improvements:**
 
 1. **Faster Time to First Byte (TTFB)**:
@@ -9473,6 +9707,7 @@ function Dashboard() {
 - **Q3:** What role does Suspense play in streaming SSR?
 <details>
 <summary>Answer</summary>
+
 **Suspense enables streaming** by defining boundaries where rendering can be paused and resumed:
 
 
@@ -9569,6 +9804,7 @@ function BlogPage() {
 - **Q1:** How do you implement selective hydration with streaming SSR?
 <details>
 <summary>Answer</summary>
+
 **Selective hydration** allows parts of the page to become interactive before the entire page has hydrated:
 
 
@@ -9724,6 +9960,7 @@ function InteractionBasedHydration({ children, triggerEvents = ['click', 'focus'
 - **Q2:** What are the challenges of streaming SSR implementation?
 <details>
 <summary>Answer</summary>
+
 **Implementation challenges:**
 
 1. **Error handling in streams**:
@@ -9938,6 +10175,7 @@ function useServerState(initialState) {
 - **Q1:** What is Webpack and why is it used in React projects?
 <details>
 <summary>Answer</summary>
+
 **Webpack** is a module bundler that packages JavaScript files and assets for browsers.
 
 
@@ -9976,6 +10214,7 @@ module.exports = {
 - **Q2:** What are the main concepts in Webpack (entry, output, loaders, plugins)?
 <details>
 <summary>Answer</summary>
+
 
 ```javascript
 module.exports = {
@@ -10028,6 +10267,7 @@ module.exports = {
 - **Q3:** How does Webpack handle different file types?
 <details>
 <summary>Answer</summary>
+
 
 ```javascript
 module.exports = {
@@ -10095,6 +10335,7 @@ function App() {
 <details>
 <summary>Answer</summary>
 
+
 ```javascript
 const path = require('path');
 const TerserPlugin = require('terser-webpack-plugin');
@@ -10161,6 +10402,7 @@ module.exports = {
 - **Q2:** How do you implement code splitting with Webpack?
 <details>
 <summary>Answer</summary>
+
 
 ```javascript
 // 1. Dynamic imports in React
@@ -10236,6 +10478,7 @@ import(/* webpackChunkName: "lodash" */ 'lodash').then((_) => {
 - **Q1:** What is Babel and why is it needed for React?
 <details>
 <summary>Answer</summary>
+
 **Babel** is a JavaScript compiler that transforms modern JS/JSX into browser-compatible code.
 
 
@@ -10267,6 +10510,7 @@ const App = () => {
 - **Q2:** How does JSX get transformed into JavaScript?
 <details>
 <summary>Answer</summary>
+
 
 ```javascript
 // JSX input
@@ -10307,6 +10551,7 @@ const element = _jsxs("div", {
 - **Q3:** What are Babel presets and plugins?
 <details>
 <summary>Answer</summary>
+
 
 ```javascript
 // .babelrc or babel.config.js
@@ -10358,6 +10603,7 @@ module.exports = {
 - **Q1:** How do you configure Babel for optimal React builds?
 <details>
 <summary>Answer</summary>
+
 
 ```javascript
 // babel.config.js
@@ -10420,6 +10666,7 @@ module.exports = {
 <details>
 <summary>Answer</summary>
 
+
 ```javascript
 // Classic JSX Transform (React 16 and earlier)
 // Requires React import
@@ -10479,6 +10726,7 @@ function App() {
 <details>
 <summary>Answer</summary>
 
+
 ```javascript
 // Essential production optimizations
 const optimizations = {
@@ -10537,6 +10785,7 @@ module.exports = {
 - **Q2:** How do you minify and compress React applications?
 <details>
 <summary>Answer</summary>
+
 
 ```javascript
 // Webpack configuration for minification
@@ -10599,6 +10848,7 @@ app.use(compression({
 - **Q3:** What is tree shaking and how does it help?
 <details>
 <summary>Answer</summary>
+
 **Tree shaking** removes unused code from bundles.
 
 
@@ -10657,6 +10907,7 @@ import debounce from 'lodash/debounce';
 - **Q1:** How do you analyze and optimize bundle sizes?
 <details>
 <summary>Answer</summary>
+
 
 ```javascript
 // 1. Bundle analyzer
@@ -10721,6 +10972,7 @@ module.exports = {
 - **Q2:** What are the best practices for caching strategies in React apps?
 <details>
 <summary>Answer</summary>
+
 
 ```javascript
 // 1. Content-based hashing
@@ -10811,6 +11063,7 @@ function App() {
 - **Q1:** What is a Higher Order Component (HOC)?
 <details>
 <summary>Answer</summary>
+
 **HOC** is a function that takes a component and returns a new enhanced component.
 
 
@@ -10845,6 +11098,7 @@ const LoggedButton = withLogger(Button);
 - **Q2:** How do you create a simple HOC?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // 1. Simple authentication HOC
@@ -10906,6 +11160,7 @@ const EnhancedProfile = withAuth(withLoading(withErrorBoundary(Profile)));
 - **Q3:** What problems do HOCs solve?
 <details>
 <summary>Answer</summary>
+
 **HOCs solve cross-cutting concerns:**
 
 
@@ -10979,6 +11234,7 @@ const EnhancedComponent = withAuth(
 - **Q1:** What are the drawbacks of HOCs?
 <details>
 <summary>Answer</summary>
+
 **HOC problems:**
 
 
@@ -11056,6 +11312,7 @@ function withTheme(WrappedComponent) {
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 // 1. Same functionality, different patterns
 
@@ -11121,6 +11378,7 @@ const comparison = {
 - **Q2:** How do HOCs compare to hooks and render props?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // 1. Same functionality, different patterns
@@ -11192,6 +11450,7 @@ const comparison = {
 - **Q1:** What is the render props pattern?
 <details>
 <summary>Answer</summary>
+
 **Render props** is a pattern where a component receives a function as a prop that returns JSX.
 
 
@@ -11242,6 +11501,7 @@ function DataProvider({ children }) {
 - **Q2:** How do you implement a component using render props?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Mouse position tracker
@@ -11328,6 +11588,7 @@ function Fetcher({ url, children }) {
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 // 1. Flexible rendering
 function DataList({ data, children }) {
@@ -11401,6 +11662,7 @@ function Permission({ role, children }) {
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 // Same counter logic, different patterns
 
@@ -11463,6 +11725,7 @@ const patterns = {
 - **Q2:** How do you avoid callback hell with render props?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // ❌ Callback hell problem
@@ -11563,6 +11826,7 @@ function RenderPropComposer({ providers, children }) {
 - **Q1:** What are React Portals and when would you use them?
 <details>
 <summary>Answer</summary>
+
 **Portals** render children into a DOM node outside the parent component's hierarchy.
 
 
@@ -11614,6 +11878,7 @@ function App() {
 - **Q2:** How do you create a portal?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 import { createPortal } from 'react-dom';
@@ -11701,6 +11966,7 @@ function NotificationProvider({ children }) {
 - **Q3:** Do portals affect event propagation?
 <details>
 <summary>Answer</summary>
+
 **Events bubble through React tree, not DOM tree.**
 
 
@@ -11771,6 +12037,7 @@ function PortalComponent() {
 - **Q1:** How do you handle portal cleanup and memory leaks?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Custom portal hook with cleanup
@@ -11876,6 +12143,7 @@ function App() {
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 // Portals don't work with SSR - they're client-only
 function Modal({ children, isOpen }) {
@@ -11961,6 +12229,7 @@ const ClientOnlyPortal = dynamic(
 - **Q1:** What are React Fragments and why are they useful?
 <details>
 <summary>Answer</summary>
+
 **Fragments** let you group elements without adding extra DOM nodes.
 
 
@@ -12026,6 +12295,7 @@ function TableRow() {
 - **Q2:** What are the different ways to use Fragments?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // 1. React.Fragment syntax
@@ -12096,6 +12366,7 @@ function ConditionalComponent({ showExtra }) {
 - **Q3:** When should you use Fragments vs div wrappers?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // ✅ Use Fragments when:
@@ -12185,6 +12456,7 @@ const guidelines = {
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 // ✅ React.Fragment can have keys (short syntax cannot)
 function CommentList({ comments }) {
@@ -12264,6 +12536,7 @@ function ChatMessage({ message }) {
 - **Q2:** How do Fragments affect CSS styling and layout?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // CSS Grid example
@@ -12378,6 +12651,7 @@ function DataTable({ rows }) {
 - **Q1:** Why are keys required when rendering lists in React?
 <details>
 <summary>Answer</summary>
+
 **Keys** help React identify which items have changed, been added, or removed in lists.
 
 
@@ -12447,6 +12721,7 @@ function TodoItem({ todo }) {
 <details>
 <summary>Answer</summary>
 
+
 ```jsx
 // ❌ Using index as key - problematic for dynamic lists
 function BadTodoList({ todos, onDelete }) {
@@ -12504,6 +12779,7 @@ const okayToUseIndex = [
 - **Q3:** What makes a good key for list items?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // ✅ GOOD: Stable unique identifiers
@@ -12597,6 +12873,7 @@ function generateKeys(items) {
 - **Q1:** How do keys affect component state during list reordering?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Demonstration of key impact on component state
@@ -12716,6 +12993,7 @@ const statePreservation = {
 - **Q2:** How do you handle keys in dynamic lists?
 <details>
 <summary>Answer</summary>
+
 
 ```jsx
 // Dynamic list with filtering, sorting, and CRUD operations
@@ -12866,6 +13144,7 @@ const keyStrategies = {
 - **Q1:** What is hydration in the context of SSR?
 <details>
 <summary>Answer</summary>
+
 **Hydration** is the process of attaching React event handlers and state to server-rendered HTML:
 - **Server renders** static HTML for fast initial display
 - **Client downloads** JavaScript bundle
@@ -12900,6 +13179,7 @@ hydrateRoot(document.getElementById('root'), <App />);
 - **Q2:** What happens during the hydration process?
 <details>
 <summary>Answer</summary>
+
 **Hydration process steps:**
 
 1. **HTML already rendered** by server and displayed to user
@@ -12938,6 +13218,7 @@ function HydrationExample() {
 - **Q3:** What are hydration mismatches?
 <details>
 <summary>Answer</summary>
+
 **Hydration mismatches** occur when server-rendered HTML differs from client-rendered HTML:
 
 **Common causes:**
@@ -12997,6 +13278,7 @@ function ClientOnlyComponent() {
 - **Q1:** How do you debug hydration issues?
 <details>
 <summary>Answer</summary>
+
 **Debugging hydration issues:**
 
 1. **Enable detailed warnings**:
@@ -13081,6 +13363,7 @@ function TimestampComponent() {
 - **Q2:** How do you implement progressive hydration?
 <details>
 <summary>Answer</summary>
+
 **Progressive hydration** loads and hydrates components incrementally:
 
 
@@ -13201,6 +13484,7 @@ function PriorityHydration({ priority, children, fallback }) {
 - **Q1:** What is Next.js and what features does it provide?
 <details>
 <summary>Answer</summary>
+
 **Next.js** is a React framework that provides production-ready features:
 
 **Core features:**
@@ -13241,6 +13525,7 @@ export default HomePage;
 - **Q2:** What's the difference between SSR, SSG, and CSR?
 <details>
 <summary>Answer</summary>
+
 | Rendering Method | When | Where | Performance | SEO | Use Case |
 |------------------|------|-------|-------------|-----|----------|
 | **SSR** | Request time | Server | Good | Excellent | Dynamic content |
@@ -13308,6 +13593,7 @@ function Dashboard() {
 - **Q3:** What is ISR (Incremental Static Regeneration)?
 <details>
 <summary>Answer</summary>
+
 **ISR** combines benefits of SSG and SSR by regenerating static pages on-demand:
 
 **How ISR works:**
@@ -13380,6 +13666,7 @@ export async function getStaticProps({ params }) {
 - **Q1:** How do you choose between getStaticProps, getServerSideProps, and getStaticPaths?
 <details>
 <summary>Answer</summary>
+
 **Decision matrix:**
 
 
@@ -13468,6 +13755,7 @@ function ProductPage({ product, relatedProducts }) {
 - **Q2:** How do you implement API routes in Next.js?
 <details>
 <summary>Answer</summary>
+
 **API routes** in Next.js create serverless functions:
 
 
@@ -13601,6 +13889,7 @@ export default async function handler(req, res) {
 - **Q1:** What are React Server Components?
 <details>
 <summary>Answer</summary>
+
 **React Server Components** run on the server and render to a special format that's sent to the client:
 
 **Key characteristics:**
@@ -13658,6 +13947,7 @@ function PostInteractions({ postId }) {
 - **Q2:** How do Server Components differ from traditional SSR?
 <details>
 <summary>Answer</summary>
+
 | Feature | Server Components | Traditional SSR |
 |---------|-------------------|-----------------|
 | **Execution** | Server only | Server + Client |
@@ -13733,6 +14023,7 @@ function PostFilter() {
 - **Q3:** What are the benefits of Server Components?
 <details>
 <summary>Answer</summary>
+
 **Server Components benefits:**
 
 1. **Reduced bundle size**:
@@ -13826,6 +14117,7 @@ async function ServerComponent() {
 - **Q1:** How do Server and Client Components work together?
 <details>
 <summary>Answer</summary>
+
 **Server and Client Components composition patterns:**
 
 
@@ -13939,6 +14231,7 @@ function InteractiveReviews({ initialReviews, productId }) {
 - **Q2:** What are the limitations of Server Components?
 <details>
 <summary>Answer</summary>
+
 **Server Component limitations:**
 
 1. **No client-side state**:
