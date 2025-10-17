@@ -10454,37 +10454,1219 @@ console.log('Environment Detection:', detectEnvironment());
 
 **Beginner: Q1** - What is an execution context in JavaScript?
 
+<details>
+<summary>Answer</summary>
+
+An execution context is the environment where JavaScript code is executed, containing all information needed to run that code:
+
+```javascript
+// Execution context contains:
+// 1. Variable Environment (var declarations, function declarations)
+// 2. Lexical Environment (let/const, function parameters)
+// 3. this binding
+// 4. Outer environment reference
+
+function example() {
+    var a = 1;        // Variable Environment
+    let b = 2;        // Lexical Environment  
+    const c = 3;      // Lexical Environment
+    
+    console.log(this); // this binding
+    console.log(a, b, c);
+}
+
+// Global execution context
+var globalVar = 'global';
+
+// Function execution context created when called
+example(); // Creates new execution context
+```
+</details>
+
 **Beginner: Q2** - What are the different types of execution contexts?
+
+<details>
+<summary>Answer</summary>
+
+Three types: **Global**, **Function**, and **Eval** execution contexts:
+
+```javascript
+// 1. GLOBAL EXECUTION CONTEXT
+// Created when script starts, only one per program
+var globalVariable = 'I am global';
+console.log('Global context');
+
+// 2. FUNCTION EXECUTION CONTEXT  
+// Created each time a function is called
+function functionContext() {
+    var localVariable = 'I am local';
+    console.log('Function context');
+}
+
+functionContext(); // Creates function execution context
+
+// 3. EVAL EXECUTION CONTEXT
+// Created when eval() is executed (avoid using eval)
+eval('var evalVar = "I am eval"; console.log("Eval context");');
+
+// Each function call creates its own context:
+function outer() {
+    console.log('Outer context');
+    
+    function inner() {
+        console.log('Inner context');
+    }
+    
+    inner(); // Creates separate inner context
+}
+
+outer(); // Creates outer context, then inner context
+
+// Recursive functions create multiple contexts:
+function countdown(n) {
+    console.log(`Context for n=${n}`);
+    if (n > 0) {
+        countdown(n - 1); // Creates new context for each call
+    }
+}
+
+countdown(3); // Creates 4 contexts (3, 2, 1, 0)
+```
+</details>
 
 **Beginner: Q3** - When is a new execution context created?
 
+<details>
+<summary>Answer</summary>
+
+New execution contexts are created when:
+
+```javascript
+// 1. SCRIPT STARTS - Global context created
+console.log('Global execution context created');
+
+// 2. FUNCTION CALL - Function context created
+function myFunction() {
+    console.log('Function execution context created');
+}
+
+myFunction(); // New context created here
+
+// 3. METHOD CALL - Function context created  
+const obj = {
+    method() {
+        console.log('Method execution context created');
+    }
+};
+
+obj.method(); // New context created
+
+// 4. CONSTRUCTOR CALL - Function context created
+function Constructor() {
+    this.value = 'Constructor execution context created';
+}
+
+new Constructor(); // New context created
+
+// 5. RECURSIVE CALLS - New context per call
+function recursive(n) {
+    if (n > 0) {
+        recursive(n - 1); // Each call creates new context
+    }
+}
+
+recursive(3); // Creates 4 contexts
+
+// 6. CALLBACK FUNCTIONS - New context when called
+setTimeout(function() {
+    console.log('Callback execution context created');
+}, 0);
+
+// 7. EVENT HANDLERS - New context per event
+document.addEventListener('click', function() {
+    console.log('Event handler execution context created');
+});
+
+// NOT created for:
+// - Variable assignments
+// - Property access
+// - Arithmetic operations
+var x = 10;     // No new context
+obj.prop;       // No new context
+x + 5;          // No new context
+```
+</details>
+
 **Intermediate: Q1** - What are the phases of execution context creation?
 
+<details>
+<summary>Answer</summary>
+
+Two phases: **Creation Phase** and **Execution Phase**:
+
+```javascript
+// CREATION PHASE:
+// 1. Create Variable Environment
+// 2. Create Lexical Environment  
+// 3. Determine 'this' binding
+
+function demonstratePhases() {
+    // CREATION PHASE happens first:
+    // - hoistFunction is created and assigned
+    // - var variables are created but undefined
+    // - let/const variables are created but uninitialized (TDZ)
+    
+    console.log(typeof hoistFunction); // 'function' - already created
+    console.log(varVariable);          // undefined - created but not assigned
+    // console.log(letVariable);       // ReferenceError - in TDZ
+    
+    // EXECUTION PHASE happens second:
+    var varVariable = 'now assigned';
+    let letVariable = 'now initialized';
+    const constVariable = 'now initialized';
+    
+    function hoistFunction() {
+        return 'I was hoisted';
+    }
+}
+
+demonstratePhases();
+
+// Detailed breakdown:
+function detailedExample() {
+    // === CREATION PHASE ===
+    // 1. Variable Environment created:
+    //    - hoistedFunc: function object
+    //    - varA: undefined
+    //    - arguments: arguments object
+    
+    // 2. Lexical Environment created:
+    //    - letB: <uninitialized> (TDZ)
+    //    - constC: <uninitialized> (TDZ)
+    
+    // 3. this binding determined
+    
+    console.log('=== Creation Phase Complete ===');
+    
+    // === EXECUTION PHASE ===
+    console.log(hoistedFunc()); // Works - function already created
+    console.log(varA);          // undefined - created but not assigned
+    
+    var varA = 'assigned';      // Now assigned
+    let letB = 'initialized';   // Now initialized, out of TDZ
+    const constC = 'initialized'; // Now initialized, out of TDZ
+    
+    function hoistedFunc() {
+        return 'Function declaration hoisted';
+    }
+    
+    console.log('=== Execution Phase Complete ===');
+}
+
+detailedExample();
+
+// Global context phases:
+// CREATION PHASE:
+console.log(typeof globalFunc); // 'function'
+console.log(globalVar);          // undefined
+
+// EXECUTION PHASE:  
+var globalVar = 'global value';
+
+function globalFunc() {
+    return 'global function';
+}
+```
+</details>
+
 **Intermediate: Q2** - How does the execution context stack work?
+
+<details>
+<summary>Answer</summary>
+
+The execution context stack (call stack) manages execution contexts using LIFO (Last In, First Out):
+
+```javascript
+// Call Stack Demonstration
+
+function first() {
+    console.log('1. First function starts');
+    second(); // Push second() to stack
+    console.log('5. First function resumes');
+} // Pop first() from stack
+
+function second() {
+    console.log('2. Second function starts');
+    third(); // Push third() to stack  
+    console.log('4. Second function resumes');
+} // Pop second() from stack
+
+function third() {
+    console.log('3. Third function executes');
+} // Pop third() from stack
+
+// Call stack visualization:
+console.log('0. Global context (bottom of stack)');
+first(); // Push first() to stack
+console.log('6. Back to global context');
+
+// Stack states during execution:
+// Start:    [Global]
+// Call 1:   [Global, first]
+// Call 2:   [Global, first, second]  
+// Call 3:   [Global, first, second, third]
+// Return 3: [Global, first, second]
+// Return 2: [Global, first]
+// Return 1: [Global]
+
+// Recursive stack example:
+function factorial(n) {
+    console.log(`Stack depth: ${n}`);
+    
+    if (n <= 1) {
+        console.log('Base case reached, unwinding stack');
+        return 1;
+    }
+    
+    return n * factorial(n - 1); // Each call adds to stack
+}
+
+console.log('Result:', factorial(4));
+
+// Stack overflow example (don't run):
+// function infiniteRecursion() {
+//     infiniteRecursion(); // Stack grows until memory limit
+// }
+// infiniteRecursion(); // RangeError: Maximum call stack size exceeded
+
+// Async operations and stack:
+function asyncExample() {
+    console.log('1. Sync operation');
+    
+    setTimeout(() => {
+        console.log('3. Async callback (new stack)');
+    }, 0);
+    
+    console.log('2. Sync operation continues');
+}
+
+asyncExample();
+
+// Stack trace example:
+function a() { b(); }
+function b() { c(); }  
+function c() { throw new Error('Stack trace demo'); }
+
+try {
+    a();
+} catch (error) {
+    console.log('Stack trace:');
+    console.log(error.stack);
+    // Shows: c() -> b() -> a() -> global
+}
+
+// Practical stack management:
+function processLargeArray(arr) {
+    // Avoid deep recursion for large arrays
+    if (arr.length > 1000) {
+        // Use iterative approach instead
+        return arr.reduce((sum, item) => sum + item, 0);
+    } else {
+        // Safe to use recursion
+        return arr.length === 0 ? 0 : arr[0] + processLargeArray(arr.slice(1));
+    }
+}
+```
+</details>
 
 ## Lexical environment
 
 **Beginner: Q1** - What is a lexical environment?
 
+<details>
+<summary>Answer</summary>
+
+A lexical environment is a structure that holds identifier-variable mappings and a reference to the outer environment:
+
+```javascript
+// Lexical Environment = Environment Record + Outer Reference
+
+function outerFunction() {
+    var outerVar = 'outer';
+    
+    // Outer function's lexical environment:
+    // Environment Record: { outerVar: 'outer' }
+    // Outer Reference: Global Environment
+    
+    function innerFunction() {
+        var innerVar = 'inner';
+        
+        // Inner function's lexical environment:
+        // Environment Record: { innerVar: 'inner' }
+        // Outer Reference: Outer Function Environment
+        
+        console.log(innerVar); // Found in current environment
+        console.log(outerVar); // Found in outer environment
+    }
+    
+    return innerFunction;
+}
+
+// Global lexical environment:
+// Environment Record: { outerFunction: function, globalVar: 'global' }
+// Outer Reference: null
+
+var globalVar = 'global';
+const closure = outerFunction();
+closure(); // Accesses preserved lexical environments
+
+// Let/const create their own lexical environment in blocks:
+function blockExample() {
+    var functionScoped = 'function';
+    
+    {
+        let blockScoped = 'block';
+        const alsoBlockScoped = 'also block';
+        
+        // Block lexical environment:
+        // Environment Record: { blockScoped: 'block', alsoBlockScoped: 'also block' }
+        // Outer Reference: Function Environment
+        
+        console.log(functionScoped); // Found in outer environment
+        console.log(blockScoped);    // Found in current environment
+    }
+    
+    // blockScoped no longer accessible - environment destroyed
+}
+
+blockExample();
+```
+</details>
+
 **Beginner: Q2** - How is lexical environment related to scope?
+
+<details>
+<summary>Answer</summary>
+
+Lexical environment implements scope - it determines what variables are accessible at any point in code:
+
+```javascript
+// Lexical environment = The mechanism that implements scope
+
+const globalScope = 'global';
+
+function demonstrateScope() {
+    const functionScope = 'function';
+    
+    // Function's lexical environment contains functionScope
+    // and references global environment for globalScope
+    
+    if (true) {
+        const blockScope = 'block';
+        let anotherBlockVar = 'another';
+        
+        // Block's lexical environment contains block variables
+        // and references function environment
+        
+        console.log(blockScope);     // Current environment
+        console.log(functionScope);  // Outer environment (function)
+        console.log(globalScope);    // Outer environment (global)
+    }
+    
+    // blockScope not accessible here - different lexical environment
+    console.log(functionScope);  // Still accessible
+    console.log(globalScope);    // Still accessible
+}
+
+demonstrateScope();
+
+// Scope chain = Chain of lexical environments
+function outer() {
+    const outerVar = 'outer';
+    
+    function middle() {
+        const middleVar = 'middle';
+        
+        function inner() {
+            const innerVar = 'inner';
+            
+            // Scope chain: inner → middle → outer → global
+            // Each step is a lexical environment reference
+            
+            console.log(innerVar);   // Current lexical environment
+            console.log(middleVar);  // Parent lexical environment
+            console.log(outerVar);   // Grandparent lexical environment
+        }
+        
+        return inner;
+    }
+    
+    return middle();
+}
+
+const nested = outer();
+nested(); // Scope chain preserved through closures
+
+// Variable resolution through lexical environments:
+let x = 'global x';
+
+function scopeResolution() {
+    let x = 'function x';
+    
+    {
+        let x = 'block x';
+        console.log(x); // 'block x' - found in current lexical environment
+    }
+    
+    console.log(x); // 'function x' - block environment destroyed
+}
+
+scopeResolution();
+console.log(x); // 'global x' - function environment destroyed
+```
+</details>
 
 **Beginner: Q3** - What happens to variables in a lexical environment?
 
+<details>
+<summary>Answer</summary>
+
+Variables are stored in the environment record and follow specific lifecycle rules:
+
+```javascript
+// Variable lifecycle in lexical environments:
+
+function variableLifecycle() {
+    // CREATION PHASE:
+    // var variables: created and initialized with undefined
+    // let/const variables: created but uninitialized (TDZ)
+    // function declarations: created and initialized
+    
+    console.log(typeof varVariable);    // 'undefined' - created, not assigned
+    console.log(typeof funcDeclaration); // 'function' - created and assigned
+    // console.log(letVariable);        // ReferenceError - in TDZ
+    
+    // EXECUTION PHASE:
+    var varVariable = 'assigned';
+    let letVariable = 'initialized';
+    const constVariable = 'initialized';
+    
+    function funcDeclaration() {
+        return 'hoisted';
+    }
+    
+    // Variables accessible in this environment
+    console.log(varVariable, letVariable, constVariable);
+}
+
+variableLifecycle();
+
+// Block-scoped variables create new lexical environments:
+function blockScoping() {
+    var outerVar = 'outer';
+    
+    {
+        // New lexical environment created for block
+        let blockVar = 'block';
+        const anotherBlockVar = 'another';
+        
+        console.log(blockVar);      // Accessible in block
+        console.log(outerVar);      // Inherited from outer environment
+    }
+    
+    // Block lexical environment destroyed
+    // console.log(blockVar);       // ReferenceError - environment gone
+    console.log(outerVar);          // Still accessible
+}
+
+blockScoping();
+
+// Variable updates in lexical environments:
+function variableUpdates() {
+    let count = 0;
+    
+    function increment() {
+        count++; // Updates variable in outer lexical environment
+        return count;
+    }
+    
+    function getCount() {
+        return count; // Reads from outer lexical environment
+    }
+    
+    return { increment, getCount };
+}
+
+const counter = variableUpdates();
+console.log(counter.increment()); // 1
+console.log(counter.increment()); // 2
+console.log(counter.getCount());  // 2
+
+// Garbage collection of lexical environments:
+function environmentCleanup() {
+    let largeData = new Array(1000000);
+    
+    function useData() {
+        return largeData.length; // Keeps largeData alive
+    }
+    
+    function noData() {
+        return 'no reference to largeData';
+    }
+    
+    // If only noData is returned, largeData can be garbage collected
+    return noData; // largeData environment can be cleaned up
+}
+
+const cleanup = environmentCleanup();
+
+// Loop variables and lexical environments:
+for (let i = 0; i < 3; i++) {
+    // Each iteration creates new lexical environment for 'i'
+    setTimeout(() => console.log('let:', i), 100); // 0, 1, 2
+}
+
+for (var j = 0; j < 3; j++) {
+    // var shares same lexical environment (function-scoped)
+    setTimeout(() => console.log('var:', j), 200); // 3, 3, 3
+}
+```
+</details>
+
 **Intermediate: Q1** - Explain the relationship between lexical environment and closures.
 
+<details>
+<summary>Answer</summary>
+
+Closures are created when functions retain access to their lexical environment even after the outer function returns:
+
+```javascript
+// Closure = Function + Preserved Lexical Environment
+
+function createClosure() {
+    let privateVar = 'private';
+    let count = 0;
+    
+    // Inner function captures outer lexical environment
+    function closureFunction() {
+        count++;
+        return `${privateVar} - called ${count} times`;
+    }
+    
+    // When returned, closureFunction keeps reference to lexical environment
+    return closureFunction;
+}
+
+const closure = createClosure();
+// createClosure execution context is destroyed, but lexical environment preserved
+
+console.log(closure()); // "private - called 1 times"
+console.log(closure()); // "private - called 2 times"
+
+// Multiple closures share same lexical environment:
+function sharedEnvironment() {
+    let shared = 0;
+    
+    return {
+        increment: () => ++shared,
+        decrement: () => --shared,
+        getValue: () => shared
+    };
+}
+
+const counter = sharedEnvironment();
+console.log(counter.increment()); // 1
+console.log(counter.increment()); // 2
+console.log(counter.decrement()); // 1
+console.log(counter.getValue());  // 1
+
+// Closure with parameters captures both:
+function multiplierFactory(factor) {
+    // Lexical environment: { factor: parameter value }
+    
+    return function(number) {
+        // Closure captures 'factor' from outer environment
+        return number * factor;
+    };
+}
+
+const double = multiplierFactory(2);
+const triple = multiplierFactory(3);
+
+console.log(double(5)); // 10 - uses factor=2
+console.log(triple(5)); // 15 - uses factor=3
+
+// Nested closures create chain of environments:
+function outermost(a) {
+    return function middle(b) {
+        return function innermost(c) {
+            // Closure captures all three lexical environments
+            return a + b + c;
+        };
+    };
+}
+
+const nested = outermost(1)(2);
+console.log(nested(3)); // 6 - accesses a=1, b=2, c=3
+
+// Loop closures and lexical environment:
+function createFunctions() {
+    const functions = [];
+    
+    // Each iteration creates new lexical environment with let
+    for (let i = 0; i < 3; i++) {
+        functions.push(() => i); // Captures current 'i' value
+    }
+    
+    return functions;
+}
+
+const funcs = createFunctions();
+console.log(funcs[0]()); // 0
+console.log(funcs[1]()); // 1
+console.log(funcs[2]()); // 2
+
+// Module pattern with closures:
+const module = (function() {
+    // Private lexical environment
+    let privateState = 'secret';
+    let counter = 0;
+    
+    // Public interface (closures)
+    return {
+        getState: () => privateState,
+        increment: () => ++counter,
+        getCount: () => counter
+    };
+})();
+
+console.log(module.getState()); // 'secret'
+console.log(module.increment()); // 1
+// console.log(privateState); // ReferenceError - not accessible
+```
+</details>
+
 **Intermediate: Q2** - How do `let` and `const` create temporal dead zones in lexical environments?
+
+<details>
+<summary>Answer</summary>
+
+TDZ occurs because `let`/`const` variables exist in the lexical environment but are uninitialized until declaration:
+
+```javascript
+// Temporal Dead Zone = Time between environment creation and initialization
+
+function demonstrateTDZ() {
+    // TDZ starts here for letVar and constVar
+    
+    console.log(typeof varVar);     // 'undefined' - hoisted and initialized
+    // console.log(letVar);         // ReferenceError - in TDZ
+    // console.log(constVar);       // ReferenceError - in TDZ
+    
+    var varVar = 'var assigned';    // var works normally
+    
+    // TDZ continues...
+    
+    let letVar = 'let assigned';    // TDZ ends for letVar
+    const constVar = 'const assigned'; // TDZ ends for constVar
+    
+    console.log(letVar, constVar);  // Now accessible
+}
+
+demonstrateTDZ();
+
+// Block-level TDZ:
+function blockTDZ() {
+    let outer = 'outer';
+    
+    {
+        // TDZ starts for blockVar
+        console.log(outer);         // Accessible from outer scope
+        // console.log(blockVar);   // ReferenceError - TDZ
+        
+        let blockVar = 'block';     // TDZ ends
+        console.log(blockVar);      // Now accessible
+    }
+    
+    // blockVar no longer accessible - lexical environment destroyed
+}
+
+blockTDZ();
+
+// Function parameters and TDZ:
+function parameterTDZ(a = b, b = 1) {
+    // Parameter 'a' tries to access 'b' before it's initialized
+    return a + b;
+}
+
+// parameterTDZ(); // ReferenceError - b is in TDZ when a is initialized
+
+// Correct version:
+function correctParameters(a = 1, b = a) {
+    return a + b; // Works - a is initialized before b uses it
+}
+
+console.log(correctParameters()); // 2
+
+// Class TDZ:
+// console.log(MyClass); // ReferenceError - class in TDZ
+
+class MyClass {
+    constructor() {
+        this.value = 'initialized';
+    }
+}
+
+console.log(MyClass); // Now accessible
+
+// typeof operator and TDZ:
+function typeofTDZ() {
+    // typeof usually returns 'undefined' for undeclared variables
+    console.log(typeof undeclaredVar); // 'undefined' - safe
+    
+    // But with let/const in TDZ, it throws error
+    // console.log(typeof letInTDZ); // ReferenceError - not 'undefined'!
+    
+    let letInTDZ = 'value';
+    console.log(typeof letInTDZ); // 'string' - after initialization
+}
+
+typeofTDZ();
+
+// Switch statement TDZ (common gotcha):
+function switchTDZ(option) {
+    switch (option) {
+        case 1:
+            let shared = 'case 1';
+            console.log(shared);
+            break;
+            
+        case 2:
+            // shared is in TDZ here - same lexical environment!
+            // console.log(shared); // ReferenceError
+            shared = 'case 2'; // Can't assign before declaration
+            break;
+    }
+}
+
+// switchTDZ(2); // ReferenceError
+
+// Solution - use block scopes:
+function switchFixed(option) {
+    switch (option) {
+        case 1: {
+            let shared = 'case 1';
+            console.log(shared);
+            break;
+        }
+        case 2: {
+            let shared = 'case 2'; // Different lexical environment
+            console.log(shared);
+            break;
+        }
+    }
+}
+
+switchFixed(2); // Works fine
+
+// TDZ and function hoisting:
+function hoistingWithTDZ() {
+    // Function declarations are fully hoisted
+    console.log(hoistedFunc()); // Works
+    
+    // Function expressions with let/const are in TDZ
+    // console.log(funcExpr()); // ReferenceError - TDZ
+    
+    function hoistedFunc() {
+        return 'hoisted';
+    }
+    
+    const funcExpr = function() {
+        return 'expression';
+    };
+    
+    console.log(funcExpr()); // Now works
+}
+
+hoistingWithTDZ();
+```
+</details>
 
 ## Scope chain
 
 **Beginner: Q1** - What is the scope chain?
 
+<details>
+<summary>Answer</summary>
+
+The scope chain is a mechanism that determines how JavaScript resolves variable names by traversing linked lexical environments:
+
+```javascript
+// Scope chain = Chain of lexical environments for variable resolution
+
+const globalVar = 'global';
+
+function outerFunction() {
+    const outerVar = 'outer';
+    
+    function innerFunction() {
+        const innerVar = 'inner';
+        
+        // Scope chain: innerFunction → outerFunction → global
+        console.log(innerVar);   // Found in current scope
+        console.log(outerVar);   // Found in parent scope
+        console.log(globalVar);  // Found in global scope
+    }
+    
+    innerFunction();
+}
+
+outerFunction();
+
+// Visual representation of scope chain lookup:
+function scopeChainDemo() {
+    const level1 = 'first level';
+    
+    function level2() {
+        const level2Var = 'second level';
+        
+        function level3() {
+            const level3Var = 'third level';
+            
+            // When accessing a variable, JavaScript searches:
+            // 1. Current scope (level3)
+            // 2. Parent scope (level2) 
+            // 3. Grandparent scope (level1)
+            // 4. Global scope
+            // 5. If not found: ReferenceError
+            
+            console.log(level3Var);  // Current scope
+            console.log(level2Var);  // Parent scope
+            console.log(level1);     // Grandparent scope
+            console.log(globalVar);  // Global scope
+        }
+        
+        level3();
+    }
+    
+    level2();
+}
+
+scopeChainDemo();
+```
+</details>
+
 **Beginner: Q2** - How does JavaScript resolve variable names using the scope chain?
+
+<details>
+<summary>Answer</summary>
+
+JavaScript resolves variables by searching from innermost to outermost scope until found or throwing ReferenceError:
+
+```javascript
+// Variable resolution algorithm:
+// 1. Check current lexical environment
+// 2. If not found, check outer environment
+// 3. Repeat until found or reach global scope
+// 4. If not found in global: ReferenceError
+
+const globalVariable = 'global value';
+
+function demonstrateResolution() {
+    const outerVariable = 'outer value';
+    
+    function innerFunction() {
+        const innerVariable = 'inner value';
+        
+        // Resolution examples:
+        console.log(innerVariable);   // Found in current scope (immediate)
+        console.log(outerVariable);   // Found in parent scope
+        console.log(globalVariable);  // Found in global scope
+        
+        try {
+            console.log(undefinedVariable); // Not found anywhere - ReferenceError
+        } catch (e) {
+            console.log('Variable not found:', e.message);
+        }
+    }
+    
+    innerFunction();
+}
+
+demonstrateResolution();
+
+// Variable shadowing in resolution:
+const shadowedVar = 'global version';
+
+function shadowingDemo() {
+    const shadowedVar = 'function version'; // Shadows global
+    
+    function inner() {
+        const shadowedVar = 'inner version'; // Shadows function
+        
+        // Resolution stops at first match
+        console.log(shadowedVar); // 'inner version'
+    }
+    
+    inner();
+    console.log(shadowedVar); // 'function version'
+}
+
+shadowingDemo();
+console.log(shadowedVar); // 'global version'
+
+// Resolution with different declaration types:
+function resolutionTypes() {
+    var varVariable = 'var in function';
+    
+    {
+        let blockVariable = 'let in block';
+        const constVariable = 'const in block';
+        
+        function blockFunction() {
+            // Resolution finds block-scoped variables
+            console.log(varVariable);    // Function scope
+            console.log(blockVariable);  // Block scope
+            console.log(constVariable);  // Block scope
+        }
+        
+        blockFunction();
+    }
+    
+    function afterBlock() {
+        console.log(varVariable);        // Still accessible
+        // console.log(blockVariable);   // ReferenceError - not in scope
+    }
+    
+    afterBlock();
+}
+
+resolutionTypes();
+```
+</details>
 
 **Beginner: Q3** - What happens when a variable is not found in the current scope?
 
+<details>
+<summary>Answer</summary>
+
+When a variable is not found in current scope, JavaScript searches up the scope chain and throws ReferenceError if not found anywhere:
+
+```javascript
+// Variable not found behavior:
+// 1. Search current scope
+// 2. Search parent scopes (scope chain)
+// 3. Search global scope
+// 4. Throw ReferenceError if not found
+
+function demonstrateNotFound() {
+    const localVar = 'local';
+    
+    function inner() {
+        console.log(localVar); // ✅ Found in parent scope
+        
+        try {
+            console.log(unknownVariable); // ❌ Not found anywhere
+        } catch (error) {
+            console.log('Error type:', error.constructor.name); // ReferenceError
+            console.log('Error message:', error.message);
+        }
+    }
+    
+    inner();
+}
+
+demonstrateNotFound();
+
+// Different scenarios of "not found":
+
+// 1. Completely undeclared variable
+function undeclaredVariable() {
+    try {
+        console.log(totallyUndeclared);
+    } catch (e) {
+        console.log('Undeclared error:', e.message);
+    }
+}
+
+undeclaredVariable();
+
+// 2. Variable declared but not in scope
+function outOfScope() {
+    {
+        let blockScoped = 'only in block';
+    }
+    
+    try {
+        console.log(blockScoped);
+    } catch (e) {
+        console.log('Out of scope error:', e.message);
+    }
+}
+
+outOfScope();
+
+// 3. Variable in temporal dead zone
+function temporalDeadZone() {
+    try {
+        console.log(tdzVariable);
+    } catch (e) {
+        console.log('TDZ error:', e.message);
+    }
+    
+    let tdzVariable = 'now initialized';
+}
+
+temporalDeadZone();
+
+// typeof operator with non-existent variables:
+function typeofBehavior() {
+    console.log(typeof undeclaredVar); // "undefined" (no error!)
+    
+    // But let/const in TDZ still throw ReferenceError
+    try {
+        console.log(typeof letInTDZ);
+    } catch (e) {
+        console.log('typeof TDZ error:', e.message);
+    }
+    
+    let letInTDZ = 'value';
+}
+
+typeofBehavior();
+
+// Best practices for handling missing variables:
+function bestPractices() {
+    // 1. Use typeof for optional globals
+    const maybeUndefined = typeof someGlobal !== 'undefined' ? someGlobal : 'default';
+    
+    // 2. Use try/catch for potential missing variables
+    function safeAccess() {
+        try {
+            return someVariable;
+        } catch (e) {
+            return 'fallback value';
+        }
+    }
+    
+    // 3. Use optional chaining for object properties
+    const obj = { nested: { value: 'exists' } };
+    console.log(obj.nested?.value);   // 'exists'
+    console.log(obj.missing?.value);  // undefined (no error)
+}
+
+bestPractices();
+```
+</details>
+
 **Intermediate: Q1** - How does the scope chain relate to lexical scoping?
 
+<details>
+<summary>Answer</summary>
+
+The scope chain implements lexical scoping by creating a linked structure of environments based on where code is written, not where it's executed:
+
+```javascript
+// LEXICAL SCOPING = Scope determined by code structure (where written)
+// SCOPE CHAIN = Mechanism that implements lexical scoping
+
+const globalVar = 'global';
+
+function outerFunction() {
+    const outerVar = 'outer';
+    
+    function innerFunction() {
+        const innerVar = 'inner';
+        
+        // Scope chain: inner → outer → global
+        // This chain is determined LEXICALLY (by code structure)
+        console.log(innerVar);  // Current lexical environment
+        console.log(outerVar);  // Parent lexical environment
+        console.log(globalVar); // Global lexical environment
+    }
+    
+    return innerFunction; // Function maintains its lexical scope chain
+}
+
+const returnedFunction = outerFunction();
+
+// Even when called from different context, maintains original scope chain
+function callInDifferentContext() {
+    const contextVar = 'different context';
+    
+    // returnedFunction still sees its lexical scope chain
+    returnedFunction(); // Accesses outerVar, not contextVar
+}
+
+callInDifferentContext();
+
+// Lexical vs Dynamic scoping comparison:
+const scopeVariable = 'global scope';
+
+function lexicalScopeDemo() {
+    const scopeVariable = 'function scope';
+    
+    function inner() {
+        // LEXICAL: Looks where function was DEFINED
+        console.log(scopeVariable); // 'function scope'
+    }
+    
+    return inner;
+}
+
+function dynamicScopeSimulation(func) {
+    const scopeVariable = 'call-site scope';
+    
+    // If JavaScript used dynamic scoping (it doesn't):
+    // func() would see 'call-site scope'
+    // But with lexical scoping, it sees 'function scope'
+    
+    func(); // Still logs 'function scope'
+}
+
+const lexicalFunction = lexicalScopeDemo();
+dynamicScopeSimulation(lexicalFunction);
+
+// Scope chain creation at definition time:
+function createScopeChainExample() {
+    const definitionTimeVar = 'defined here';
+    
+    // Scope chain established when function is DEFINED
+    function definedFunction() {
+        console.log(definitionTimeVar);
+    }
+    
+    // Function maintains scope chain even when moved
+    setTimeout(definedFunction, 100); // Still accesses definitionTimeVar
+    
+    return definedFunction;
+}
+
+const scopeChainFunction = createScopeChainExample();
+
+// Module pattern with lexical scope:
+const moduleWithLexicalScope = (function() {
+    const privateVar = 'private to module';
+    let moduleState = 0;
+    
+    return {
+        increment() {
+            moduleState++; // Accesses captured scope
+            console.log('Module state:', moduleState);
+        },
+        
+        getPrivate() {
+            return privateVar; // Accesses captured scope
+        }
+    };
+})();
+
+moduleWithLexicalScope.increment(); // 1
+```
+</details>
+
 **Intermediate: Q2** - What will be the output of this code?
+
 ```javascript
 var x = 'global';
 function outer() {
@@ -10497,77 +11679,6466 @@ function outer() {
 outer()();
 ```
 
+<details>
+<summary>Answer</summary>
+
+The output will be `'outer'` due to lexical scoping and scope chain preservation:
+
+```javascript
+// Original code analysis:
+var x = 'global';
+function outer() {
+    var x = 'outer';
+    function inner() {
+        console.log(x); // Logs 'outer'
+    }
+    return inner;
+}
+outer()(); // Output: 'outer'
+
+// Step-by-step explanation:
+// 1. Global variable x = 'global'
+// 2. Function outer() creates local variable x = 'outer' (shadows global)
+// 3. Function inner() is defined inside outer() - captures outer's scope
+// 4. inner() returns, but maintains reference to outer's lexical environment
+// 5. When inner() executes, it finds x in outer's scope: 'outer'
+
+// Lexical environment preservation:
+function demonstratePreservation() {
+    var preservedVar = 'preserved value';
+    
+    function createClosure() {
+        var closureVar = 'closure value';
+        
+        return function() {
+            // Both outer scopes preserved
+            console.log(preservedVar); // 'preserved value'
+            console.log(closureVar);   // 'closure value'
+        };
+    }
+    
+    const closure = createClosure();
+    // createClosure execution context is gone, but variables preserved
+    
+    closure(); // Still has access to both variables
+}
+
+demonstratePreservation();
+
+// Comparison with different scenarios:
+
+// Scenario 1: No variable shadowing
+var scenario1 = 'global';
+function noShadowing() {
+    // No local variable declared
+    function inner() {
+        console.log(scenario1); // 'global'
+    }
+    return inner;
+}
+noShadowing()();
+
+// Scenario 2: Multiple levels of shadowing
+var scenario2 = 'global';
+function multipleShadowing() {
+    var scenario2 = 'outer';
+    
+    function middle() {
+        var scenario2 = 'middle';
+        
+        function inner() {
+            console.log(scenario2); // 'middle'
+        }
+        
+        return inner;
+    }
+    
+    return middle();
+}
+multipleShadowing()();
+
+// Key concepts:
+// 1. Lexical scoping determines variable access
+// 2. Closures preserve scope chain
+// 3. Variable shadowing hides outer variables
+// 4. Scope resolution stops at first match
+// 5. inner() accesses x from outer() scope via closure
+
+console.log('Original code output: outer');
+```
+</details>
+
 ## Garbage collection
 
 **Beginner: Q1** - What is garbage collection in JavaScript?
 
+<details>
+<summary>Answer</summary>
+
+Garbage collection is an automatic memory management process that frees up memory by removing objects that are no longer reachable or referenced:
+
+```javascript
+// GARBAGE COLLECTION = Automatic memory management
+// Removes objects that are no longer accessible
+
+function demonstrateGarbageCollection() {
+    // Object created in memory
+    let obj = {
+        name: 'John',
+        age: 30,
+        data: new Array(1000).fill('large data')
+    };
+    
+    // Object is reachable via 'obj' variable
+    console.log(obj.name); // Accessible
+    
+    // Remove reference - object becomes unreachable
+    obj = null;
+    
+    // Now original object is eligible for garbage collection
+    // (Will be cleaned up automatically by JavaScript engine)
+}
+
+demonstrateGarbageCollection();
+
+// What makes objects eligible for GC:
+
+// 1. No references
+function noReferences() {
+    let temp = { data: 'will be collected' };
+    temp = null; // No more references
+    // Object eligible for GC
+}
+
+// 2. Out of scope
+function outOfScope() {
+    {
+        let scopedObj = { data: 'scoped' };
+        // Object accessible here
+    }
+    // scopedObj out of scope - eligible for GC
+}
+
+// 3. Function execution complete
+function functionComplete() {
+    let localObj = { data: 'local' };
+    return localObj.data; // Returns primitive, not object
+    // localObj eligible for GC after function returns
+}
+
+// Reachability examples:
+function reachabilityDemo() {
+    let root = {
+        child: {
+            data: 'reachable via root'
+        }
+    };
+    
+    // Both root and child objects are reachable
+    console.log(root.child.data);
+    
+    // Remove reference to child
+    root.child = null;
+    // Child object now unreachable - eligible for GC
+    
+    // Remove reference to root
+    root = null;
+    // Root object now unreachable - eligible for GC
+}
+
+reachabilityDemo();
+
+// Memory lifecycle:
+function memoryLifecycle() {
+    // 1. ALLOCATION - Memory allocated when object created
+    const allocated = new Object();
+    
+    // 2. USE - Object is used/accessed
+    allocated.property = 'value';
+    console.log(allocated.property);
+    
+    // 3. RELEASE - Object becomes unreachable
+    return; // allocated goes out of scope
+    
+    // 4. COLLECTION - GC automatically frees memory
+}
+
+memoryLifecycle();
+```
+</details>
+
 **Beginner: Q2** - When does garbage collection happen?
+
+<details>
+<summary>Answer</summary>
+
+Garbage collection occurs automatically at intervals determined by the JavaScript engine, typically when memory usage reaches certain thresholds:
+
+```javascript
+// WHEN GC OCCURS:
+// 1. Automatically by JavaScript engine
+// 2. When memory usage increases
+// 3. During idle time (engine-dependent)
+// 4. When heap size reaches thresholds
+
+// Triggering conditions (engine-dependent):
+function gcTriggerConditions() {
+    // 1. Memory pressure
+    const largeArrays = [];
+    for (let i = 0; i < 1000; i++) {
+        largeArrays.push(new Array(10000).fill(`data ${i}`));
+        // GC may trigger due to memory pressure
+    }
+    
+    // 2. Allocation rate
+    function highAllocationRate() {
+        for (let i = 0; i < 100000; i++) {
+            const temp = { id: i, data: `item ${i}` };
+            // Rapid allocations may trigger GC
+        }
+    }
+    
+    highAllocationRate();
+    
+    // 3. Time intervals (engine-specific)
+    setTimeout(() => {
+        // GC may occur during idle periods
+        console.log('Some time has passed - GC may have occurred');
+    }, 1000);
+}
+
+// You cannot force garbage collection in standard JavaScript
+// (Some engines provide methods like gc() in development)
+
+// Monitoring GC (development tools):
+function monitoringGC() {
+    // Performance API can show memory usage
+    if (performance.memory) {
+        console.log('Used heap:', performance.memory.usedJSHeapSize);
+        console.log('Total heap:', performance.memory.totalJSHeapSize);
+        console.log('Heap limit:', performance.memory.jsHeapSizeLimit);
+    }
+    
+    // Create objects to potentially trigger GC
+    const objects = [];
+    for (let i = 0; i < 50000; i++) {
+        objects.push({ id: i, data: new Array(100).fill(i) });
+    }
+    
+    // Check memory again
+    setTimeout(() => {
+        if (performance.memory) {
+            console.log('After allocation:', performance.memory.usedJSHeapSize);
+        }
+        
+        // Clear references
+        objects.length = 0;
+        
+        // Memory may be freed in next GC cycle
+        setTimeout(() => {
+            if (performance.memory) {
+                console.log('After clearing:', performance.memory.usedJSHeapSize);
+            }
+        }, 100);
+    }, 100);
+}
+
+// Best practices for GC timing:
+function gcBestPractices() {
+    // 1. Don't try to control GC timing
+    // 2. Focus on making objects eligible for collection
+    // 3. Remove references when done
+    
+    let heavyResource = {
+        data: new Array(100000).fill('heavy data'),
+        cleanup() {
+            this.data = null; // Help GC by clearing references
+        }
+    };
+    
+    // Use resource
+    console.log('Resource size:', heavyResource.data.length);
+    
+    // Clean up when done
+    heavyResource.cleanup();
+    heavyResource = null; // Make object eligible for GC
+}
+
+gcBestPractices();
+
+// Different GC patterns:
+// - Generational GC: Young objects collected more frequently
+// - Incremental GC: Small chunks to avoid blocking
+// - Concurrent GC: GC runs alongside main thread
+```
+</details>
 
 **Beginner: Q3** - What types of values are eligible for garbage collection?
 
+<details>
+<summary>Answer</summary>
+
+Only reference types (objects, arrays, functions) are eligible for garbage collection. Primitive values are managed differently:
+
+```javascript
+// ELIGIBLE FOR GC: Reference types (objects)
+// NOT ELIGIBLE: Primitive values (managed on stack/registers)
+
+// Reference types eligible for GC:
+function eligibleTypes() {
+    // 1. Objects
+    let obj = { name: 'John', age: 30 };
+    obj = null; // Object eligible for GC
+    
+    // 2. Arrays
+    let arr = [1, 2, 3, 4, 5];
+    arr = null; // Array eligible for GC
+    
+    // 3. Functions
+    let func = function() { return 'hello'; };
+    func = null; // Function eligible for GC
+    
+    // 4. Dates
+    let date = new Date();
+    date = null; // Date object eligible for GC
+    
+    // 5. Regular expressions
+    let regex = /pattern/g;
+    regex = null; // RegExp object eligible for GC
+    
+    // 6. DOM elements (in browsers)
+    // let element = document.createElement('div');
+    // element = null; // Element eligible for GC
+}
+
+// Primitive types NOT eligible for GC:
+function primitiveTypes() {
+    // Primitives are stored on stack or in registers
+    let num = 42;           // Number primitive
+    let str = 'hello';      // String primitive
+    let bool = true;        // Boolean primitive
+    let undef = undefined;  // Undefined primitive
+    let nul = null;         // Null primitive
+    let sym = Symbol('id'); // Symbol primitive
+    let big = 123n;         // BigInt primitive
+    
+    // These are not "collected" - they're just deallocated
+    // when variables go out of scope
+}
+
+// Complex scenarios:
+function complexScenarios() {
+    // Objects containing primitives
+    let container = {
+        number: 42,        // Primitive stored in object
+        string: 'hello',   // Primitive stored in object
+        nested: {          // Nested object
+            value: 100
+        }
+    };
+    
+    container = null; // Object and nested object eligible for GC
+                     // Primitives inside are deallocated with object
+    
+    // Arrays containing mixed types
+    let mixedArray = [
+        42,                    // Primitive element
+        'string',              // Primitive element
+        { id: 1 },            // Object element
+        [1, 2, 3],            // Array element
+        function() { return 1; } // Function element
+    ];
+    
+    mixedArray = null; // Array and all object elements eligible for GC
+                       // Primitive elements deallocated with array
+    
+    // Functions with closures
+    function createClosure() {
+        let closureVar = { data: 'closure data' }; // Object in closure
+        let primitiveVar = 'primitive in closure';  // Primitive in closure
+        
+        return function() {
+            console.log(closureVar.data);   // Keeps object alive
+            console.log(primitiveVar);      // Primitive captured in closure
+        };
+    }
+    
+    let closure = createClosure();
+    // closureVar object kept alive by closure
+    closure = null; // Now closure and captured object eligible for GC
+}
+
+// What happens to each type:
+function typeManagement() {
+    // PRIMITIVES: Stored in variables/stack
+    // - Automatically freed when scope ends
+    // - No need for garbage collection
+    
+    // OBJECTS: Stored in heap
+    // - Referenced by variables/properties
+    // - Eligible for GC when unreachable
+    // - Actually freed during GC cycles
+    
+    console.log('Primitives: Stack/register management');
+    console.log('Objects: Heap allocation + garbage collection');
+}
+
+eligibleTypes();
+complexScenarios();
+typeManagement();
+```
+</details>
+
 **Intermediate: Q1** - What is the mark-and-sweep algorithm?
 
+<details>
+<summary>Answer</summary>
+
+Mark-and-sweep is the most common garbage collection algorithm that works in two phases: marking reachable objects and sweeping (freeing) unmarked objects:
+
+```javascript
+// MARK-AND-SWEEP ALGORITHM:
+// PHASE 1: MARK - Traverse from roots, mark reachable objects
+// PHASE 2: SWEEP - Free all unmarked objects
+
+// Simulating mark-and-sweep concept:
+function markAndSweepSimulation() {
+    // PHASE 1: MARK - Starting from roots
+    
+    // ROOTS (always reachable):
+    // - Global variables
+    // - Local variables in call stack
+    // - DOM elements in use
+    
+    let root1 = {           // ROOT: Global variable
+        id: 'root1',
+        child: {
+            id: 'child1',
+            data: 'reachable'
+        }
+    };
+    
+    let root2 = {           // ROOT: Global variable
+        id: 'root2',
+        reference: root1    // Points to root1
+    };
+    
+    // Orphaned object (not reachable from roots)
+    let orphan = {
+        id: 'orphan',
+        data: 'unreachable'
+    };
+    
+    // Remove reference to orphan
+    orphan = null;
+    
+    // MARKING PROCESS (conceptual):
+    /*
+    1. Start from root1 (MARKED)
+       ├── child object (MARKED via root1.child)
+    
+    2. Start from root2 (MARKED)
+       ├── root1 object (ALREADY MARKED)
+           ├── child object (ALREADY MARKED)
+    
+    3. orphan object (UNMARKED - no path from roots)
+    */
+    
+    // SWEEPING PROCESS:
+    // - All UNMARKED objects are freed
+    // - orphan object would be collected
+    
+    console.log('Mark-and-sweep would collect orphaned objects');
+}
+
+// Detailed algorithm steps:
+function markAndSweepSteps() {
+    // Step 1: Initialize - All objects unmarked
+    const objects = [
+        { id: 'obj1', marked: false, refs: ['obj2'] },
+        { id: 'obj2', marked: false, refs: [] },
+        { id: 'obj3', marked: false, refs: ['obj1'] },
+        { id: 'obj4', marked: false, refs: [] }  // Orphaned
+    ];
+    
+    const roots = ['obj1', 'obj3']; // Reachable from roots
+    
+    // Step 2: MARK phase - Depth-first traversal
+    function markReachable(objId, visited = new Set()) {
+        if (visited.has(objId)) return;
+        visited.add(objId);
+        
+        const obj = objects.find(o => o.id === objId);
+        if (obj) {
+            obj.marked = true;
+            console.log(`Marked: ${objId}`);
+            
+            // Mark all referenced objects
+            obj.refs.forEach(ref => markReachable(ref, visited));
+        }
+    }
+    
+    // Mark from all roots
+    roots.forEach(root => markReachable(root));
+    
+    // Step 3: SWEEP phase - Free unmarked objects
+    console.log('\nSweep phase:');
+    objects.forEach(obj => {
+        if (!obj.marked) {
+            console.log(`Collecting: ${obj.id}`);
+        } else {
+            console.log(`Keeping: ${obj.id}`);
+        }
+    });
+}
+
+markAndSweepSteps();
+
+// Real-world mark-and-sweep behavior:
+function realWorldBehavior() {
+    // Objects that reference each other
+    let objA = { id: 'A' };
+    let objB = { id: 'B' };
+    
+    // Create circular reference
+    objA.ref = objB;
+    objB.ref = objA;
+    
+    // Both objects reachable from variables (roots)
+    console.log('Both objects reachable');
+    
+    // Remove root references
+    objA = null;
+    objB = null;
+    
+    // Now both objects are unreachable despite circular reference
+    // Mark-and-sweep will collect both (no path from roots)
+    console.log('Circular reference will be collected');
+    
+    // Complex object graph
+    function complexGraph() {
+        let root = {
+            id: 'root',
+            children: [
+                {
+                    id: 'child1',
+                    parent: null, // Will be set to root
+                    data: new Array(1000).fill('data')
+                },
+                {
+                    id: 'child2',
+                    parent: null, // Will be set to root
+                    siblings: []
+                }
+            ]
+        };
+        
+        // Create parent references
+        root.children[0].parent = root;
+        root.children[1].parent = root;
+        
+        // Create sibling references
+        root.children[0].siblings = [root.children[1]];
+        root.children[1].siblings = [root.children[0]];
+        
+        // Complex graph with multiple references
+        // All reachable from 'root' variable
+        
+        return root;
+    }
+    
+    let complexObj = complexGraph();
+    // All objects in graph are reachable
+    
+    complexObj = null;
+    // Entire graph becomes unreachable - all will be collected
+}
+
+realWorldBehavior();
+
+// Advantages of mark-and-sweep:
+console.log(`
+Mark-and-sweep advantages:
+1. Handles circular references
+2. Precise (collects exactly unreachable objects)
+3. No reference counting overhead
+4. Works with complex object graphs
+`);
+```
+</details>
+
 **Intermediate: Q2** - How can circular references cause memory leaks in older JavaScript engines?
+
+<details>
+<summary>Answer</summary>
+
+Older JavaScript engines used reference counting which couldn't handle circular references, causing memory leaks. Modern engines use mark-and-sweep which solves this:
+
+```javascript
+// HISTORICAL PROBLEM: Reference counting + Circular references = Memory leaks
+// MODERN SOLUTION: Mark-and-sweep correctly handles circular references
+
+// Reference counting algorithm (OLD):
+function referenceCountingProblem() {
+    // OLD ALGORITHM:
+    // 1. Each object has a reference count
+    // 2. Count increments when referenced
+    // 3. Count decrements when reference removed
+    // 4. Object freed when count reaches 0
+    
+    // PROBLEM: Circular references never reach count 0
+    
+    function createCircularLeak() {
+        let objA = { name: 'Object A', refCount: 0 };
+        let objB = { name: 'Object B', refCount: 0 };
+        
+        // Create circular reference
+        objA.ref = objB;    // objB.refCount = 1
+        objB.ref = objA;    // objA.refCount = 1
+        
+        // Even when variables go out of scope:
+        // objA.refCount = 1 (referenced by objB)
+        // objB.refCount = 1 (referenced by objA)
+        // Neither object is freed = MEMORY LEAK
+        
+        return { objA, objB };
+    }
+    
+    let result = createCircularLeak();
+    result = null; // Variables cleared, but objects still reference each other
+    
+    console.log('With reference counting: MEMORY LEAK');
+}
+
+// Real-world memory leak scenarios (historical):
+function historicalLeakScenarios() {
+    // 1. DOM element circular references (old IE)
+    function domCircularLeak() {
+        // This would cause leaks in old browsers:
+        /*
+        let element = document.getElementById('myDiv');
+        let data = {
+            element: element,
+            info: 'some data'
+        };
+        element.customData = data; // Circular reference
+        
+        // When element removed from DOM:
+        // - element still references data
+        // - data still references element
+        // = MEMORY LEAK in old IE
+        */
+        
+        console.log('DOM circular references caused leaks in old IE');
+    }
+    
+    // 2. Event handler circular references
+    function eventHandlerLeak() {
+        /*
+        let button = document.createElement('button');
+        let handler = {
+            element: button,
+            handleClick: function() {
+                console.log('Clicked');
+            }
+        };
+        
+        button.addEventListener('click', handler.handleClick);
+        button.customHandler = handler; // Circular reference
+        
+        // handler references button via element property
+        // button references handler via customHandler property
+        // = MEMORY LEAK in old browsers
+        */
+        
+        console.log('Event handler circular references caused leaks');
+    }
+    
+    domCircularLeak();
+    eventHandlerLeak();
+}
+
+// Modern mark-and-sweep solution:
+function modernSolution() {
+    // MARK-AND-SWEEP ALGORITHM:
+    // 1. Start from "roots" (global variables, DOM, etc.)
+    // 2. Mark all reachable objects
+    // 3. Sweep (free) all unmarked objects
+    // 4. Circular references don't matter if unreachable from roots
+    
+    function circularReferenceSolved() {
+        let objA = { name: 'A' };
+        let objB = { name: 'B' };
+        
+        // Create circular reference
+        objA.ref = objB;
+        objB.ref = objA;
+        
+        // Objects are reachable from variables (roots)
+        console.log('Objects reachable from roots');
+        
+        // Remove root references
+        objA = null;
+        objB = null;
+        
+        // Mark-and-sweep analysis:
+        // 1. MARK phase: Start from roots (objA=null, objB=null)
+        // 2. No path to either object from roots
+        // 3. Both objects remain UNMARKED
+        // 4. SWEEP phase: Both objects are freed
+        
+        console.log('Mark-and-sweep: Circular reference cleaned up! ✅');
+    }
+    
+    circularReferenceSolved();
+}
+
+// Comparison of algorithms:
+function algorithmComparison() {
+    const scenarios = [
+        {
+            name: 'Simple object',
+            leak: 'None',
+            refCounting: 'Works ✅',
+            markSweep: 'Works ✅'
+        },
+        {
+            name: 'Circular reference',
+            leak: 'Memory leak',
+            refCounting: 'Fails ❌',
+            markSweep: 'Works ✅'
+        },
+        {
+            name: 'Complex graph',
+            leak: 'Partial leaks',
+            refCounting: 'Partial ❌',
+            markSweep: 'Works ✅'
+        }
+    ];
+    
+    console.table(scenarios);
+}
+
+// Best practices for avoiding leaks:
+function bestPractices() {
+    // Even with modern GC, good practices help:
+    
+    // 1. Explicitly null references when done
+    function explicitCleanup() {
+        let heavyObject = { data: new Array(100000).fill('data') };
+        
+        // Use object...
+        console.log('Using heavy object');
+        
+        // Explicitly clear when done
+        heavyObject = null; // Help GC
+    }
+    
+    // 2. Use WeakMap for auxiliary references
+    function useWeakReferences() {
+        const metadata = new WeakMap();
+        
+        let obj = { id: 1 };
+        metadata.set(obj, { created: new Date() });
+        
+        // When obj is freed, metadata is automatically cleaned
+        obj = null; // No circular reference with WeakMap
+    }
+    
+    // 3. Remove event listeners
+    function cleanupEventListeners() {
+        let button = document.createElement('button');
+        let controller = new AbortController();
+        
+        button.addEventListener('click', () => {
+            console.log('clicked');
+        }, { signal: controller.signal });
+        
+        // Clean up properly
+        controller.abort(); // Removes all listeners
+        button = null;
+    }
+    
+    explicitCleanup();
+    useWeakReferences();
+}
+
+referenceCountingProblem();
+historicalLeakScenarios();
+modernSolution();
+algorithmComparison();
+bestPractices();
+
+console.log(`
+Summary:
+- Old engines: Reference counting → Circular reference leaks
+- Modern engines: Mark-and-sweep → Handles circular references
+- Best practice: Focus on making objects unreachable from roots
+`);
+```
+</details>
 
 ## Memoization
 
 **Beginner: Q1** - What is memoization?
 
+<details>
+<summary>Answer</summary>
+
+Memoization is an optimization technique that caches the results of expensive function calls and returns the cached result for the same inputs:
+
+```javascript
+// MEMOIZATION = Cache function results to avoid repeated computation
+// Key concept: Cache input → output mapping
+
+// Without memoization (expensive repeated calculations):
+function expensiveFunction(n) {
+    console.log(`Computing for ${n}...`);
+    
+    // Simulate expensive computation
+    let result = 0;
+    for (let i = 0; i < n; i++) {
+        result += Math.sqrt(i);
+    }
+    
+    return result;
+}
+
+// Multiple calls do same work:
+console.log(expensiveFunction(1000000)); // Computes
+console.log(expensiveFunction(1000000)); // Computes again (wasteful)
+
+// With memoization:
+function createMemoizedFunction() {
+    const cache = new Map(); // Store results
+    
+    return function memoizedExpensive(n) {
+        // Check if result already cached
+        if (cache.has(n)) {
+            console.log(`Cache hit for ${n}`);
+            return cache.get(n);
+        }
+        
+        // Compute and cache result
+        console.log(`Computing for ${n}...`);
+        let result = 0;
+        for (let i = 0; i < n; i++) {
+            result += Math.sqrt(i);
+        }
+        
+        cache.set(n, result);
+        return result;
+    };
+}
+
+const memoizedFunction = createMemoizedFunction();
+
+console.log(memoizedFunction(1000000)); // Computes
+console.log(memoizedFunction(1000000)); // Cache hit! ✅
+
+// Simple memoization example:
+function memoize(fn) {
+    const cache = {};
+    
+    return function(...args) {
+        const key = JSON.stringify(args);
+        
+        if (key in cache) {
+            return cache[key];
+        }
+        
+        const result = fn.apply(this, args);
+        cache[key] = result;
+        return result;
+    };
+}
+
+// Usage:
+const slowAdd = (a, b) => {
+    console.log('Computing sum...');
+    return a + b;
+};
+
+const fastAdd = memoize(slowAdd);
+
+console.log(fastAdd(1, 2)); // Computing sum... 3
+console.log(fastAdd(1, 2)); // 3 (cached)
+
+// Fibonacci with and without memoization:
+function fibonacciSlow(n) {
+    if (n <= 1) return n;
+    return fibonacciSlow(n - 1) + fibonacciSlow(n - 2);
+}
+
+const fibonacciFast = memoize(function(n) {
+    if (n <= 1) return n;
+    return fibonacciFast(n - 1) + fibonacciFast(n - 2);
+});
+
+console.log('Slow:', fibonacciSlow(10)); // Many redundant calculations
+console.log('Fast:', fibonacciFast(10)); // Cached intermediate results
+```
+</details>
+
 **Beginner: Q2** - When would you use memoization?
+
+<details>
+<summary>Answer</summary>
+
+Use memoization for pure functions with expensive computations that are called repeatedly with the same inputs:
+
+```javascript
+// IDEAL CANDIDATES FOR MEMOIZATION:
+// 1. Pure functions (same input → same output)
+// 2. Expensive computations
+// 3. Frequently called with same inputs
+// 4. No side effects
+
+// 1. Mathematical calculations:
+function factorial(n) {
+    if (n <= 1) return 1;
+    return n * factorial(n - 1);
+}
+
+const memoizedFactorial = memoize(factorial);
+
+// Use case: Computing factorials in combinatorics
+function combinations(n, r) {
+    return memoizedFactorial(n) / (memoizedFactorial(r) * memoizedFactorial(n - r));
+}
+
+// 2. Recursive algorithms:
+function fibonacci(n) {
+    if (n <= 1) return n;
+    return fibonacci(n - 1) + fibonacci(n - 2);
+}
+
+const memoizedFib = memoize(fibonacci);
+
+// Without memoization: O(2^n) - exponential
+// With memoization: O(n) - linear
+
+// 3. API calls with same parameters:
+async function fetchUserData(userId) {
+    console.log(`Fetching user ${userId}...`);
+    const response = await fetch(`/api/users/${userId}`);
+    return response.json();
+}
+
+const memoizedFetch = memoize(fetchUserData);
+
+// Multiple calls to same user ID use cached result
+async function getUserProfile(userId) {
+    const userData = await memoizedFetch(userId); // Cache hit on repeat calls
+    return userData;
+}
+
+// 4. Complex data transformations:
+function transformLargeDataset(data) {
+    console.log('Transforming dataset...');
+    return data
+        .filter(item => item.active)
+        .map(item => ({
+            ...item,
+            computed: item.value * 2.5,
+            formatted: item.date.toISOString()
+        }))
+        .sort((a, b) => a.computed - b.computed);
+}
+
+const memoizedTransform = memoize(transformLargeDataset);
+
+// 5. React component rendering optimization:
+const ExpensiveComponent = React.memo(function ExpensiveComponent({ data }) {
+    const processedData = useMemo(() => {
+        return data.map(item => ({
+            ...item,
+            expensive: expensiveCalculation(item)
+        }));
+    }, [data]); // Only recalculate when data changes
+    
+    return <div>{processedData.map(item => <Item key={item.id} {...item} />)}</div>;
+});
+
+// WHEN NOT TO USE MEMOIZATION:
+
+// 1. Functions with side effects:
+function impureFunction(x) {
+    console.log('Side effect!'); // Side effect
+    window.someGlobal = x;       // Side effect
+    return x * 2;
+}
+// Don't memoize - side effects should execute every time
+
+// 2. Functions that return different results for same input:
+function randomFunction(x) {
+    return x + Math.random(); // Different result each time
+}
+// Don't memoize - violates pure function requirement
+
+// 3. Simple, fast computations:
+function simpleAdd(a, b) {
+    return a + b; // Too simple to benefit from memoization
+}
+// Don't memoize - overhead > benefit
+
+// 4. Functions called infrequently:
+function rarelyCalledFunction(x) {
+    return expensiveCalculation(x);
+}
+// Don't memoize if called once per session
+
+// Memory considerations:
+function memoryAwareMemoization() {
+    // Problem: Unbounded cache growth
+    const cache = new Map();
+    
+    // Solution: LRU (Least Recently Used) cache
+    function createLRUMemoize(maxSize) {
+        const cache = new Map();
+        
+        return function(fn) {
+            return function(...args) {
+                const key = JSON.stringify(args);
+                
+                if (cache.has(key)) {
+                    // Move to end (mark as recently used)
+                    const value = cache.get(key);
+                    cache.delete(key);
+                    cache.set(key, value);
+                    return value;
+                }
+                
+                // Remove oldest if at capacity
+                if (cache.size >= maxSize) {
+                    const firstKey = cache.keys().next().value;
+                    cache.delete(firstKey);
+                }
+                
+                const result = fn.apply(this, args);
+                cache.set(key, result);
+                return result;
+            };
+        };
+    }
+    
+    const lruMemoize = createLRUMemoize(100); // Max 100 cached results
+    const memoizedFn = lruMemoize(expensiveFunction);
+}
+
+function memoize(fn) {
+    const cache = {};
+    return function(...args) {
+        const key = JSON.stringify(args);
+        if (key in cache) return cache[key];
+        const result = fn.apply(this, args);
+        cache[key] = result;
+        return result;
+    };
+}
+
+function expensiveCalculation(x) {
+    return x * x * x;
+}
+
+memoryAwareMemoization();
+```
+</details>
 
 **Beginner: Q3** - Give a simple example of memoization.
 
+<details>
+<summary>Answer</summary>
+
+Here's a simple memoization example using a square calculation function:
+
+```javascript
+// Simple memoization example: Calculating squares
+
+// Basic function without memoization:
+function calculateSquare(n) {
+    console.log(`Calculating square of ${n}`);
+    return n * n;
+}
+
+// Without memoization - repeats work:
+console.log(calculateSquare(5)); // Calculating square of 5 → 25
+console.log(calculateSquare(5)); // Calculating square of 5 → 25 (calculated again)
+
+// WITH MEMOIZATION:
+function createMemoizedSquare() {
+    const cache = {}; // Store previous results
+    
+    return function(n) {
+        // Check if we already calculated this
+        if (n in cache) {
+            console.log(`Cache hit for ${n}`);
+            return cache[n];
+        }
+        
+        // Calculate and store result
+        console.log(`Calculating square of ${n}`);
+        const result = n * n;
+        cache[n] = result;
+        
+        return result;
+    };
+}
+
+const memoizedSquare = createMemoizedSquare();
+
+// Now with memoization:
+console.log(memoizedSquare(5)); // Calculating square of 5 → 25
+console.log(memoizedSquare(5)); // Cache hit for 5 → 25 (no calculation!)
+console.log(memoizedSquare(3)); // Calculating square of 3 → 9
+console.log(memoizedSquare(5)); // Cache hit for 5 → 25
+console.log(memoizedSquare(3)); // Cache hit for 3 → 9
+
+// Generic memoization function:
+function memoize(fn) {
+    const cache = {};
+    
+    return function(...args) {
+        // Create unique key from arguments
+        const key = JSON.stringify(args);
+        
+        // Return cached result if exists
+        if (key in cache) {
+            console.log('Cache hit!');
+            return cache[key];
+        }
+        
+        // Calculate and cache result
+        console.log('Computing...');
+        const result = fn.apply(this, args);
+        cache[key] = result;
+        
+        return result;
+    };
+}
+
+// Usage with different functions:
+
+// 1. Simple addition:
+const add = (a, b) => a + b;
+const memoizedAdd = memoize(add);
+
+console.log(memoizedAdd(2, 3)); // Computing... → 5
+console.log(memoizedAdd(2, 3)); // Cache hit! → 5
+
+// 2. String manipulation:
+const reverseString = (str) => str.split('').reverse().join('');
+const memoizedReverse = memoize(reverseString);
+
+console.log(memoizedReverse('hello')); // Computing... → 'olleh'
+console.log(memoizedReverse('hello')); // Cache hit! → 'olleh'
+
+// 3. Object transformation:
+const processUser = (user) => ({
+    ...user,
+    fullName: `${user.firstName} ${user.lastName}`,
+    initials: `${user.firstName[0]}${user.lastName[0]}`
+});
+
+const memoizedProcessUser = memoize(processUser);
+
+const user = { firstName: 'John', lastName: 'Doe' };
+
+console.log(memoizedProcessUser(user)); // Computing... → processed user
+console.log(memoizedProcessUser(user)); // Cache hit! → processed user
+
+// Visual representation of cache:
+function demonstrateCache() {
+    const cache = {};
+    
+    function memoizedFunction(x) {
+        const key = String(x);
+        
+        if (key in cache) {
+            console.log(`Cache: {${Object.keys(cache).join(', ')}} - HIT for ${x}`);
+            return cache[key];
+        }
+        
+        const result = x * x;
+        cache[key] = result;
+        console.log(`Cache: {${Object.keys(cache).join(', ')}} - MISS for ${x}, computed ${result}`);
+        
+        return result;
+    }
+    
+    memoizedFunction(2); // Cache: {2} - MISS for 2, computed 4
+    memoizedFunction(3); // Cache: {2, 3} - MISS for 3, computed 9
+    memoizedFunction(2); // Cache: {2, 3} - HIT for 2
+    memoizedFunction(4); // Cache: {2, 3, 4} - MISS for 4, computed 16
+    memoizedFunction(3); // Cache: {2, 3, 4} - HIT for 3
+}
+
+demonstrateCache();
+
+// Performance comparison:
+function performanceComparison() {
+    function slowFunction(n) {
+        // Simulate slow computation
+        let result = 0;
+        for (let i = 0; i < n * 1000000; i++) {
+            result += i;
+        }
+        return result;
+    }
+    
+    const memoizedSlow = memoize(slowFunction);
+    
+    console.time('First call (no cache)');
+    memoizedSlow(100);
+    console.timeEnd('First call (no cache)');
+    
+    console.time('Second call (cached)');
+    memoizedSlow(100);
+    console.timeEnd('Second call (cached)');
+}
+
+performanceComparison();
+```
+</details>
+
 **Intermediate: Q1** - Implement a generic memoization function.
 
+<details>
+<summary>Answer</summary>
+
+Here's a comprehensive generic memoization function with advanced features:
+
+```javascript
+// BASIC GENERIC MEMOIZATION:
+function basicMemoize(fn) {
+    const cache = new Map();
+    
+    return function(...args) {
+        const key = JSON.stringify(args);
+        
+        if (cache.has(key)) {
+            return cache.get(key);
+        }
+        
+        const result = fn.apply(this, args);
+        cache.set(key, result);
+        return result;
+    };
+}
+
+// ADVANCED GENERIC MEMOIZATION with options:
+function advancedMemoize(fn, options = {}) {
+    const {
+        maxSize = Infinity,           // Maximum cache size
+        ttl = Infinity,              // Time to live (milliseconds)
+        keyGenerator = JSON.stringify, // Custom key generation
+        onCacheHit,                  // Callback for cache hits
+        onCacheMiss,                 // Callback for cache misses
+        onEviction                   // Callback for evictions
+    } = options;
+    
+    const cache = new Map();
+    const timestamps = new Map(); // For TTL tracking
+    
+    function evictExpired() {
+        const now = Date.now();
+        for (const [key, timestamp] of timestamps) {
+            if (now - timestamp > ttl) {
+                const evictedValue = cache.get(key);
+                cache.delete(key);
+                timestamps.delete(key);
+                onEviction?.(key, evictedValue, 'expired');
+            }
+        }
+    }
+    
+    function evictOldest() {
+        const oldestKey = cache.keys().next().value;
+        const evictedValue = cache.get(oldestKey);
+        cache.delete(oldestKey);
+        timestamps.delete(oldestKey);
+        onEviction?.(oldestKey, evictedValue, 'size-limit');
+    }
+    
+    const memoizedFn = function(...args) {
+        // Generate cache key
+        const key = keyGenerator(args);
+        
+        // Clean up expired entries
+        if (ttl < Infinity) {
+            evictExpired();
+        }
+        
+        // Check cache
+        if (cache.has(key)) {
+            // Update timestamp for LRU
+            const value = cache.get(key);
+            cache.delete(key);
+            cache.set(key, value);
+            timestamps.set(key, Date.now());
+            
+            onCacheHit?.(key, value);
+            return value;
+        }
+        
+        // Cache miss - compute result
+        const result = fn.apply(this, args);
+        
+        // Evict oldest if at capacity
+        if (cache.size >= maxSize) {
+            evictOldest();
+        }
+        
+        // Store result
+        cache.set(key, result);
+        timestamps.set(key, Date.now());
+        
+        onCacheMiss?.(key, result);
+        return result;
+    };
+    
+    // Add utility methods
+    memoizedFn.cache = cache;
+    memoizedFn.clear = () => {
+        cache.clear();
+        timestamps.clear();
+    };
+    memoizedFn.delete = (key) => {
+        cache.delete(key);
+        timestamps.delete(key);
+    };
+    memoizedFn.has = (key) => cache.has(key);
+    memoizedFn.size = () => cache.size;
+    
+    return memoizedFn;
+}
+
+// CUSTOM KEY GENERATORS:
+const keyGenerators = {
+    // Default JSON stringify
+    json: JSON.stringify,
+    
+    // Simple string concatenation
+    concat: (args) => args.join('|'),
+    
+    // Hash-based key (for objects)
+    hash: (args) => {
+        return args.map(arg => {
+            if (typeof arg === 'object') {
+                return Object.keys(arg).sort().map(k => `${k}:${arg[k]}`).join(',');
+            }
+            return String(arg);
+        }).join('|');
+    },
+    
+    // First argument only
+    firstArg: (args) => String(args[0]),
+    
+    // Custom object serialization
+    deepSerialize: (args) => {
+        return JSON.stringify(args, (key, value) => {
+            if (typeof value === 'function') return '[Function]';
+            if (value instanceof Date) return `[Date:${value.toISOString()}]`;
+            if (value instanceof RegExp) return `[RegExp:${value.toString()}]`;
+            return value;
+        });
+    }
+};
+
+// USAGE EXAMPLES:
+
+// 1. Basic usage:
+const expensiveFunction = (n) => {
+    console.log(`Computing for ${n}`);
+    return n * n * n;
+};
+
+const memoized = basicMemoize(expensiveFunction);
+console.log(memoized(5)); // Computing for 5 → 125
+console.log(memoized(5)); // 125 (cached)
+
+// 2. With size limit:
+const limitedMemoize = advancedMemoize(expensiveFunction, {
+    maxSize: 3,
+    onEviction: (key, value, reason) => {
+        console.log(`Evicted ${key}=${value} (${reason})`);
+    }
+});
+
+limitedMemoize(1); // Computing for 1
+limitedMemoize(2); // Computing for 2  
+limitedMemoize(3); // Computing for 3
+limitedMemoize(4); // Computing for 4, Evicted [1]=1 (size-limit)
+
+// 3. With TTL (Time To Live):
+const ttlMemoize = advancedMemoize(expensiveFunction, {
+    ttl: 1000, // 1 second
+    onEviction: (key, value, reason) => {
+        console.log(`Evicted ${key}=${value} (${reason})`);
+    }
+});
+
+ttlMemoize(10); // Computing for 10
+setTimeout(() => {
+    ttlMemoize(10); // Computing for 10 (expired)
+}, 1100);
+
+// 4. With custom key generator:
+const customKeyMemoize = advancedMemoize(
+    (obj) => obj.a + obj.b,
+    {
+        keyGenerator: keyGenerators.hash,
+        onCacheHit: (key) => console.log(`Cache hit: ${key}`),
+        onCacheMiss: (key) => console.log(`Cache miss: ${key}`)
+    }
+);
+
+customKeyMemoize({ a: 1, b: 2 }); // Cache miss: a:1,b:2 → 3
+customKeyMemoize({ b: 2, a: 1 }); // Cache hit: a:1,b:2 → 3 (same object)
+
+// 5. Async function memoization:
+function memoizeAsync(asyncFn, options = {}) {
+    const cache = new Map();
+    
+    return async function(...args) {
+        const key = JSON.stringify(args);
+        
+        if (cache.has(key)) {
+            return cache.get(key);
+        }
+        
+        const promise = asyncFn.apply(this, args);
+        cache.set(key, promise);
+        
+        try {
+            const result = await promise;
+            return result;
+        } catch (error) {
+            // Remove failed promise from cache
+            cache.delete(key);
+            throw error;
+        }
+    };
+}
+
+// Usage with async functions:
+const fetchData = async (id) => {
+    console.log(`Fetching data for ${id}`);
+    const response = await fetch(`/api/data/${id}`);
+    return response.json();
+};
+
+const memoizedFetch = memoizeAsync(fetchData);
+
+// 6. Class method memoization:
+class Calculator {
+    constructor() {
+        this.compute = advancedMemoize(this.compute.bind(this));
+    }
+    
+    compute(n) {
+        console.log(`Computing ${n}!`);
+        let result = 1;
+        for (let i = 2; i <= n; i++) {
+            result *= i;
+        }
+        return result;
+    }
+}
+
+const calc = new Calculator();
+console.log(calc.compute(5)); // Computing 5! → 120
+console.log(calc.compute(5)); // 120 (cached)
+
+// Utility function for React components:
+function memoizeComponent(Component) {
+    return React.memo(Component, (prevProps, nextProps) => {
+        return JSON.stringify(prevProps) === JSON.stringify(nextProps);
+    });
+}
+```
+</details>
+
 **Intermediate: Q2** - What are the trade-offs of using memoization?
+
+<details>
+<summary>Answer</summary>
+
+Memoization has important trade-offs between performance gains and memory/complexity costs:
+
+```javascript
+// MEMOIZATION TRADE-OFFS ANALYSIS
+
+// ✅ BENEFITS:
+console.log('=== BENEFITS ===');
+
+// 1. Performance improvement for expensive repeated calculations
+function demonstratePerformanceBenefit() {
+    function fibonacci(n) {
+        if (n <= 1) return n;
+        return fibonacci(n - 1) + fibonacci(n - 2);
+    }
+    
+    const memoizedFib = memoize(fibonacci);
+    
+    console.time('Without memoization (fib 35)');
+    fibonacci(35); // ~29 million function calls
+    console.timeEnd('Without memoization (fib 35)');
+    
+    console.time('With memoization (fib 35)');
+    memoizedFib(35); // ~35 function calls
+    console.timeEnd('With memoization (fib 35)');
+    
+    // Time complexity: O(2^n) → O(n)
+}
+
+// ❌ COSTS:
+console.log('\n=== COSTS ===');
+
+// 1. Memory overhead - storing cached results
+function memoryOverhead() {
+    const cache = new Map();
+    
+    function expensiveFunction(data) {
+        const key = JSON.stringify(data);
+        
+        if (cache.has(key)) {
+            return cache.get(key);
+        }
+        
+        const result = data.map(x => x * x);
+        cache.set(key, result); // Memory grows with each unique input
+        return result;
+    }
+    
+    // Each call with different input increases memory usage
+    const largeArray = new Array(10000).fill(0).map((_, i) => i);
+    
+    for (let i = 0; i < 100; i++) {
+        expensiveFunction(largeArray.slice(0, i * 100));
+    }
+    
+    console.log(`Cache size: ${cache.size} entries`);
+    console.log('Memory grows linearly with unique inputs');
+}
+
+// 2. Key generation overhead
+function keyGenerationOverhead() {
+    function complexObject() {
+        return {
+            id: Math.random(),
+            data: new Array(1000).fill('data'),
+            nested: { deep: { object: { structure: true } } }
+        };
+    }
+    
+    const obj = complexObject();
+    
+    console.time('JSON.stringify overhead');
+    for (let i = 0; i < 10000; i++) {
+        JSON.stringify(obj); // Expensive for large objects
+    }
+    console.timeEnd('JSON.stringify overhead');
+    
+    console.log('Key generation can be expensive for complex objects');
+}
+
+// 3. Memory leaks in long-running applications
+function memoryLeakRisk() {
+    const cache = new Map();
+    
+    function userProcessor(userData) {
+        const key = userData.id;
+        
+        if (cache.has(key)) {
+            return cache.get(key);
+        }
+        
+        const processed = processUserData(userData);
+        cache.set(key, processed); // Never cleared!
+        return processed;
+    }
+    
+    // In a long-running app, cache grows indefinitely
+    // Solution: Implement cache eviction strategies
+    
+    console.log('Unbounded caches can cause memory leaks');
+}
+
+// WHEN MEMOIZATION HURTS PERFORMANCE:
+console.log('\n=== WHEN MEMOIZATION HURTS ===');
+
+// 1. Frequently changing inputs
+function changingInputs() {
+    let counter = 0;
+    
+    function alwaysChanging() {
+        return { timestamp: Date.now(), random: Math.random(), counter: counter++ };
+    }
+    
+    const memoizedChanging = memoize(alwaysChanging);
+    
+    // Cache never hits - only overhead
+    console.time('Without memoization');
+    for (let i = 0; i < 10000; i++) {
+        alwaysChanging();
+    }
+    console.timeEnd('Without memoization');
+    
+    console.time('With memoization (never hits)');
+    for (let i = 0; i < 10000; i++) {
+        memoizedChanging();
+    }
+    console.timeEnd('With memoization (never hits)');
+    
+    console.log('Memoization adds overhead when cache never hits');
+}
+
+// 2. Simple computations
+function simpleComputations() {
+    function simpleAdd(a, b) {
+        return a + b;
+    }
+    
+    const memoizedAdd = memoize(simpleAdd);
+    
+    console.time('Simple function direct');
+    for (let i = 0; i < 1000000; i++) {
+        simpleAdd(i, i + 1);
+    }
+    console.timeEnd('Simple function direct');
+    
+    console.time('Simple function memoized');
+    for (let i = 0; i < 1000000; i++) {
+        memoizedAdd(i, i + 1);
+    }
+    console.timeEnd('Simple function memoized');
+    
+    console.log('Memoization overhead > computation cost for simple functions');
+}
+
+// SOLUTIONS TO TRADE-OFFS:
+console.log('\n=== SOLUTIONS ===');
+
+// 1. LRU (Least Recently Used) cache
+function lruSolution() {
+    function createLRUMemoize(maxSize) {
+        const cache = new Map();
+        
+        return function(fn) {
+            return function(...args) {
+                const key = JSON.stringify(args);
+                
+                if (cache.has(key)) {
+                    // Move to end (most recently used)
+                    const value = cache.get(key);
+                    cache.delete(key);
+                    cache.set(key, value);
+                    return value;
+                }
+                
+                // Remove oldest if at capacity
+                if (cache.size >= maxSize) {
+                    const firstKey = cache.keys().next().value;
+                    cache.delete(firstKey);
+                }
+                
+                const result = fn.apply(this, args);
+                cache.set(key, result);
+                return result;
+            };
+        };
+    }
+    
+    const lruMemoize = createLRUMemoize(100);
+    console.log('LRU cache prevents unbounded memory growth');
+}
+
+// 2. TTL (Time To Live) cache
+function ttlSolution() {
+    function createTTLMemoize(ttl) {
+        const cache = new Map();
+        const timestamps = new Map();
+        
+        return function(fn) {
+            return function(...args) {
+                const key = JSON.stringify(args);
+                const now = Date.now();
+                
+                // Clean expired entries
+                for (const [k, timestamp] of timestamps) {
+                    if (now - timestamp > ttl) {
+                        cache.delete(k);
+                        timestamps.delete(k);
+                    }
+                }
+                
+                if (cache.has(key)) {
+                    return cache.get(key);
+                }
+                
+                const result = fn.apply(this, args);
+                cache.set(key, result);
+                timestamps.set(key, now);
+                return result;
+            };
+        };
+    }
+    
+    const ttlMemoize = createTTLMemoize(5000); // 5 second TTL
+    console.log('TTL cache prevents stale data and memory growth');
+}
+
+// 3. Weak references for automatic cleanup
+function weakRefSolution() {
+    // Use WeakMap for objects that can be garbage collected
+    const cache = new WeakMap();
+    
+    function memoizeForObjects(fn) {
+        return function(obj, ...otherArgs) {
+            if (typeof obj !== 'object' || obj === null) {
+                return fn(obj, ...otherArgs);
+            }
+            
+            let objCache = cache.get(obj);
+            if (!objCache) {
+                objCache = new Map();
+                cache.set(obj, objCache);
+            }
+            
+            const key = JSON.stringify(otherArgs);
+            if (objCache.has(key)) {
+                return objCache.get(key);
+            }
+            
+            const result = fn(obj, ...otherArgs);
+            objCache.set(key, result);
+            return result;
+        };
+    }
+    
+    console.log('WeakMap allows automatic cleanup when objects are GC\'d');
+}
+
+// DECISION MATRIX:
+function decisionMatrix() {
+    const scenarios = [
+        {
+            scenario: 'Expensive pure function, repeated calls',
+            recommendation: 'Use memoization ✅',
+            reason: 'High benefit, low risk'
+        },
+        {
+            scenario: 'Simple computation, high frequency',
+            recommendation: 'Avoid memoization ❌',
+            reason: 'Overhead > benefit'
+        },
+        {
+            scenario: 'API calls with same parameters',
+            recommendation: 'Use with TTL ✅',
+            reason: 'Prevents redundant network requests'
+        },
+        {
+            scenario: 'Recursive algorithms',
+            recommendation: 'Use memoization ✅',
+            reason: 'Dramatic performance improvement'
+        },
+        {
+            scenario: 'Functions with side effects',
+            recommendation: 'Avoid memoization ❌',
+            reason: 'Side effects must execute every time'
+        },
+        {
+            scenario: 'Long-running applications',
+            recommendation: 'Use LRU/TTL ✅',
+            reason: 'Prevent memory leaks'
+        }
+    ];
+    
+    console.table(scenarios);
+}
+
+// Utility function for basic memoization
+function memoize(fn) {
+    const cache = new Map();
+    return function(...args) {
+        const key = JSON.stringify(args);
+        if (cache.has(key)) return cache.get(key);
+        const result = fn.apply(this, args);
+        cache.set(key, result);
+        return result;
+    };
+}
+
+function processUserData(userData) {
+    return { ...userData, processed: true };
+}
+
+// Run demonstrations
+demonstratePerformanceBenefit();
+memoryOverhead();
+keyGenerationOverhead();
+memoryLeakRisk();
+changingInputs();
+simpleComputations();
+lruSolution();
+ttlSolution();
+weakRefSolution();
+decisionMatrix();
+
+console.log(`
+SUMMARY:
+Benefits: Faster repeated computations, reduced redundant work
+Costs: Memory usage, key generation overhead, complexity
+Best for: Expensive pure functions with repeated inputs
+Avoid for: Simple functions, changing inputs, side effects
+Solutions: LRU caching, TTL, WeakMap, bounded cache sizes
+`);
+```
+</details>
 
 ## Debouncing & throttling
 
 **Beginner: Q1** - What is debouncing? When would you use it?
 
+<details>
+<summary>Answer</summary>
+
+Debouncing delays function execution until after a specified time has passed since the last call:
+
+```javascript
+// DEBOUNCING = Delay execution until calls stop for X milliseconds
+
+// Without debouncing (search on every keystroke)
+function searchWithoutDebounce() {
+    const input = document.getElementById('search');
+    input.addEventListener('input', (e) => {
+        console.log('Searching for:', e.target.value); // Fires on every keystroke
+        // Expensive API call on every character typed
+    });
+}
+
+// With debouncing (search only after user stops typing)
+function debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+function searchWithDebounce() {
+    const input = document.getElementById('search');
+    
+    const debouncedSearch = debounce((e) => {
+        console.log('Searching for:', e.target.value); // Fires only after 300ms pause
+        // API call only when user stops typing
+    }, 300);
+    
+    input.addEventListener('input', debouncedSearch);
+}
+
+// Common use cases:
+// 1. Search input
+const searchInput = debounce((query) => {
+    fetch(`/api/search?q=${query}`)
+        .then(response => response.json())
+        .then(data => displayResults(data));
+}, 500);
+
+// 2. Form validation
+const validateForm = debounce((formData) => {
+    console.log('Validating form...');
+    // Expensive validation logic
+}, 1000);
+
+// 3. Window resize
+const handleResize = debounce(() => {
+    console.log('Window resized, recalculating layout...');
+    // Expensive layout calculations
+}, 250);
+
+window.addEventListener('resize', handleResize);
+
+// 4. Button click prevention
+const submitButton = document.getElementById('submit');
+const debouncedSubmit = debounce(() => {
+    console.log('Form submitted');
+    // Prevent multiple rapid clicks
+}, 1000);
+
+submitButton.addEventListener('click', debouncedSubmit);
+
+function displayResults(data) {
+    console.log('Search results:', data);
+}
+```
+</details>
+
 **Beginner: Q2** - What is throttling? When would you use it?
+
+<details>
+<summary>Answer</summary>
+
+Throttling limits function execution to once per specified interval, regardless of how often it's called:
+
+```javascript
+// THROTTLING = Execute function at most once per X milliseconds
+
+// Without throttling (scroll handler fires constantly)
+function scrollWithoutThrottle() {
+    window.addEventListener('scroll', () => {
+        console.log('Scroll position:', window.scrollY); // Fires hundreds of times
+        // Expensive calculations on every scroll pixel
+    });
+}
+
+// With throttling (scroll handler limited to once per interval)
+function throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+function scrollWithThrottle() {
+    const throttledScroll = throttle(() => {
+        console.log('Scroll position:', window.scrollY); // Fires max once per 100ms
+        // Reasonable performance with useful updates
+    }, 100);
+    
+    window.addEventListener('scroll', throttledScroll);
+}
+
+// Common use cases:
+// 1. Scroll events
+const updateScrollProgress = throttle(() => {
+    const scrollPercent = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+    document.getElementById('progress').style.width = `${scrollPercent}%`;
+}, 50);
+
+window.addEventListener('scroll', updateScrollProgress);
+
+// 2. Mouse move tracking
+const trackMouseMovement = throttle((e) => {
+    console.log(`Mouse at: ${e.clientX}, ${e.clientY}`);
+    // Update UI element position
+}, 16); // ~60fps
+
+document.addEventListener('mousemove', trackMouseMovement);
+
+// 3. API calls with rate limiting
+const apiCall = throttle(() => {
+    fetch('/api/data')
+        .then(response => response.json())
+        .then(data => console.log(data));
+}, 1000); // Max 1 request per second
+
+// 4. Button click rate limiting
+const gameButton = throttle(() => {
+    console.log('Game action performed');
+    // Prevent spam clicking in games
+}, 500);
+
+// Advanced throttle with leading and trailing options
+function advancedThrottle(func, limit, options = {}) {
+    let timeout;
+    let previous = 0;
+    
+    return function(...args) {
+        const now = Date.now();
+        
+        if (!previous && options.leading === false) {
+            previous = now;
+        }
+        
+        const remaining = limit - (now - previous);
+        
+        if (remaining <= 0 || remaining > limit) {
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+            previous = now;
+            func.apply(this, args);
+        } else if (!timeout && options.trailing !== false) {
+            timeout = setTimeout(() => {
+                previous = options.leading === false ? 0 : Date.now();
+                timeout = null;
+                func.apply(this, args);
+            }, remaining);
+        }
+    };
+}
+```
+</details>
 
 **Beginner: Q3** - What is the difference between debouncing and throttling?
 
+<details>
+<summary>Answer</summary>
+
+Debouncing waits for a pause in calls, while throttling executes at regular intervals:
+
+```javascript
+// VISUAL COMPARISON:
+// User action: ||||||||||||||||||||||||||||||||||||||||||||||||
+// Debouncing:                                                  X (only at end)
+// Throttling:  X       X       X       X       X       X       X (regular intervals)
+
+// DEBOUNCING: "Wait until quiet, then execute"
+function createDebounceDemo() {
+    let calls = 0;
+    
+    const debouncedFunction = debounce(() => {
+        console.log(`Debounced execution #${++calls}`);
+    }, 1000);
+    
+    // Simulate rapid calls
+    for (let i = 0; i < 5; i++) {
+        setTimeout(() => debouncedFunction(), i * 100);
+    }
+    // Only executes once, 1000ms after the last call
+}
+
+// THROTTLING: "Execute at most once per interval"
+function createThrottleDemo() {
+    let calls = 0;
+    
+    const throttledFunction = throttle(() => {
+        console.log(`Throttled execution #${++calls}`);
+    }, 1000);
+    
+    // Simulate rapid calls
+    for (let i = 0; i < 10; i++) {
+        setTimeout(() => throttledFunction(), i * 200);
+    }
+    // Executes immediately, then once per 1000ms
+}
+
+// PRACTICAL COMPARISON:
+
+// Search input example
+function searchComparison() {
+    const searchInput = document.getElementById('search');
+    
+    // Debounced search - waits for user to stop typing
+    const debouncedSearch = debounce((query) => {
+        console.log('Debounced search:', query);
+        // Good for: API calls, validation
+        // Executes: Only after user stops typing for 300ms
+    }, 300);
+    
+    // Throttled search - searches at regular intervals
+    const throttledSearch = throttle((query) => {
+        console.log('Throttled search:', query);
+        // Good for: Live suggestions, progressive search
+        // Executes: Max once per 300ms while typing
+    }, 300);
+    
+    searchInput.addEventListener('input', (e) => {
+        debouncedSearch(e.target.value);
+        throttledSearch(e.target.value);
+    });
+}
+
+// Scroll example
+function scrollComparison() {
+    // Debounced scroll - fires only when scrolling stops
+    const debouncedScroll = debounce(() => {
+        console.log('Scroll ended');
+        // Good for: Final calculations, saving state
+        // Use case: Auto-save when user stops scrolling
+    }, 150);
+    
+    // Throttled scroll - fires regularly during scroll
+    const throttledScroll = throttle(() => {
+        console.log('Scrolling...');
+        // Good for: Animations, progress bars, lazy loading
+        // Use case: Update scroll progress indicator
+    }, 100);
+    
+    window.addEventListener('scroll', debouncedScroll);
+    window.addEventListener('scroll', throttledScroll);
+}
+
+// When to use which:
+const useCase = {
+    debouncing: {
+        searchInput: 'Wait for user to finish typing',
+        formValidation: 'Validate after user stops editing',
+        resizeHandler: 'Recalculate layout after resize ends',
+        buttonClick: 'Prevent accidental double-clicks'
+    },
+    
+    throttling: {
+        scrollEvents: 'Smooth animations during scroll',
+        mouseMoveTracking: 'Limit tracking frequency',
+        apiRateLimit: 'Respect API rate limits',
+        gameControls: 'Limit action frequency in games'
+    }
+};
+
+// Utility functions
+function debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+function throttle(func, limit) {
+    let inThrottle;
+    return function(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+createDebounceDemo();
+createThrottleDemo();
+```
+</details>
+
 **Intermediate: Q1** - Implement a debounce function.
 
+<details>
+<summary>Answer</summary>
+
+Here's a comprehensive debounce implementation with advanced features:
+
+```javascript
+// BASIC DEBOUNCE IMPLEMENTATION:
+function basicDebounce(func, delay) {
+    let timeoutId;
+    
+    return function(...args) {
+        // Clear previous timeout
+        clearTimeout(timeoutId);
+        
+        // Set new timeout
+        timeoutId = setTimeout(() => {
+            func.apply(this, args);
+        }, delay);
+    };
+}
+
+// ADVANCED DEBOUNCE with options:
+function advancedDebounce(func, delay, options = {}) {
+    let timeoutId;
+    let lastCallTime;
+    
+    const {
+        leading = false,        // Execute immediately on first call
+        trailing = true,        // Execute after delay
+        maxWait = null         // Maximum time to wait before forced execution
+    } = options;
+    
+    return function(...args) {
+        const currentTime = Date.now();
+        const timeSinceLastCall = currentTime - (lastCallTime || 0);
+        
+        // Clear existing timeout
+        clearTimeout(timeoutId);
+        
+        // Leading edge execution
+        if (leading && !lastCallTime) {
+            func.apply(this, args);
+            lastCallTime = currentTime;
+            return;
+        }
+        
+        // Set up trailing execution
+        if (trailing) {
+            timeoutId = setTimeout(() => {
+                func.apply(this, args);
+                lastCallTime = Date.now();
+            }, delay);
+        }
+        
+        // MaxWait forced execution
+        if (maxWait && timeSinceLastCall >= maxWait) {
+            func.apply(this, args);
+            lastCallTime = currentTime;
+            clearTimeout(timeoutId);
+        } else {
+            lastCallTime = currentTime;
+        }
+    };
+}
+
+// DEBOUNCE with CANCEL and FLUSH methods:
+function fullDebounce(func, delay, options = {}) {
+    let timeoutId;
+    let lastArgs;
+    let lastThis;
+    
+    function debounced(...args) {
+        lastArgs = args;
+        lastThis = this;
+        
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => {
+            func.apply(lastThis, lastArgs);
+        }, delay);
+    }
+    
+    // Cancel pending execution
+    debounced.cancel = function() {
+        clearTimeout(timeoutId);
+        timeoutId = null;
+    };
+    
+    // Execute immediately with last arguments
+    debounced.flush = function() {
+        if (timeoutId) {
+            clearTimeout(timeoutId);
+            func.apply(lastThis, lastArgs);
+        }
+    };
+    
+    // Check if execution is pending
+    debounced.pending = function() {
+        return timeoutId != null;
+    };
+    
+    return debounced;
+}
+
+// USAGE EXAMPLES:
+
+// 1. Search input with basic debounce
+const searchInput = document.getElementById('search');
+const debouncedSearch = basicDebounce((e) => {
+    console.log('Searching for:', e.target.value);
+    // API call here
+}, 300);
+
+searchInput?.addEventListener('input', debouncedSearch);
+
+// 2. Form validation with advanced options
+const validateForm = advancedDebounce(
+    (formData) => {
+        console.log('Validating form...', formData);
+        // Validation logic
+    },
+    500,
+    { leading: false, trailing: true, maxWait: 2000 }
+);
+
+// 3. Button with cancel/flush capabilities
+const saveButton = document.getElementById('save');
+const debouncedSave = fullDebounce(() => {
+    console.log('Saving data...');
+    // Save logic
+}, 1000);
+
+saveButton?.addEventListener('click', debouncedSave);
+
+// Cancel save on page unload
+window.addEventListener('beforeunload', () => {
+    debouncedSave.cancel();
+});
+
+// Force save on form submit
+document.getElementById('form')?.addEventListener('submit', () => {
+    debouncedSave.flush();
+});
+
+// 4. Resize handler with immediate and delayed execution
+const handleResize = advancedDebounce(
+    () => {
+        console.log('Window resized, recalculating...');
+        // Layout recalculation
+    },
+    250,
+    { leading: true, trailing: true } // Execute immediately AND after delay
+);
+
+window.addEventListener('resize', handleResize);
+
+// 5. Auto-save with maxWait
+const autoSave = advancedDebounce(
+    (data) => {
+        console.log('Auto-saving...', data);
+        // Save to server
+    },
+    2000,  // Wait 2s after last change
+    { maxWait: 10000 } // Force save every 10s
+);
+
+// Usage in text editor
+document.getElementById('editor')?.addEventListener('input', (e) => {
+    autoSave(e.target.value);
+});
+
+// TESTING UTILITIES:
+function testDebounce() {
+    const mockFunction = jest.fn();
+    const debouncedMock = basicDebounce(mockFunction, 100);
+    
+    // Call multiple times rapidly
+    debouncedMock(1);
+    debouncedMock(2);
+    debouncedMock(3);
+    
+    // Should only execute once with last argument
+    setTimeout(() => {
+        expect(mockFunction).toHaveBeenCalledTimes(1);
+        expect(mockFunction).toHaveBeenCalledWith(3);
+    }, 150);
+}
+
+// Performance monitoring
+function createMonitoredDebounce(func, delay) {
+    let callCount = 0;
+    let executionCount = 0;
+    
+    const debounced = basicDebounce((...args) => {
+        executionCount++;
+        console.log(`Execution ${executionCount} (${callCount} calls total)`);
+        func.apply(this, args);
+    }, delay);
+    
+    return function(...args) {
+        callCount++;
+        return debounced.apply(this, args);
+    };
+}
+
+// Real-world example: Search with loading state
+function createSmartSearch() {
+    const searchInput = document.getElementById('search');
+    const results = document.getElementById('results');
+    const loading = document.getElementById('loading');
+    
+    const debouncedSearch = fullDebounce(async (query) => {
+        if (!query.trim()) {
+            results.innerHTML = '';
+            return;
+        }
+        
+        loading.style.display = 'block';
+        
+        try {
+            const response = await fetch(`/api/search?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            
+            results.innerHTML = data.map(item => `<div>${item.title}</div>`).join('');
+        } catch (error) {
+            results.innerHTML = '<div>Search failed</div>';
+        } finally {
+            loading.style.display = 'none';
+        }
+    }, 300);
+    
+    searchInput?.addEventListener('input', (e) => {
+        debouncedSearch(e.target.value);
+    });
+    
+    // Clear search on escape
+    searchInput?.addEventListener('keydown', (e) => {
+        if (e.key === 'Escape') {
+            debouncedSearch.cancel();
+            results.innerHTML = '';
+            loading.style.display = 'none';
+        }
+    });
+}
+```
+</details>
+
 **Intermediate: Q2** - Implement a throttle function.
+
+<details>
+<summary>Answer</summary>
+
+Here's a comprehensive throttle implementation with advanced features:
+
+```javascript
+// BASIC THROTTLE IMPLEMENTATION:
+function basicThrottle(func, limit) {
+    let inThrottle;
+    
+    return function(...args) {
+        if (!inThrottle) {
+            func.apply(this, args);
+            inThrottle = true;
+            setTimeout(() => inThrottle = false, limit);
+        }
+    };
+}
+
+// ADVANCED THROTTLE with leading/trailing options:
+function advancedThrottle(func, limit, options = {}) {
+    let timeout;
+    let previous = 0;
+    
+    const {
+        leading = true,     // Execute on leading edge
+        trailing = true     // Execute on trailing edge
+    } = options;
+    
+    return function(...args) {
+        const now = Date.now();
+        
+        // If leading is false, set previous to now on first call
+        if (!previous && leading === false) {
+            previous = now;
+        }
+        
+        const remaining = limit - (now - previous);
+        
+        if (remaining <= 0 || remaining > limit) {
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+            previous = now;
+            func.apply(this, args);
+        } else if (!timeout && trailing !== false) {
+            timeout = setTimeout(() => {
+                previous = leading === false ? 0 : Date.now();
+                timeout = null;
+                func.apply(this, args);
+            }, remaining);
+        }
+    };
+}
+
+// THROTTLE with CANCEL and FLUSH methods:
+function fullThrottle(func, limit, options = {}) {
+    let timeout;
+    let previous = 0;
+    let lastArgs;
+    let lastThis;
+    
+    function throttled(...args) {
+        lastArgs = args;
+        lastThis = this;
+        
+        const now = Date.now();
+        const remaining = limit - (now - previous);
+        
+        if (remaining <= 0) {
+            if (timeout) {
+                clearTimeout(timeout);
+                timeout = null;
+            }
+            previous = now;
+            func.apply(this, args);
+        } else if (!timeout) {
+            timeout = setTimeout(() => {
+                previous = Date.now();
+                timeout = null;
+                func.apply(lastThis, lastArgs);
+            }, remaining);
+        }
+    }
+    
+    // Cancel pending execution
+    throttled.cancel = function() {
+        clearTimeout(timeout);
+        timeout = null;
+        previous = 0;
+    };
+    
+    // Execute immediately
+    throttled.flush = function() {
+        if (timeout) {
+            clearTimeout(timeout);
+            func.apply(lastThis, lastArgs);
+            timeout = null;
+            previous = Date.now();
+        }
+    };
+    
+    // Check if execution is pending
+    throttled.pending = function() {
+        return timeout != null;
+    };
+    
+    return throttled;
+}
+
+// USAGE EXAMPLES:
+
+// 1. Scroll progress indicator
+const updateScrollProgress = basicThrottle(() => {
+    const scrollPercent = (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100;
+    const progressBar = document.getElementById('progress');
+    if (progressBar) {
+        progressBar.style.width = `${Math.min(100, Math.max(0, scrollPercent))}%`;
+    }
+}, 16); // ~60fps
+
+window.addEventListener('scroll', updateScrollProgress);
+
+// 2. Mouse tracking with advanced options
+const trackMouse = advancedThrottle(
+    (e) => {
+        console.log(`Mouse: ${e.clientX}, ${e.clientY}`);
+        // Update custom cursor or parallax effect
+    },
+    50,
+    { leading: true, trailing: false } // Only on leading edge
+);
+
+document.addEventListener('mousemove', trackMouse);
+
+// 3. API rate limiting
+const apiThrottle = fullThrottle(
+    async (data) => {
+        console.log('Making API call...', data);
+        try {
+            const response = await fetch('/api/endpoint', {
+                method: 'POST',
+                body: JSON.stringify(data)
+            });
+            return response.json();
+        } catch (error) {
+            console.error('API call failed:', error);
+        }
+    },
+    1000 // Max 1 call per second
+);
+
+// Usage with flush on page unload
+window.addEventListener('beforeunload', () => {
+    apiThrottle.flush(); // Send final data
+});
+
+// 4. Game controls throttling
+const gameAction = advancedThrottle(
+    (action) => {
+        console.log('Game action:', action);
+        // Process game action
+    },
+    100, // Max 10 actions per second
+    { leading: true, trailing: false }
+);
+
+document.addEventListener('keydown', (e) => {
+    if (e.code === 'Space') {
+        gameAction('jump');
+    }
+});
+
+// 5. Window resize with immediate and delayed execution
+const handleResize = advancedThrottle(
+    () => {
+        console.log('Resize handler executed');
+        // Expensive layout calculations
+    },
+    200,
+    { leading: true, trailing: true } // Both edges
+);
+
+window.addEventListener('resize', handleResize);
+
+// PERFORMANCE COMPARISON:
+function performanceTest() {
+    let regularCount = 0;
+    let throttledCount = 0;
+    
+    const regularFunction = () => regularCount++;
+    const throttledFunction = basicThrottle(() => throttledCount++, 100);
+    
+    // Simulate rapid calls
+    const interval = setInterval(() => {
+        regularFunction();
+        throttledFunction();
+    }, 10);
+    
+    // Check results after 1 second
+    setTimeout(() => {
+        clearInterval(interval);
+        console.log(`Regular calls: ${regularCount}`); // ~100
+        console.log(`Throttled calls: ${throttledCount}`); // ~10
+    }, 1000);
+}
+
+// REAL-WORLD EXAMPLES:
+
+// 1. Infinite scroll
+function createInfiniteScroll() {
+    const container = document.getElementById('content');
+    let page = 1;
+    let loading = false;
+    
+    const loadMore = fullThrottle(async () => {
+        if (loading) return;
+        
+        const scrollPosition = window.scrollY + window.innerHeight;
+        const documentHeight = document.documentElement.scrollHeight;
+        
+        if (scrollPosition >= documentHeight - 100) { // 100px threshold
+            loading = true;
+            console.log(`Loading page ${page}...`);
+            
+            try {
+                const response = await fetch(`/api/content?page=${page}`);
+                const data = await response.json();
+                
+                // Append new content
+                data.items.forEach(item => {
+                    const div = document.createElement('div');
+                    div.textContent = item.title;
+                    container?.appendChild(div);
+                });
+                
+                page++;
+            } catch (error) {
+                console.error('Failed to load more content:', error);
+            } finally {
+                loading = false;
+            }
+        }
+    }, 200);
+    
+    window.addEventListener('scroll', loadMore);
+}
+
+// 2. Live search suggestions
+function createLiveSearch() {
+    const searchInput = document.getElementById('search');
+    const suggestions = document.getElementById('suggestions');
+    
+    const fetchSuggestions = fullThrottle(async (query) => {
+        if (!query.trim()) {
+            suggestions.innerHTML = '';
+            return;
+        }
+        
+        try {
+            const response = await fetch(`/api/suggestions?q=${encodeURIComponent(query)}`);
+            const data = await response.json();
+            
+            suggestions.innerHTML = data
+                .map(item => `<div class="suggestion">${item}</div>`)
+                .join('');
+        } catch (error) {
+            console.error('Failed to fetch suggestions:', error);
+        }
+    }, 300);
+    
+    searchInput?.addEventListener('input', (e) => {
+        fetchSuggestions(e.target.value);
+    });
+}
+
+// 3. Canvas animation throttling
+function createCanvasAnimation() {
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas?.getContext('2d');
+    
+    if (!ctx) return;
+    
+    let mouseX = 0;
+    let mouseY = 0;
+    
+    const updateMouse = basicThrottle((e) => {
+        const rect = canvas.getBoundingClientRect();
+        mouseX = e.clientX - rect.left;
+        mouseY = e.clientY - rect.top;
+    }, 16); // 60fps
+    
+    const animate = () => {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        
+        // Draw something that follows mouse
+        ctx.beginPath();
+        ctx.arc(mouseX, mouseY, 20, 0, 2 * Math.PI);
+        ctx.fillStyle = 'blue';
+        ctx.fill();
+        
+        requestAnimationFrame(animate);
+    };
+    
+    canvas.addEventListener('mousemove', updateMouse);
+    animate();
+}
+
+// Performance monitoring
+function createMonitoredThrottle(func, limit) {
+    let callCount = 0;
+    let executionCount = 0;
+    
+    const throttled = basicThrottle((...args) => {
+        executionCount++;
+        console.log(`Execution ${executionCount}/${callCount} calls`);
+        func.apply(this, args);
+    }, limit);
+    
+    return function(...args) {
+        callCount++;
+        return throttled.apply(this, args);
+    };
+}
+
+performanceTest();
+```
+</details>
 
 ## Polyfills
 
 **Beginner: Q1** - What is a polyfill?
 
+<details>
+<summary>Answer</summary>
+
+A polyfill is code that implements features on web browsers that don't natively support them:
+
+```javascript
+// POLYFILL = "Fill in" missing browser functionality
+
+// Example: Array.includes() polyfill for older browsers
+if (!Array.prototype.includes) {
+    Array.prototype.includes = function(searchElement, fromIndex) {
+        'use strict';
+        
+        // Convert to object
+        const obj = Object(this);
+        const len = parseInt(obj.length) || 0;
+        
+        if (len === 0) return false;
+        
+        // Calculate start index
+        const startIndex = parseInt(fromIndex) || 0;
+        let index = Math.max(startIndex >= 0 ? startIndex : len - Math.abs(startIndex), 0);
+        
+        // Search for element
+        while (index < len) {
+            if (obj[index] === searchElement) {
+                return true;
+            }
+            index++;
+        }
+        
+        return false;
+    };
+}
+
+// Usage works the same across all browsers
+const fruits = ['apple', 'banana', 'orange'];
+console.log(fruits.includes('banana')); // true
+
+// Common polyfills:
+// 1. String.startsWith()
+if (!String.prototype.startsWith) {
+    String.prototype.startsWith = function(searchString, position) {
+        position = position || 0;
+        return this.substr(position, searchString.length) === searchString;
+    };
+}
+
+// 2. Array.find()
+if (!Array.prototype.find) {
+    Array.prototype.find = function(callback, thisArg) {
+        for (let i = 0; i < this.length; i++) {
+            if (callback.call(thisArg, this[i], i, this)) {
+                return this[i];
+            }
+        }
+        return undefined;
+    };
+}
+
+// 3. Object.assign()
+if (!Object.assign) {
+    Object.assign = function(target, ...sources) {
+        if (target == null) {
+            throw new TypeError('Cannot convert undefined or null to object');
+        }
+        
+        const to = Object(target);
+        
+        sources.forEach(source => {
+            if (source != null) {
+                for (const key in source) {
+                    if (source.hasOwnProperty(key)) {
+                        to[key] = source[key];
+                    }
+                }
+            }
+        });
+        
+        return to;
+    };
+}
+
+// Key characteristics:
+console.log(`
+Polyfill characteristics:
+1. Provides missing functionality
+2. Uses same API as native implementation
+3. Only adds code if feature is missing
+4. Enables consistent cross-browser experience
+`);
+```
+</details>
+
 **Beginner: Q2** - Why are polyfills needed?
+
+<details>
+<summary>Answer</summary>
+
+Polyfills are needed to ensure consistent functionality across different browsers and versions:
+
+```javascript
+// BROWSER COMPATIBILITY ISSUES:
+
+// 1. Different implementation timelines
+// ES6 features weren't supported everywhere immediately
+const modernFeatures = {
+    'Array.includes()': 'Chrome 47+, Firefox 43+, Safari 9+',
+    'String.startsWith()': 'Chrome 41+, Firefox 17+, Safari 9+',
+    'Object.assign()': 'Chrome 45+, Firefox 34+, Safari 9+',
+    'Promise': 'Chrome 32+, Firefox 29+, Safari 8+'
+};
+
+// 2. Legacy browser support
+// Internet Explorer 11 lacks many modern features
+const ie11Missing = [
+    'Array.includes()',
+    'String.startsWith()',
+    'Object.assign()',
+    'Promise',
+    'fetch()',
+    'Array.from()',
+    'Set/Map'
+];
+
+// 3. Without polyfills - code breaks
+function withoutPolyfill() {
+    const data = ['apple', 'banana', 'orange'];
+    
+    try {
+        // This would throw TypeError in IE11
+        const hasApple = data.includes('apple');
+        console.log('Has apple:', hasApple);
+    } catch (error) {
+        console.error('Method not supported:', error.message);
+    }
+}
+
+// 4. With polyfills - code works everywhere
+function withPolyfill() {
+    // Polyfill ensures includes() exists
+    if (!Array.prototype.includes) {
+        Array.prototype.includes = function(searchElement) {
+            return this.indexOf(searchElement) !== -1;
+        };
+    }
+    
+    const data = ['apple', 'banana', 'orange'];
+    const hasApple = data.includes('apple'); // Works in all browsers
+    console.log('Has apple:', hasApple);
+}
+
+// REAL-WORLD SCENARIOS:
+
+// Scenario 1: Corporate environment with old browsers
+function corporateSupport() {
+    // Many companies still use IE11 or older Chrome versions
+    const supportMatrix = {
+        'IE 11': '6.3% global usage (2023)',
+        'Chrome 80-90': 'Common in enterprise',
+        'Safari 12-13': 'Older macOS versions'
+    };
+    
+    console.log('Must support:', supportMatrix);
+}
+
+// Scenario 2: Global audience
+function globalAudience() {
+    // Different regions have different browser adoption rates
+    const browserUsage = {
+        'Developing countries': 'Often use older devices/browsers',
+        'Mobile users': 'May have older mobile browsers',
+        'Enterprise users': 'Restricted to older browser versions'
+    };
+    
+    console.log('Browser diversity:', browserUsage);
+}
+
+// Scenario 3: Progressive enhancement
+function progressiveEnhancement() {
+    // Start with basic functionality, enhance with modern features
+    
+    // Basic functionality (works everywhere)
+    function basicSearch(items, query) {
+        for (let i = 0; i < items.length; i++) {
+            if (items[i].toLowerCase().indexOf(query.toLowerCase()) !== -1) {
+                return items[i];
+            }
+        }
+        return null;
+    }
+    
+    // Enhanced functionality with polyfill
+    if (!Array.prototype.find) {
+        Array.prototype.find = function(callback) {
+            for (let i = 0; i < this.length; i++) {
+                if (callback(this[i], i, this)) {
+                    return this[i];
+                }
+            }
+            return undefined;
+        };
+    }
+    
+    function enhancedSearch(items, query) {
+        return items.find(item => 
+            item.toLowerCase().includes(query.toLowerCase())
+        );
+    }
+    
+    // Use enhanced version with polyfill fallback
+    const searchFunction = Array.prototype.find ? enhancedSearch : basicSearch;
+}
+
+// Benefits of polyfills:
+const benefits = {
+    consistency: 'Same API across all browsers',
+    compatibility: 'Support older browsers without rewriting code',
+    futureProof: 'Use modern features while maintaining backwards compatibility',
+    productivity: 'Write modern JavaScript without browser-specific workarounds',
+    userExperience: 'Consistent functionality for all users'
+};
+
+console.log('Polyfill benefits:', benefits);
+
+withoutPolyfill();
+withPolyfill();
+corporateSupport();
+globalAudience();
+progressiveEnhancement();
+```
+</details>
 
 **Beginner: Q3** - Give an example of when you might need a polyfill.
 
+<details>
+<summary>Answer</summary>
+
+Common scenarios requiring polyfills include legacy browser support and missing modern JavaScript features:
+
+```javascript
+// SCENARIO 1: Company requires IE11 support
+function ie11Support() {
+    // Modern code using Array.includes()
+    const validRoles = ['admin', 'user', 'guest'];
+    const userRole = 'admin';
+    
+    // This breaks in IE11 - includes() not supported
+    try {
+        const isValidRole = validRoles.includes(userRole);
+        console.log('Valid role:', isValidRole);
+    } catch (error) {
+        console.error('IE11 error:', error.message);
+    }
+    
+    // Solution: Add polyfill
+    if (!Array.prototype.includes) {
+        Array.prototype.includes = function(searchElement) {
+            return this.indexOf(searchElement) !== -1;
+        };
+    }
+    
+    // Now works in IE11
+    const isValidRole = validRoles.includes(userRole);
+    console.log('With polyfill:', isValidRole); // true
+}
+
+// SCENARIO 2: Promise support for older browsers
+function promiseSupport() {
+    // Modern async code
+    function fetchUserData(userId) {
+        return new Promise((resolve, reject) => {
+            setTimeout(() => {
+                resolve({ id: userId, name: 'John Doe' });
+            }, 1000);
+        });
+    }
+    
+    // Promise polyfill for browsers without native support
+    if (typeof Promise === 'undefined') {
+        // Simple Promise polyfill
+        window.Promise = function(executor) {
+            const self = this;
+            self.state = 'pending';
+            self.value = undefined;
+            self.onResolvedCallbacks = [];
+            self.onRejectedCallbacks = [];
+            
+            function resolve(value) {
+                if (self.state === 'pending') {
+                    self.state = 'resolved';
+                    self.value = value;
+                    self.onResolvedCallbacks.forEach(callback => callback(value));
+                }
+            }
+            
+            function reject(reason) {
+                if (self.state === 'pending') {
+                    self.state = 'rejected';
+                    self.value = reason;
+                    self.onRejectedCallbacks.forEach(callback => callback(reason));
+                }
+            }
+            
+            try {
+                executor(resolve, reject);
+            } catch (error) {
+                reject(error);
+            }
+        };
+        
+        Promise.prototype.then = function(onResolved, onRejected) {
+            const self = this;
+            return new Promise((resolve, reject) => {
+                if (self.state === 'resolved') {
+                    try {
+                        const result = onResolved ? onResolved(self.value) : self.value;
+                        resolve(result);
+                    } catch (error) {
+                        reject(error);
+                    }
+                } else if (self.state === 'rejected') {
+                    try {
+                        const result = onRejected ? onRejected(self.value) : self.value;
+                        reject(result);
+                    } catch (error) {
+                        reject(error);
+                    }
+                } else {
+                    self.onResolvedCallbacks.push((value) => {
+                        try {
+                            const result = onResolved ? onResolved(value) : value;
+                            resolve(result);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    });
+                    
+                    self.onRejectedCallbacks.push((reason) => {
+                        try {
+                            const result = onRejected ? onRejected(reason) : reason;
+                            reject(result);
+                        } catch (error) {
+                            reject(error);
+                        }
+                    });
+                }
+            });
+        };
+    }
+    
+    // Now works in older browsers
+    fetchUserData(123).then(user => {
+        console.log('User data:', user);
+    });
+}
+
+// SCENARIO 3: Fetch API for AJAX requests
+function fetchPolyfill() {
+    // Modern way to make HTTP requests
+    if (!window.fetch) {
+        window.fetch = function(url, options = {}) {
+            return new Promise((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+                const method = options.method || 'GET';
+                
+                xhr.open(method, url);
+                
+                // Set headers
+                if (options.headers) {
+                    Object.keys(options.headers).forEach(key => {
+                        xhr.setRequestHeader(key, options.headers[key]);
+                    });
+                }
+                
+                xhr.onload = function() {
+                    const response = {
+                        ok: xhr.status >= 200 && xhr.status < 300,
+                        status: xhr.status,
+                        statusText: xhr.statusText,
+                        json: () => Promise.resolve(JSON.parse(xhr.responseText)),
+                        text: () => Promise.resolve(xhr.responseText)
+                    };
+                    resolve(response);
+                };
+                
+                xhr.onerror = () => reject(new Error('Network error'));
+                
+                xhr.send(options.body);
+            });
+        };
+    }
+    
+    // Now fetch() works everywhere
+    fetch('/api/data')
+        .then(response => response.json())
+        .then(data => console.log('Data:', data))
+        .catch(error => console.error('Error:', error));
+}
+
+// SCENARIO 4: Object.assign() for object merging
+function objectAssignPolyfill() {
+    // Modern object merging
+    const defaults = { timeout: 5000, retries: 3 };
+    const userOptions = { timeout: 10000 };
+    
+    // Object.assign() not supported in IE
+    if (!Object.assign) {
+        Object.assign = function(target, ...sources) {
+            if (target == null) {
+                throw new TypeError('Cannot convert undefined or null to object');
+            }
+            
+            const to = Object(target);
+            
+            sources.forEach(source => {
+                if (source != null) {
+                    for (const key in source) {
+                        if (source.hasOwnProperty(key)) {
+                            to[key] = source[key];
+                        }
+                    }
+                }
+            });
+            
+            return to;
+        };
+    }
+    
+    const config = Object.assign({}, defaults, userOptions);
+    console.log('Config:', config); // { timeout: 10000, retries: 3 }
+}
+
+// SCENARIO 5: Real-world polyfill bundle
+function realWorldExample() {
+    // Common polyfills loaded at app startup
+    const polyfills = [
+        'Array.includes',
+        'Array.find',
+        'Array.from',
+        'Object.assign',
+        'String.startsWith',
+        'String.endsWith',
+        'Promise',
+        'fetch'
+    ];
+    
+    console.log('Loading polyfills for older browsers:', polyfills);
+    
+    // Typically loaded from CDN like polyfill.io
+    // <script src="https://polyfill.io/v3/polyfill.min.js?features=Array.includes,Array.find,Promise,fetch"></script>
+}
+
+ie11Support();
+promiseSupport();
+fetchPolyfill();
+objectAssignPolyfill();
+realWorldExample();
+```
+</details>
+
 **Intermediate: Q1** - Write a polyfill for `Array.prototype.includes()`.
 
+<details>
+<summary>Answer</summary>
+
+Here's a complete, spec-compliant polyfill for `Array.prototype.includes()`:
+
+```javascript
+// SPEC-COMPLIANT Array.prototype.includes() POLYFILL
+if (!Array.prototype.includes) {
+    Array.prototype.includes = function(searchElement, fromIndex) {
+        'use strict';
+        
+        // 1. Let O be ? ToObject(this value)
+        if (this == null) {
+            throw new TypeError('Array.prototype.includes called on null or undefined');
+        }
+        
+        const obj = Object(this);
+        
+        // 2. Let len be ? ToLength(? Get(O, "length"))
+        const len = parseInt(obj.length) || 0;
+        
+        // 3. If len is 0, return false
+        if (len === 0) {
+            return false;
+        }
+        
+        // 4. Let n be ? ToInteger(fromIndex)
+        const fromIdx = parseInt(fromIndex) || 0;
+        
+        // 5. If n ≥ 0, then let k be n
+        // 6. Else n < 0, let k be len + n
+        let k;
+        if (fromIdx >= 0) {
+            k = fromIdx;
+        } else {
+            k = len + fromIdx;
+            // If k < 0, let k be 0
+            if (k < 0) {
+                k = 0;
+            }
+        }
+        
+        // 7. Repeat, while k < len
+        while (k < len) {
+            // a. Let elementK be the result of ? Get(O, ! ToString(k))
+            const elementK = obj[k];
+            
+            // b. If SameValueZero(searchElement, elementK) is true, return true
+            if (sameValueZero(searchElement, elementK)) {
+                return true;
+            }
+            
+            // c. Increase k by 1
+            k++;
+        }
+        
+        // 8. Return false
+        return false;
+        
+        // SameValueZero comparison (handles NaN correctly)
+        function sameValueZero(x, y) {
+            // If x and y are exactly the same value
+            if (x === y) {
+                return true;
+            }
+            // Handle NaN case (NaN is equal to NaN in SameValueZero)
+            if (typeof x === 'number' && typeof y === 'number' && 
+                isNaN(x) && isNaN(y)) {
+                return true;
+            }
+            return false;
+        }
+    };
+}
+
+// TESTING THE POLYFILL:
+
+// Test 1: Basic functionality
+function testBasic() {
+    const arr = [1, 2, 3, 4, 5];
+    
+    console.log(arr.includes(3));     // true
+    console.log(arr.includes(6));     // false
+    console.log(arr.includes(1, 1));  // false (from index 1)
+    console.log(arr.includes(3, 2));  // true (from index 2)
+}
+
+// Test 2: Edge cases
+function testEdgeCases() {
+    const arr = [1, 2, NaN, 4, 5];
+    
+    // NaN handling (special case in SameValueZero)
+    console.log(arr.includes(NaN));        // true
+    console.log(arr.indexOf(NaN));         // -1 (indexOf can't find NaN)
+    
+    // Negative fromIndex
+    console.log(arr.includes(5, -1));      // true (from last element)
+    console.log(arr.includes(1, -10));     // true (negative too large, starts from 0)
+    
+    // Zero handling
+    const zeroArr = [+0, -0];
+    console.log(zeroArr.includes(+0));     // true
+    console.log(zeroArr.includes(-0));     // true (+0 === -0)
+    
+    // Empty array
+    console.log([].includes(1));           // false
+}
+
+// Test 3: Type coercion and edge values
+function testTypeCoercion() {
+    const mixedArr = [1, '2', true, null, undefined];
+    
+    console.log(mixedArr.includes(1));     // true
+    console.log(mixedArr.includes('1'));   // false (no type coercion)
+    console.log(mixedArr.includes('2'));   // true
+    console.log(mixedArr.includes(2));     // false
+    console.log(mixedArr.includes(null));  // true
+    console.log(mixedArr.includes(undefined)); // true
+}
+
+// Test 4: Array-like objects
+function testArrayLike() {
+    // String (array-like)
+    const str = 'hello';
+    console.log(Array.prototype.includes.call(str, 'e')); // true
+    console.log(Array.prototype.includes.call(str, 'x')); // false
+    
+    // NodeList (array-like)
+    const arrayLike = {
+        0: 'a',
+        1: 'b',
+        2: 'c',
+        length: 3
+    };
+    console.log(Array.prototype.includes.call(arrayLike, 'b')); // true
+    console.log(Array.prototype.includes.call(arrayLike, 'd')); // false
+}
+
+// Test 5: Error cases
+function testErrors() {
+    try {
+        Array.prototype.includes.call(null, 1);
+    } catch (error) {
+        console.log('Null error:', error.message);
+    }
+    
+    try {
+        Array.prototype.includes.call(undefined, 1);
+    } catch (error) {
+        console.log('Undefined error:', error.message);
+    }
+}
+
+// SIMPLIFIED VERSION for basic needs:
+function simpleIncludesPolyfill() {
+    if (!Array.prototype.includes) {
+        Array.prototype.includes = function(searchElement, fromIndex) {
+            return this.indexOf(searchElement, fromIndex) !== -1;
+        };
+    }
+    
+    // Note: This simple version doesn't handle NaN correctly
+    // indexOf returns -1 for NaN, but includes should return true for NaN
+}
+
+// COMPARISON with native behavior:
+function compareWithNative() {
+    const testCases = [
+        { array: [1, 2, 3], search: 2, expected: true },
+        { array: [1, 2, 3], search: 4, expected: false },
+        { array: [1, NaN, 3], search: NaN, expected: true },
+        { array: [1, 2, 3], search: 2, fromIndex: 2, expected: false },
+        { array: [1, 2, 3], search: 3, fromIndex: -1, expected: true }
+    ];
+    
+    testCases.forEach((test, index) => {
+        const result = test.array.includes(test.search, test.fromIndex);
+        const passed = result === test.expected;
+        console.log(`Test ${index + 1}: ${passed ? 'PASS' : 'FAIL'} - Expected ${test.expected}, got ${result}`);
+    });
+}
+
+// Run tests
+testBasic();
+testEdgeCases();
+testTypeCoercion();
+testArrayLike();
+testErrors();
+compareWithNative();
+```
+</details>
+
 **Intermediate: Q2** - How do you detect if a polyfill is needed before adding it?
+
+<details>
+<summary>Answer</summary>
+
+Feature detection is the standard way to conditionally load polyfills only when needed:
+
+```javascript
+// BASIC FEATURE DETECTION:
+function detectFeatures() {
+    // Check if method exists
+    const needsIncludesPolyfill = !Array.prototype.includes;
+    const needsStartsWithPolyfill = !String.prototype.startsWith;
+    const needsAssignPolyfill = !Object.assign;
+    
+    console.log('Polyfills needed:', {
+        includes: needsIncludesPolyfill,
+        startsWith: needsStartsWithPolyfill,
+        assign: needsAssignPolyfill
+    });
+}
+
+// COMPREHENSIVE FEATURE DETECTION:
+function comprehensiveDetection() {
+    const features = {
+        // Array methods
+        'Array.includes': !!Array.prototype.includes,
+        'Array.find': !!Array.prototype.find,
+        'Array.findIndex': !!Array.prototype.findIndex,
+        'Array.from': !!Array.from,
+        
+        // String methods
+        'String.startsWith': !!String.prototype.startsWith,
+        'String.endsWith': !!String.prototype.endsWith,
+        'String.includes': !!String.prototype.includes,
+        
+        // Object methods
+        'Object.assign': !!Object.assign,
+        'Object.keys': !!Object.keys,
+        'Object.values': !!Object.values,
+        
+        // Modern APIs
+        'Promise': typeof Promise !== 'undefined',
+        'fetch': typeof fetch !== 'undefined',
+        'Map': typeof Map !== 'undefined',
+        'Set': typeof Set !== 'undefined',
+        
+        // ES6+ features
+        'arrow functions': (() => {
+            try {
+                eval('() => {}');
+                return true;
+            } catch (e) {
+                return false;
+            }
+        })(),
+        
+        'const/let': (() => {
+            try {
+                eval('const x = 1; let y = 2;');
+                return true;
+            } catch (e) {
+                return false;
+            }
+        })()
+    };
+    
+    return features;
+}
+
+// CONDITIONAL POLYFILL LOADING:
+function conditionalPolyfills() {
+    // Method 1: Inline polyfills
+    if (!Array.prototype.includes) {
+        Array.prototype.includes = function(searchElement, fromIndex) {
+            return this.indexOf(searchElement, fromIndex) !== -1;
+        };
+        console.log('Loaded Array.includes polyfill');
+    }
+    
+    if (!String.prototype.startsWith) {
+        String.prototype.startsWith = function(searchString, position) {
+            position = position || 0;
+            return this.substr(position, searchString.length) === searchString;
+        };
+        console.log('Loaded String.startsWith polyfill');
+    }
+    
+    // Method 2: Dynamic script loading
+    function loadPolyfillScript(feature, scriptUrl) {
+        if (!window[feature]) {
+            const script = document.createElement('script');
+            script.src = scriptUrl;
+            script.async = true;
+            document.head.appendChild(script);
+            console.log(`Loading ${feature} polyfill from ${scriptUrl}`);
+        }
+    }
+    
+    // Example usage
+    loadPolyfillScript('Promise', 'https://cdn.jsdelivr.net/npm/promise-polyfill@8/dist/polyfill.min.js');
+    loadPolyfillScript('fetch', 'https://cdn.jsdelivr.net/npm/whatwg-fetch@3/dist/fetch.umd.js');
+}
+
+// POLYFILL SERVICE INTEGRATION:
+function polyfillService() {
+    // Using polyfill.io service
+    function loadPolyfillIO(features) {
+        const baseUrl = 'https://polyfill.io/v3/polyfill.min.js';
+        const featuresParam = features.join(',');
+        const scriptUrl = `${baseUrl}?features=${featuresParam}`;
+        
+        const script = document.createElement('script');
+        script.src = scriptUrl;
+        script.async = true;
+        document.head.appendChild(script);
+        
+        console.log(`Loading polyfills: ${featuresParam}`);
+    }
+    
+    // Detect needed polyfills
+    const neededPolyfills = [];
+    
+    if (!Array.prototype.includes) neededPolyfills.push('Array.prototype.includes');
+    if (!String.prototype.startsWith) neededPolyfills.push('String.prototype.startsWith');
+    if (!Object.assign) neededPolyfills.push('Object.assign');
+    if (typeof Promise === 'undefined') neededPolyfills.push('Promise');
+    if (typeof fetch === 'undefined') neededPolyfills.push('fetch');
+    
+    if (neededPolyfills.length > 0) {
+        loadPolyfillIO(neededPolyfills);
+    }
+}
+
+// ADVANCED FEATURE DETECTION:
+function advancedDetection() {
+    // Test actual functionality, not just existence
+    function testArrayIncludes() {
+        if (!Array.prototype.includes) return false;
+        
+        try {
+            // Test NaN handling (critical for spec compliance)
+            const result = [NaN].includes(NaN);
+            return result === true;
+        } catch (e) {
+            return false;
+        }
+    }
+    
+    function testPromise() {
+        if (typeof Promise === 'undefined') return false;
+        
+        try {
+            // Test basic Promise functionality
+            const p = new Promise((resolve) => resolve(42));
+            return typeof p.then === 'function';
+        } catch (e) {
+            return false;
+        }
+    }
+    
+    function testFetch() {
+        if (typeof fetch === 'undefined') return false;
+        
+        try {
+            // Test if fetch returns a Promise
+            const result = fetch('data:text/plain,test');
+            return result && typeof result.then === 'function';
+        } catch (e) {
+            return false;
+        }
+    }
+    
+    return {
+        'Array.includes (working)': testArrayIncludes(),
+        'Promise (working)': testPromise(),
+        'fetch (working)': testFetch()
+    };
+}
+
+// POLYFILL MANAGER CLASS:
+class PolyfillManager {
+    constructor() {
+        this.loaded = new Set();
+        this.loading = new Map();
+    }
+    
+    detect(feature) {
+        const detectors = {
+            'Array.includes': () => !!Array.prototype.includes,
+            'Array.find': () => !!Array.prototype.find,
+            'String.startsWith': () => !!String.prototype.startsWith,
+            'Object.assign': () => !!Object.assign,
+            'Promise': () => typeof Promise !== 'undefined',
+            'fetch': () => typeof fetch !== 'undefined'
+        };
+        
+        return detectors[feature] ? detectors[feature]() : false;
+    }
+    
+    async loadPolyfill(feature, polyfillFn) {
+        if (this.detect(feature)) {
+            console.log(`${feature} already supported`);
+            return Promise.resolve();
+        }
+        
+        if (this.loaded.has(feature)) {
+            console.log(`${feature} polyfill already loaded`);
+            return Promise.resolve();
+        }
+        
+        if (this.loading.has(feature)) {
+            console.log(`${feature} polyfill already loading`);
+            return this.loading.get(feature);
+        }
+        
+        console.log(`Loading ${feature} polyfill`);
+        
+        const promise = new Promise((resolve) => {
+            try {
+                polyfillFn();
+                this.loaded.add(feature);
+                console.log(`${feature} polyfill loaded successfully`);
+                resolve();
+            } catch (error) {
+                console.error(`Failed to load ${feature} polyfill:`, error);
+                resolve(); // Don't reject, continue with degraded functionality
+            }
+        });
+        
+        this.loading.set(feature, promise);
+        
+        promise.then(() => {
+            this.loading.delete(feature);
+        });
+        
+        return promise;
+    }
+    
+    async loadAll(polyfills) {
+        const promises = Object.entries(polyfills).map(([feature, polyfillFn]) => {
+            return this.loadPolyfill(feature, polyfillFn);
+        });
+        
+        return Promise.all(promises);
+    }
+}
+
+// USAGE EXAMPLE:
+async function usePolyfillManager() {
+    const manager = new PolyfillManager();
+    
+    const polyfills = {
+        'Array.includes': () => {
+            if (!Array.prototype.includes) {
+                Array.prototype.includes = function(searchElement, fromIndex) {
+                    return this.indexOf(searchElement, fromIndex) !== -1;
+                };
+            }
+        },
+        
+        'String.startsWith': () => {
+            if (!String.prototype.startsWith) {
+                String.prototype.startsWith = function(searchString, position) {
+                    position = position || 0;
+                    return this.substr(position, searchString.length) === searchString;
+                };
+            }
+        }
+    };
+    
+    await manager.loadAll(polyfills);
+    
+    // Now use the features
+    console.log([1, 2, 3].includes(2)); // Works everywhere
+    console.log('hello'.startsWith('he')); // Works everywhere
+}
+
+// Run detection
+detectFeatures();
+console.log('Comprehensive detection:', comprehensiveDetection());
+console.log('Advanced detection:', advancedDetection());
+conditionalPolyfills();
+polyfillService();
+usePolyfillManager();
+```
+</details>
 
 ## Event delegation
 
 **Beginner: Q1** - What is event delegation?
 
+<details>
+<summary>Answer</summary>
+
+Event delegation uses event bubbling to handle events on child elements through a parent element listener:
+
+```javascript
+// EVENT DELEGATION = Single listener on parent handles child events
+
+// Without delegation (inefficient)
+function withoutDelegation() {
+    const buttons = document.querySelectorAll('.button');
+    
+    // Add listener to each button
+    buttons.forEach(button => {
+        button.addEventListener('click', (e) => {
+            console.log('Button clicked:', e.target.textContent);
+        });
+    });
+    
+    // Problem: Many listeners, memory usage, no handling of dynamic elements
+}
+
+// With delegation (efficient)
+function withDelegation() {
+    const container = document.getElementById('button-container');
+    
+    // Single listener on parent
+    container.addEventListener('click', (e) => {
+        // Check if clicked element is a button
+        if (e.target.classList.contains('button')) {
+            console.log('Button clicked:', e.target.textContent);
+        }
+    });
+    
+    // Benefits: One listener, handles dynamic elements, better performance
+}
+
+// HTML Structure:
+/*
+<div id="button-container">
+    <button class="button">Button 1</button>
+    <button class="button">Button 2</button>
+    <button class="button">Button 3</button>
+    <!-- New buttons added dynamically work automatically -->
+</div>
+*/
+
+// Real-world example: List management
+function listExample() {
+    const todoList = document.getElementById('todo-list');
+    
+    // Delegate click events for todo items
+    todoList.addEventListener('click', (e) => {
+        const todoItem = e.target.closest('.todo-item');
+        if (!todoItem) return;
+        
+        if (e.target.classList.contains('delete-btn')) {
+            // Handle delete
+            todoItem.remove();
+            console.log('Todo deleted');
+        } else if (e.target.classList.contains('edit-btn')) {
+            // Handle edit
+            const text = todoItem.querySelector('.todo-text');
+            text.contentEditable = true;
+            text.focus();
+            console.log('Todo editing enabled');
+        } else if (e.target.classList.contains('complete-btn')) {
+            // Handle complete
+            todoItem.classList.toggle('completed');
+            console.log('Todo completion toggled');
+        }
+    });
+}
+
+// Dynamic content example
+function dynamicContent() {
+    const container = document.getElementById('dynamic-container');
+    
+    // Delegation handles future elements
+    container.addEventListener('click', (e) => {
+        if (e.target.matches('.dynamic-button')) {
+            console.log('Dynamic button clicked:', e.target.dataset.id);
+        }
+    });
+    
+    // Add elements dynamically
+    function addButton(id) {
+        const button = document.createElement('button');
+        button.className = 'dynamic-button';
+        button.textContent = `Button ${id}`;
+        button.dataset.id = id;
+        container.appendChild(button);
+    }
+    
+    // These buttons will work with delegation
+    addButton(1);
+    addButton(2);
+    addButton(3);
+}
+
+withDelegation();
+listExample();
+dynamicContent();
+```
+</details>
+
 **Beginner: Q2** - Why is event delegation useful?
+
+<details>
+<summary>Answer</summary>
+
+Event delegation improves performance, memory usage, and handles dynamic content automatically:
+
+```javascript
+// BENEFITS OF EVENT DELEGATION:
+
+// 1. PERFORMANCE - Fewer event listeners
+function performanceBenefit() {
+    // Without delegation: 1000 listeners
+    function inefficient() {
+        const items = document.querySelectorAll('.item'); // 1000 items
+        
+        items.forEach(item => {
+            item.addEventListener('click', handleClick); // 1000 listeners
+        });
+        
+        function handleClick(e) {
+            console.log('Item clicked');
+        }
+    }
+    
+    // With delegation: 1 listener
+    function efficient() {
+        const container = document.querySelector('.container');
+        
+        // Single listener handles all items
+        container.addEventListener('click', (e) => {
+            if (e.target.classList.contains('item')) {
+                console.log('Item clicked');
+            }
+        }); // Only 1 listener
+    }
+    
+    console.log('Delegation reduces listeners from 1000 to 1');
+}
+
+// 2. MEMORY EFFICIENCY
+function memoryBenefit() {
+    // Each listener consumes memory
+    const memoryUsage = {
+        withoutDelegation: '1000 listeners × memory per listener',
+        withDelegation: '1 listener × memory per listener',
+        savings: 'Significant memory reduction'
+    };
+    
+    console.log('Memory comparison:', memoryUsage);
+}
+
+// 3. DYNAMIC CONTENT SUPPORT
+function dynamicContentBenefit() {
+    const list = document.getElementById('dynamic-list');
+    
+    // Delegation automatically handles new elements
+    list.addEventListener('click', (e) => {
+        if (e.target.classList.contains('list-item')) {
+            console.log('List item clicked:', e.target.textContent);
+        }
+    });
+    
+    // Add items dynamically - they work automatically
+    function addItem(text) {
+        const item = document.createElement('div');
+        item.className = 'list-item';
+        item.textContent = text;
+        list.appendChild(item);
+    }
+    
+    // These new items work with existing delegation
+    addItem('Dynamic Item 1');
+    addItem('Dynamic Item 2');
+    
+    console.log('New items work without additional listeners');
+}
+
+// 4. EASIER EVENT MANAGEMENT
+function managementBenefit() {
+    // Without delegation: Complex listener management
+    function complexManagement() {
+        const buttons = [];
+        
+        function addButton(id) {
+            const button = document.createElement('button');
+            button.id = id;
+            button.textContent = `Button ${id}`;
+            
+            // Must add listener to each new button
+            const handler = () => console.log(`Button ${id} clicked`);
+            button.addEventListener('click', handler);
+            
+            // Must track for cleanup
+            buttons.push({ element: button, handler });
+            
+            document.body.appendChild(button);
+        }
+        
+        function removeButton(id) {
+            const buttonData = buttons.find(b => b.element.id === id);
+            if (buttonData) {
+                // Must remove listener manually
+                buttonData.element.removeEventListener('click', buttonData.handler);
+                buttonData.element.remove();
+                buttons.splice(buttons.indexOf(buttonData), 1);
+            }
+        }
+        
+        addButton('btn1');
+        addButton('btn2');
+        removeButton('btn1'); // Complex cleanup
+    }
+    
+    // With delegation: Simple management
+    function simpleManagement() {
+        document.body.addEventListener('click', (e) => {
+            if (e.target.matches('button[id^="btn"]')) {
+                console.log(`Button ${e.target.id} clicked`);
+            }
+        });
+        
+        function addButton(id) {
+            const button = document.createElement('button');
+            button.id = id;
+            button.textContent = `Button ${id}`;
+            document.body.appendChild(button);
+            // No listener management needed
+        }
+        
+        function removeButton(id) {
+            document.getElementById(id)?.remove();
+            // No listener cleanup needed
+        }
+        
+        addButton('btn1');
+        addButton('btn2');
+        removeButton('btn1'); // Simple cleanup
+    }
+    
+    simpleManagement();
+}
+
+// 5. BETTER PERFORMANCE FOR LARGE LISTS
+function largeListPerformance() {
+    // Table with 10,000 rows
+    function createLargeTable() {
+        const table = document.getElementById('large-table');
+        
+        // Single delegated listener
+        table.addEventListener('click', (e) => {
+            const row = e.target.closest('tr');
+            if (!row) return;
+            
+            if (e.target.classList.contains('edit-btn')) {
+                console.log('Edit row:', row.dataset.id);
+            } else if (e.target.classList.contains('delete-btn')) {
+                console.log('Delete row:', row.dataset.id);
+                row.remove();
+            }
+        });
+        
+        // Create 10,000 rows without individual listeners
+        for (let i = 0; i < 10000; i++) {
+            const row = document.createElement('tr');
+            row.dataset.id = i;
+            row.innerHTML = `
+                <td>Item ${i}</td>
+                <td>
+                    <button class="edit-btn">Edit</button>
+                    <button class="delete-btn">Delete</button>
+                </td>
+            `;
+            table.appendChild(row);
+        }
+        
+        console.log('10,000 rows with 1 listener vs 20,000 individual listeners');
+    }
+    
+    createLargeTable();
+}
+
+// 6. EVENT DELEGATION PATTERNS
+function commonPatterns() {
+    // Pattern 1: Form validation
+    const form = document.getElementById('dynamic-form');
+    form.addEventListener('input', (e) => {
+        if (e.target.matches('input[required]')) {
+            validateField(e.target);
+        }
+    });
+    
+    // Pattern 2: Modal dialogs
+    document.addEventListener('click', (e) => {
+        if (e.target.matches('[data-modal-trigger]')) {
+            openModal(e.target.dataset.modalTrigger);
+        } else if (e.target.matches('.modal-close')) {
+            closeModal(e.target.closest('.modal'));
+        }
+    });
+    
+    // Pattern 3: Navigation menus
+    const nav = document.querySelector('.navigation');
+    nav.addEventListener('click', (e) => {
+        if (e.target.matches('.nav-link')) {
+            handleNavigation(e.target);
+        }
+    });
+    
+    function validateField(field) {
+        console.log('Validating field:', field.name);
+    }
+    
+    function openModal(modalId) {
+        console.log('Opening modal:', modalId);
+    }
+    
+    function closeModal(modal) {
+        console.log('Closing modal');
+    }
+    
+    function handleNavigation(link) {
+        console.log('Navigating to:', link.href);
+    }
+}
+
+performanceBenefit();
+memoryBenefit();
+dynamicContentBenefit();
+managementBenefit();
+largeListPerformance();
+commonPatterns();
+```
+</details>
 
 **Beginner: Q3** - How do you implement event delegation?
 
+<details>
+<summary>Answer</summary>
+
+Implement event delegation by adding a listener to a parent element and checking the event target:
+
+```javascript
+// BASIC EVENT DELEGATION IMPLEMENTATION:
+
+// Step 1: Add listener to parent element
+function basicDelegation() {
+    const container = document.getElementById('container');
+    
+    container.addEventListener('click', (e) => {
+        // Step 2: Check if target matches our criteria
+        if (e.target.classList.contains('button')) {
+            console.log('Button clicked:', e.target.textContent);
+        }
+    });
+}
+
+// COMMON DELEGATION PATTERNS:
+
+// Pattern 1: Class-based delegation
+function classBased() {
+    const list = document.getElementById('todo-list');
+    
+    list.addEventListener('click', (e) => {
+        // Check by class
+        if (e.target.classList.contains('delete-btn')) {
+            const item = e.target.closest('.todo-item');
+            item.remove();
+        } else if (e.target.classList.contains('edit-btn')) {
+            const item = e.target.closest('.todo-item');
+            enableEdit(item);
+        }
+    });
+    
+    function enableEdit(item) {
+        const text = item.querySelector('.todo-text');
+        text.contentEditable = true;
+        text.focus();
+    }
+}
+
+// Pattern 2: Data attribute delegation
+function dataAttributeBased() {
+    const container = document.getElementById('container');
+    
+    container.addEventListener('click', (e) => {
+        // Check by data attribute
+        const action = e.target.dataset.action;
+        
+        if (action === 'delete') {
+            deleteItem(e.target.dataset.id);
+        } else if (action === 'edit') {
+            editItem(e.target.dataset.id);
+        } else if (action === 'view') {
+            viewItem(e.target.dataset.id);
+        }
+    });
+    
+    function deleteItem(id) {
+        console.log('Deleting item:', id);
+        document.querySelector(`[data-id="${id}"]`).remove();
+    }
+    
+    function editItem(id) {
+        console.log('Editing item:', id);
+    }
+    
+    function viewItem(id) {
+        console.log('Viewing item:', id);
+    }
+}
+
+// Pattern 3: Tag-based delegation
+function tagBased() {
+    const form = document.getElementById('form');
+    
+    form.addEventListener('input', (e) => {
+        // Check by tag name
+        if (e.target.tagName === 'INPUT') {
+            validateInput(e.target);
+        } else if (e.target.tagName === 'TEXTAREA') {
+            countCharacters(e.target);
+        } else if (e.target.tagName === 'SELECT') {
+            handleSelectChange(e.target);
+        }
+    });
+    
+    function validateInput(input) {
+        console.log('Validating input:', input.name);
+    }
+    
+    function countCharacters(textarea) {
+        console.log('Character count:', textarea.value.length);
+    }
+    
+    function handleSelectChange(select) {
+        console.log('Selection changed:', select.value);
+    }
+}
+
+// ADVANCED DELEGATION TECHNIQUES:
+
+// Using element.matches() for complex selectors
+function advancedMatching() {
+    const container = document.getElementById('container');
+    
+    container.addEventListener('click', (e) => {
+        // Complex CSS selector matching
+        if (e.target.matches('button.primary[data-action]')) {
+            handlePrimaryAction(e.target);
+        } else if (e.target.matches('.card .header .close-btn')) {
+            closeCard(e.target.closest('.card'));
+        } else if (e.target.matches('a[href^="mailto:"]')) {
+            handleEmailLink(e.target);
+        }
+    });
+    
+    function handlePrimaryAction(button) {
+        console.log('Primary action:', button.dataset.action);
+    }
+    
+    function closeCard(card) {
+        card.remove();
+    }
+    
+    function handleEmailLink(link) {
+        console.log('Email link clicked:', link.href);
+    }
+}
+
+// Using element.closest() for nested elements
+function closestDelegation() {
+    const table = document.getElementById('data-table');
+    
+    table.addEventListener('click', (e) => {
+        // Find closest parent that matches
+        const row = e.target.closest('tr[data-id]');
+        if (!row) return; // Not in a data row
+        
+        const rowId = row.dataset.id;
+        
+        if (e.target.matches('.edit-btn')) {
+            editRow(rowId);
+        } else if (e.target.matches('.delete-btn')) {
+            deleteRow(rowId);
+        } else if (e.target.matches('.view-btn')) {
+            viewRow(rowId);
+        }
+    });
+    
+    function editRow(id) {
+        console.log('Edit row:', id);
+    }
+    
+    function deleteRow(id) {
+        console.log('Delete row:', id);
+        document.querySelector(`tr[data-id="${id}"]`).remove();
+    }
+    
+    function viewRow(id) {
+        console.log('View row:', id);
+    }
+}
+
+// DELEGATION UTILITY FUNCTION:
+function createDelegator(container, eventType = 'click') {
+    const handlers = new Map();
+    
+    container.addEventListener(eventType, (e) => {
+        for (const [selector, handler] of handlers) {
+            if (e.target.matches(selector)) {
+                handler(e);
+                break; // Stop after first match
+            }
+        }
+    });
+    
+    return {
+        on(selector, handler) {
+            handlers.set(selector, handler);
+        },
+        
+        off(selector) {
+            handlers.delete(selector);
+        },
+        
+        clear() {
+            handlers.clear();
+        }
+    };
+}
+
+// Usage of delegation utility
+function useUtility() {
+    const container = document.getElementById('app');
+    const delegator = createDelegator(container);
+    
+    // Add handlers
+    delegator.on('.btn-primary', (e) => {
+        console.log('Primary button clicked');
+    });
+    
+    delegator.on('.btn-secondary', (e) => {
+        console.log('Secondary button clicked');
+    });
+    
+    delegator.on('[data-toggle="modal"]', (e) => {
+        const modalId = e.target.dataset.target;
+        console.log('Opening modal:', modalId);
+    });
+    
+    // Remove handler
+    delegator.off('.btn-secondary');
+}
+
+// REAL-WORLD EXAMPLES:
+
+// Example 1: Shopping cart
+function shoppingCart() {
+    const cart = document.getElementById('shopping-cart');
+    
+    cart.addEventListener('click', (e) => {
+        const item = e.target.closest('.cart-item');
+        if (!item) return;
+        
+        const itemId = item.dataset.itemId;
+        
+        if (e.target.matches('.quantity-increase')) {
+            increaseQuantity(itemId);
+        } else if (e.target.matches('.quantity-decrease')) {
+            decreaseQuantity(itemId);
+        } else if (e.target.matches('.remove-item')) {
+            removeItem(itemId);
+        }
+    });
+    
+    function increaseQuantity(itemId) {
+        const quantityEl = document.querySelector(`[data-item-id="${itemId}"] .quantity`);
+        quantityEl.textContent = parseInt(quantityEl.textContent) + 1;
+    }
+    
+    function decreaseQuantity(itemId) {
+        const quantityEl = document.querySelector(`[data-item-id="${itemId}"] .quantity`);
+        const quantity = parseInt(quantityEl.textContent);
+        if (quantity > 1) {
+            quantityEl.textContent = quantity - 1;
+        }
+    }
+    
+    function removeItem(itemId) {
+        document.querySelector(`[data-item-id="${itemId}"]`).remove();
+    }
+}
+
+// Example 2: Image gallery
+function imageGallery() {
+    const gallery = document.getElementById('image-gallery');
+    
+    gallery.addEventListener('click', (e) => {
+        if (e.target.matches('.thumbnail')) {
+            showLightbox(e.target.src, e.target.alt);
+        } else if (e.target.matches('.favorite-btn')) {
+            toggleFavorite(e.target.closest('.image-item'));
+        }
+    });
+    
+    function showLightbox(src, alt) {
+        console.log('Showing lightbox for:', alt);
+        // Lightbox implementation
+    }
+    
+    function toggleFavorite(imageItem) {
+        imageItem.classList.toggle('favorited');
+        console.log('Favorite toggled');
+    }
+}
+
+basicDelegation();
+classBased();
+dataAttributeBased();
+tagBased();
+advancedMatching();
+closestDelegation();
+useUtility();
+shoppingCart();
+imageGallery();
+```
+</details>
+
 **Intermediate: Q1** - What are the advantages and disadvantages of event delegation?
 
+<details>
+<summary>Answer</summary>
+
+Event delegation has significant advantages but also some limitations to consider:
+
+```javascript
+// ADVANTAGES OF EVENT DELEGATION:
+
+// 1. PERFORMANCE BENEFITS
+function performanceAdvantages() {
+    // Advantage: Fewer event listeners
+    console.log('Traditional approach: 1000 elements = 1000 listeners');
+    console.log('Delegation approach: 1000 elements = 1 listener');
+    
+    // Memory usage comparison
+    const memoryComparison = {
+        traditional: '1000 × 8KB = 8MB (example)',
+        delegation: '1 × 8KB = 8KB',
+        savings: '99.9% memory reduction'
+    };
+    
+    console.log('Memory usage:', memoryComparison);
+    
+    // Event listener registration time
+    console.time('Traditional registration');
+    // Simulate 1000 individual listeners
+    for (let i = 0; i < 1000; i++) {
+        // document.getElementById(`item-${i}`).addEventListener('click', handler);
+    }
+    console.timeEnd('Traditional registration');
+    
+    console.time('Delegation registration');
+    // Single delegation listener
+    // document.getElementById('container').addEventListener('click', delegatedHandler);
+    console.timeEnd('Delegation registration');
+}
+
+// 2. DYNAMIC CONTENT SUPPORT
+function dynamicContentAdvantage() {
+    const container = document.getElementById('dynamic-container');
+    
+    // Set up delegation once
+    container.addEventListener('click', (e) => {
+        if (e.target.matches('.dynamic-button')) {
+            console.log('Dynamic button clicked:', e.target.textContent);
+        }
+    });
+    
+    // Adding new elements works automatically
+    function addNewButton(id) {
+        const button = document.createElement('button');
+        button.className = 'dynamic-button';
+        button.textContent = `Button ${id}`;
+        container.appendChild(button);
+        // No need to add event listener - delegation handles it
+    }
+    
+    // Advantage: New elements work immediately
+    setInterval(() => {
+        const id = Date.now();
+        addNewButton(id);
+        console.log(`Added button ${id} - works with existing delegation`);
+    }, 2000);
+}
+
+// 3. SIMPLIFIED EVENT MANAGEMENT
+function managementAdvantage() {
+    // Traditional approach: Complex cleanup
+    class TraditionalList {
+        constructor() {
+            this.items = [];
+            this.listeners = new Map();
+        }
+        
+        addItem(id, text) {
+            const item = document.createElement('div');
+            item.id = id;
+            item.textContent = text;
+            
+            const handler = () => this.handleClick(id);
+            item.addEventListener('click', handler);
+            
+            // Must track for cleanup
+            this.listeners.set(id, handler);
+            this.items.push(item);
+        }
+        
+        removeItem(id) {
+            const item = document.getElementById(id);
+            const handler = this.listeners.get(id);
+            
+            // Must manually remove listener
+            item.removeEventListener('click', handler);
+            item.remove();
+            
+            this.listeners.delete(id);
+            this.items = this.items.filter(item => item.id !== id);
+        }
+        
+        handleClick(id) {
+            console.log('Traditional click:', id);
+        }
+    }
+    
+    // Delegation approach: Simple cleanup
+    class DelegatedList {
+        constructor(container) {
+            this.container = container;
+            this.items = [];
+            
+            // Single listener handles everything
+            container.addEventListener('click', (e) => {
+                if (e.target.matches('.list-item')) {
+                    this.handleClick(e.target.dataset.id);
+                }
+            });
+        }
+        
+        addItem(id, text) {
+            const item = document.createElement('div');
+            item.className = 'list-item';
+            item.dataset.id = id;
+            item.textContent = text;
+            
+            this.container.appendChild(item);
+            this.items.push(item);
+            // No listener management needed
+        }
+        
+        removeItem(id) {
+            const item = this.container.querySelector(`[data-id="${id}"]`);
+            item.remove();
+            this.items = this.items.filter(item => item.dataset.id !== id);
+            // No listener cleanup needed
+        }
+        
+        handleClick(id) {
+            console.log('Delegated click:', id);
+        }
+    }
+    
+    console.log('Delegation advantage: Simplified management');
+}
+
+// DISADVANTAGES OF EVENT DELEGATION:
+
+// 1. EVENT PROPAGATION DEPENDENCY
+function propagationDisadvantage() {
+    // Problem: Relies on event bubbling
+    const container = document.getElementById('container');
+    
+    container.addEventListener('click', (e) => {
+        if (e.target.matches('.target-element')) {
+            console.log('Target clicked');
+        }
+    });
+    
+    // This can break delegation
+    document.getElementById('problematic-child').addEventListener('click', (e) => {
+        e.stopPropagation(); // Breaks delegation!
+        console.log('Child clicked, but parent won\'t know');
+    });
+    
+    console.log('Disadvantage: stopPropagation() breaks delegation');
+}
+
+// 2. SELECTOR COMPLEXITY
+function selectorComplexity() {
+    const container = document.getElementById('container');
+    
+    // Complex selectors can be hard to maintain
+    container.addEventListener('click', (e) => {
+        // This selector is getting complex and brittle
+        if (e.target.matches('.card .header .actions .btn:not(.disabled)[data-action="edit"]')) {
+            console.log('Complex selector matched');
+        }
+        
+        // Multiple checks become unwieldy
+        if (e.target.matches('.button') || 
+            e.target.matches('.link') || 
+            e.target.matches('.action-item')) {
+            // Handle multiple types
+        }
+    });
+    
+    console.log('Disadvantage: Complex selectors hard to maintain');
+}
+
+// 3. PERFORMANCE WITH DEEP NESTING
+function deepNestingDisadvantage() {
+    // Problem: Every click bubbles through many levels
+    const deeplyNested = document.getElementById('deeply-nested');
+    
+    // This listener fires for EVERY click in the container
+    deeplyNested.addEventListener('click', (e) => {
+        // Must check target for every click, even irrelevant ones
+        if (e.target.matches('.deep-target')) {
+            console.log('Deep target found');
+        }
+        // This function runs for every click, even on empty space
+    });
+    
+    console.log('Disadvantage: Unnecessary function calls for irrelevant events');
+}
+
+// 4. DEBUGGING COMPLEXITY
+function debuggingDisadvantage() {
+    const container = document.getElementById('container');
+    
+    // Hard to debug - where is the actual handler?
+    container.addEventListener('click', (e) => {
+        if (e.target.matches('.type1')) {
+            handleType1(e);
+        } else if (e.target.matches('.type2')) {
+            handleType2(e);
+        } else if (e.target.matches('.type3')) {
+            handleType3(e);
+        }
+        // Which handler will run? Hard to trace in dev tools
+    });
+    
+    function handleType1(e) { console.log('Type 1'); }
+    function handleType2(e) { console.log('Type 2'); }
+    function handleType3(e) { console.log('Type 3'); }
+    
+    console.log('Disadvantage: Harder to debug than direct listeners');
+}
+
+// WHEN TO USE VS AVOID:
+
+function usageGuidelines() {
+    const guidelines = {
+        useWhen: [
+            'Large number of similar elements',
+            'Dynamic content that changes frequently',
+            'Performance is critical',
+            'Simple event handling logic',
+            'Elements have common parent'
+        ],
+        
+        avoidWhen: [
+            'Small number of elements (< 10)',
+            'Complex, element-specific logic',
+            'Events don\'t bubble (focus, blur, etc.)',
+            'Deep event handling logic',
+            'Need direct element reference frequently'
+        ]
+    };
+    
+    console.log('Usage guidelines:', guidelines);
+}
+
+// HYBRID APPROACH:
+function hybridApproach() {
+    // Combine delegation with direct listeners when appropriate
+    
+    const container = document.getElementById('hybrid-container');
+    
+    // Use delegation for simple, common actions
+    container.addEventListener('click', (e) => {
+        if (e.target.matches('.delete-btn')) {
+            deleteItem(e.target.closest('.item'));
+        } else if (e.target.matches('.toggle-btn')) {
+            toggleItem(e.target.closest('.item'));
+        }
+    });
+    
+    // Use direct listeners for complex interactions
+    const complexElements = document.querySelectorAll('.complex-widget');
+    complexElements.forEach(element => {
+        element.addEventListener('click', handleComplexInteraction);
+        element.addEventListener('mouseenter', handleComplexHover);
+        element.addEventListener('mouseleave', handleComplexUnhover);
+    });
+    
+    function deleteItem(item) { item.remove(); }
+    function toggleItem(item) { item.classList.toggle('active'); }
+    function handleComplexInteraction(e) { /* Complex logic */ }
+    function handleComplexHover(e) { /* Complex hover logic */ }
+    function handleComplexUnhover(e) { /* Complex unhover logic */ }
+    
+    console.log('Hybrid approach: Use best tool for each situation');
+}
+
+performanceAdvantages();
+dynamicContentAdvantage();
+managementAdvantage();
+propagationDisadvantage();
+selectorComplexity();
+deepNestingDisadvantage();
+debuggingDisadvantage();
+usageGuidelines();
+hybridApproach();
+```
+</details>
+
 **Intermediate: Q2** - How does event delegation work with dynamically added elements?
+
+<details>
+<summary>Answer</summary>
+
+Event delegation automatically handles dynamically added elements because it listens on the parent, not individual elements:
+
+```javascript
+// HOW DELEGATION HANDLES DYNAMIC ELEMENTS:
+
+// Traditional approach - BREAKS with dynamic content
+function traditionalApproachProblem() {
+    // Initial setup
+    const initialButtons = document.querySelectorAll('.button');
+    
+    initialButtons.forEach(button => {
+        button.addEventListener('click', () => {
+            console.log('Button clicked:', button.textContent);
+        });
+    });
+    
+    // Problem: New buttons don't have listeners
+    function addNewButton() {
+        const button = document.createElement('button');
+        button.className = 'button';
+        button.textContent = 'New Button';
+        document.body.appendChild(button);
+        
+        // This button won't respond to clicks!
+        // Must manually add listener:
+        button.addEventListener('click', () => {
+            console.log('New button clicked:', button.textContent);
+        });
+    }
+    
+    setTimeout(addNewButton, 2000);
+    console.log('Traditional: Must manually add listeners to new elements');
+}
+
+// Delegation approach - WORKS automatically
+function delegationApproachSolution() {
+    // Setup delegation once
+    document.body.addEventListener('click', (e) => {
+        if (e.target.classList.contains('delegated-button')) {
+            console.log('Delegated button clicked:', e.target.textContent);
+        }
+    });
+    
+    // Add new buttons - they work automatically
+    function addDelegatedButton(id) {
+        const button = document.createElement('button');
+        button.className = 'delegated-button';
+        button.textContent = `Dynamic Button ${id}`;
+        document.body.appendChild(button);
+        
+        // No need to add listener - delegation handles it!
+    }
+    
+    // These buttons work immediately
+    setTimeout(() => addDelegatedButton(1), 1000);
+    setTimeout(() => addDelegatedButton(2), 2000);
+    setTimeout(() => addDelegatedButton(3), 3000);
+    
+    console.log('Delegation: Dynamic elements work automatically');
+}
+
+// REAL-WORLD EXAMPLES:
+
+// Example 1: Dynamic form fields
+function dynamicFormFields() {
+    const form = document.getElementById('dynamic-form');
+    const addFieldBtn = document.getElementById('add-field-btn');
+    let fieldCount = 0;
+    
+    // Delegation handles all form interactions
+    form.addEventListener('input', (e) => {
+        if (e.target.matches('input[type="text"]')) {
+            validateField(e.target);
+        } else if (e.target.matches('input[type="email"]')) {
+            validateEmail(e.target);
+        }
+    });
+    
+    form.addEventListener('click', (e) => {
+        if (e.target.matches('.remove-field')) {
+            removeField(e.target.closest('.field-group'));
+        }
+    });
+    
+    // Add new fields dynamically
+    addFieldBtn.addEventListener('click', () => {
+        addFormField();
+    });
+    
+    function addFormField() {
+        fieldCount++;
+        const fieldGroup = document.createElement('div');
+        fieldGroup.className = 'field-group';
+        fieldGroup.innerHTML = `
+            <label>Field ${fieldCount}:</label>
+            <input type="text" name="field${fieldCount}" required>
+            <button type="button" class="remove-field">Remove</button>
+        `;
+        
+        form.appendChild(fieldGroup);
+        // Field automatically works with delegation
+    }
+    
+    function validateField(input) {
+        console.log('Validating field:', input.name);
+        if (input.value.length < 3) {
+            input.setCustomValidity('Minimum 3 characters');
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+    
+    function validateEmail(input) {
+        console.log('Validating email:', input.value);
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(input.value)) {
+            input.setCustomValidity('Please enter a valid email');
+        } else {
+            input.setCustomValidity('');
+        }
+    }
+    
+    function removeField(fieldGroup) {
+        fieldGroup.remove();
+        console.log('Field removed');
+    }
+}
+
+// Example 2: Dynamic todo list
+function dynamicTodoList() {
+    const todoList = document.getElementById('todo-list');
+    const addTodoBtn = document.getElementById('add-todo-btn');
+    const todoInput = document.getElementById('todo-input');
+    let todoIdCounter = 0;
+    
+    // Delegation handles all todo interactions
+    todoList.addEventListener('click', (e) => {
+        const todoItem = e.target.closest('.todo-item');
+        if (!todoItem) return;
+        
+        const todoId = todoItem.dataset.todoId;
+        
+        if (e.target.matches('.complete-btn')) {
+            toggleComplete(todoId);
+        } else if (e.target.matches('.edit-btn')) {
+            enableEdit(todoId);
+        } else if (e.target.matches('.delete-btn')) {
+            deleteTodo(todoId);
+        } else if (e.target.matches('.save-btn')) {
+            saveEdit(todoId);
+        }
+    });
+    
+    todoList.addEventListener('keydown', (e) => {
+        if (e.target.matches('.todo-text-input') && e.key === 'Enter') {
+            saveEdit(e.target.closest('.todo-item').dataset.todoId);
+        }
+    });
+    
+    // Add new todos
+    addTodoBtn.addEventListener('click', addTodo);
+    todoInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') addTodo();
+    });
+    
+    function addTodo() {
+        const text = todoInput.value.trim();
+        if (!text) return;
+        
+        todoIdCounter++;
+        const todoItem = document.createElement('div');
+        todoItem.className = 'todo-item';
+        todoItem.dataset.todoId = todoIdCounter;
+        todoItem.innerHTML = `
+            <span class="todo-text">${text}</span>
+            <div class="todo-actions">
+                <button class="complete-btn">Complete</button>
+                <button class="edit-btn">Edit</button>
+                <button class="delete-btn">Delete</button>
+            </div>
+        `;
+        
+        todoList.appendChild(todoItem);
+        todoInput.value = '';
+        
+        // Todo automatically works with delegation
+        console.log('Todo added with delegation support');
+    }
+    
+    function toggleComplete(todoId) {
+        const todoItem = document.querySelector(`[data-todo-id="${todoId}"]`);
+        todoItem.classList.toggle('completed');
+        console.log('Todo completion toggled:', todoId);
+    }
+    
+    function enableEdit(todoId) {
+        const todoItem = document.querySelector(`[data-todo-id="${todoId}"]`);
+        const textSpan = todoItem.querySelector('.todo-text');
+        const currentText = textSpan.textContent;
+        
+        textSpan.innerHTML = `<input type="text" class="todo-text-input" value="${currentText}">`;
+        todoItem.querySelector('.edit-btn').textContent = 'Save';
+        todoItem.querySelector('.edit-btn').className = 'save-btn';
+        
+        console.log('Edit mode enabled:', todoId);
+    }
+    
+    function saveEdit(todoId) {
+        const todoItem = document.querySelector(`[data-todo-id="${todoId}"]`);
+        const input = todoItem.querySelector('.todo-text-input');
+        const newText = input.value.trim();
+        
+        if (newText) {
+            todoItem.querySelector('.todo-text').textContent = newText;
+            todoItem.querySelector('.save-btn').textContent = 'Edit';
+            todoItem.querySelector('.save-btn').className = 'edit-btn';
+            console.log('Todo updated:', todoId);
+        }
+    }
+    
+    function deleteTodo(todoId) {
+        const todoItem = document.querySelector(`[data-todo-id="${todoId}"]`);
+        todoItem.remove();
+        console.log('Todo deleted:', todoId);
+    }
+}
+
+// Example 3: Dynamic data table
+function dynamicDataTable() {
+    const table = document.getElementById('data-table');
+    const addRowBtn = document.getElementById('add-row-btn');
+    let rowIdCounter = 0;
+    
+    // Delegation handles all table interactions
+    table.addEventListener('click', (e) => {
+        const row = e.target.closest('tr[data-row-id]');
+        if (!row) return;
+        
+        const rowId = row.dataset.rowId;
+        
+        if (e.target.matches('.edit-cell-btn')) {
+            enableCellEdit(e.target.closest('td'));
+        } else if (e.target.matches('.save-cell-btn')) {
+            saveCellEdit(e.target.closest('td'));
+        } else if (e.target.matches('.delete-row-btn')) {
+            deleteRow(rowId);
+        }
+    });
+    
+    table.addEventListener('keydown', (e) => {
+        if (e.target.matches('.cell-input') && e.key === 'Enter') {
+            saveCellEdit(e.target.closest('td'));
+        }
+    });
+    
+    addRowBtn.addEventListener('click', addRow);
+    
+    function addRow() {
+        rowIdCounter++;
+        const row = document.createElement('tr');
+        row.dataset.rowId = rowIdCounter;
+        row.innerHTML = `
+            <td>Item ${rowIdCounter} <button class="edit-cell-btn">Edit</button></td>
+            <td>Description ${rowIdCounter} <button class="edit-cell-btn">Edit</button></td>
+            <td>$${(Math.random() * 100).toFixed(2)} <button class="edit-cell-btn">Edit</button></td>
+            <td><button class="delete-row-btn">Delete</button></td>
+        `;
+        
+        table.querySelector('tbody').appendChild(row);
+        console.log('Row added with delegation support');
+    }
+    
+    function enableCellEdit(cell) {
+        const text = cell.childNodes[0].textContent.trim();
+        const editBtn = cell.querySelector('.edit-cell-btn');
+        
+        cell.innerHTML = `
+            <input type="text" class="cell-input" value="${text}">
+            <button class="save-cell-btn">Save</button>
+        `;
+    }
+    
+    function saveCellEdit(cell) {
+        const input = cell.querySelector('.cell-input');
+        const newValue = input.value.trim();
+        
+        cell.innerHTML = `${newValue} <button class="edit-cell-btn">Edit</button>`;
+        console.log('Cell updated:', newValue);
+    }
+    
+    function deleteRow(rowId) {
+        document.querySelector(`tr[data-row-id="${rowId}"]`).remove();
+        console.log('Row deleted:', rowId);
+    }
+}
+
+// INFINITE SCROLL EXAMPLE:
+function infiniteScrollWithDelegation() {
+    const container = document.getElementById('infinite-container');
+    let itemCount = 0;
+    
+    // Delegation handles all items, including future ones
+    container.addEventListener('click', (e) => {
+        if (e.target.matches('.like-btn')) {
+            toggleLike(e.target.closest('.item'));
+        } else if (e.target.matches('.share-btn')) {
+            shareItem(e.target.closest('.item'));
+        }
+    });
+    
+    // Simulate infinite scroll
+    function loadMoreItems() {
+        for (let i = 0; i < 10; i++) {
+            itemCount++;
+            const item = document.createElement('div');
+            item.className = 'item';
+            item.dataset.itemId = itemCount;
+            item.innerHTML = `
+                <h3>Item ${itemCount}</h3>
+                <p>Content for item ${itemCount}</p>
+                <button class="like-btn">Like</button>
+                <button class="share-btn">Share</button>
+            `;
+            
+            container.appendChild(item);
+        }
+        
+        console.log(`Loaded 10 more items (${itemCount} total) - all work with delegation`);
+    }
+    
+    function toggleLike(item) {
+        item.classList.toggle('liked');
+        console.log('Like toggled for item:', item.dataset.itemId);
+    }
+    
+    function shareItem(item) {
+        console.log('Share item:', item.dataset.itemId);
+    }
+    
+    // Initial load
+    loadMoreItems();
+    
+    // Simulate scroll loading
+    setInterval(loadMoreItems, 3000);
+}
+
+traditionalApproachProblem();
+delegationApproachSolution();
+dynamicFormFields();
+dynamicTodoList();
+dynamicDataTable();
+infiniteScrollWithDelegation();
+```
+</details>
 
 ## Module patterns (CommonJS, ES Modules, AMD, UMD)
 
 **Beginner: Q1** - What are the different module systems in JavaScript?
 
+<details>
+<summary>Answer</summary>
+
+JavaScript has several module systems for organizing and sharing code across files:
+
+```javascript
+// 1. COMMONJS (Node.js default)
+// Used in Node.js environments
+// Synchronous loading
+
+// Exporting in CommonJS
+// math.js
+function add(a, b) {
+    return a + b;
+}
+
+function subtract(a, b) {
+    return a - b;
+}
+
+module.exports = { add, subtract };
+
+// Alternative export syntax
+exports.multiply = (a, b) => a * b;
+
+// Importing in CommonJS
+// app.js
+const { add, subtract } = require('./math');
+const math = require('./math');
+
+console.log(add(2, 3)); // 5
+console.log(math.subtract(5, 2)); // 3
+
+// 2. ES MODULES (ES6/ES2015)
+// Modern standard, supported in browsers and Node.js
+// Static imports, tree-shaking friendly
+
+// Exporting in ES Modules
+// math.mjs or math.js (with type="module")
+export function add(a, b) {
+    return a + b;
+}
+
+export function subtract(a, b) {
+    return a - b;
+}
+
+// Default export
+export default function multiply(a, b) {
+    return a * b;
+}
+
+// Named exports object
+export { add as addition, subtract as subtraction };
+
+// Importing in ES Modules
+// app.mjs or app.js (with type="module")
+import multiply, { add, subtract } from './math.js';
+import { addition } from './math.js';
+import * as mathUtils from './math.js';
+
+console.log(add(2, 3)); // 5
+console.log(multiply(4, 5)); // 20
+
+// 3. AMD (Asynchronous Module Definition)
+// Used in browsers with RequireJS
+// Asynchronous loading
+
+// Defining AMD module
+// math.js
+define(['dependency'], function(dep) {
+    function add(a, b) {
+        return a + b;
+    }
+    
+    function subtract(a, b) {
+        return a - b;
+    }
+    
+    return {
+        add: add,
+        subtract: subtract
+    };
+});
+
+// Using AMD module
+// app.js
+require(['math'], function(math) {
+    console.log(math.add(2, 3)); // 5
+});
+
+// 4. UMD (Universal Module Definition)
+// Works in CommonJS, AMD, and global environments
+// Library compatibility pattern
+
+// UMD module
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD
+        define(['exports'], factory);
+    } else if (typeof exports === 'object' && typeof module !== 'undefined') {
+        // CommonJS
+        factory(exports);
+    } else {
+        // Browser global
+        factory((root.math = {}));
+    }
+}(typeof self !== 'undefined' ? self : this, function (exports) {
+    function add(a, b) {
+        return a + b;
+    }
+    
+    function subtract(a, b) {
+        return a - b;
+    }
+    
+    exports.add = add;
+    exports.subtract = subtract;
+}));
+
+// 5. IIFE (Immediately Invoked Function Expression)
+// Traditional browser pattern before modules
+
+// IIFE module
+var MathModule = (function() {
+    // Private variables
+    var privateVar = 'private';
+    
+    // Private functions
+    function privateFunction() {
+        return 'This is private';
+    }
+    
+    // Public API
+    return {
+        add: function(a, b) {
+            return a + b;
+        },
+        
+        subtract: function(a, b) {
+            return a - b;
+        }
+    };
+})();
+
+// Usage
+console.log(MathModule.add(2, 3)); // 5
+
+// COMPARISON SUMMARY:
+const moduleComparison = {
+    CommonJS: {
+        environment: 'Node.js',
+        loading: 'Synchronous',
+        syntax: 'require/module.exports',
+        treeShaking: 'No'
+    },
+    
+    ESModules: {
+        environment: 'Browser + Node.js',
+        loading: 'Static analysis',
+        syntax: 'import/export',
+        treeShaking: 'Yes'
+    },
+    
+    AMD: {
+        environment: 'Browser (RequireJS)',
+        loading: 'Asynchronous',
+        syntax: 'define/require',
+        treeShaking: 'No'
+    },
+    
+    UMD: {
+        environment: 'Universal',
+        loading: 'Depends on environment',
+        syntax: 'Multiple patterns',
+        treeShaking: 'No'
+    }
+};
+
+console.table(moduleComparison);
+```
+</details>
+
 **Beginner: Q2** - How do you export and import in CommonJS?
+
+<details>
+<summary>Answer</summary>
+
+CommonJS uses `module.exports`/`exports` for exporting and `require()` for importing:
+
+```javascript
+// EXPORTING IN COMMONJS:
+
+// Method 1: module.exports with object
+// utils.js
+function formatDate(date) {
+    return date.toISOString().split('T')[0];
+}
+
+function formatCurrency(amount) {
+    return `$${amount.toFixed(2)}`;
+}
+
+module.exports = {
+    formatDate,
+    formatCurrency
+};
+
+// Method 2: module.exports with single value
+// calculator.js
+class Calculator {
+    add(a, b) {
+        return a + b;
+    }
+    
+    subtract(a, b) {
+        return a - b;
+    }
+}
+
+module.exports = Calculator;
+
+// Method 3: exports shorthand
+// helpers.js
+exports.isEmail = function(email) {
+    return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+};
+
+exports.isPhone = function(phone) {
+    return /^\d{3}-\d{3}-\d{4}$/.test(phone);
+};
+
+// Method 4: Mixed exports
+// api.js
+const API_URL = 'https://api.example.com';
+
+function get(endpoint) {
+    return fetch(`${API_URL}/${endpoint}`);
+}
+
+function post(endpoint, data) {
+    return fetch(`${API_URL}/${endpoint}`, {
+        method: 'POST',
+        body: JSON.stringify(data)
+    });
+}
+
+// Export default function
+module.exports = get;
+
+// Add named exports
+module.exports.get = get;
+module.exports.post = post;
+module.exports.API_URL = API_URL;
+
+// IMPORTING IN COMMONJS:
+
+// Method 1: Destructuring import
+const { formatDate, formatCurrency } = require('./utils');
+
+console.log(formatDate(new Date())); // 2023-10-17
+console.log(formatCurrency(29.99)); // $29.99
+
+// Method 2: Default import
+const Calculator = require('./calculator');
+
+const calc = new Calculator();
+console.log(calc.add(5, 3)); // 8
+
+// Method 3: Full module import
+const helpers = require('./helpers');
+
+console.log(helpers.isEmail('test@example.com')); // true
+console.log(helpers.isPhone('123-456-7890')); // true
+
+// Method 4: Mixed imports
+const api = require('./api');
+const { post, API_URL } = require('./api');
+
+// Use default export
+api('users').then(response => console.log('Users loaded'));
+
+// Use named exports
+post('users', { name: 'John' }).then(response => console.log('User created'));
+console.log('API URL:', API_URL);
+
+// ADVANCED PATTERNS:
+
+// Conditional require
+function loadModule(condition) {
+    if (condition) {
+        const module = require('./heavy-module');
+        return module;
+    }
+    return null;
+}
+
+// Dynamic require
+function requireByName(moduleName) {
+    try {
+        return require(moduleName);
+    } catch (error) {
+        console.log(`Module ${moduleName} not found`);
+        return null;
+    }
+}
+
+// Require with path resolution
+const path = require('path');
+const moduleFromPath = require(path.join(__dirname, 'modules', 'custom-module'));
+
+// Caching behavior
+console.log('First require');
+const module1 = require('./cached-module');
+
+console.log('Second require (cached)');
+const module2 = require('./cached-module');
+
+console.log(module1 === module2); // true - same instance
+
+// Clear require cache
+delete require.cache[require.resolve('./cached-module')];
+const module3 = require('./cached-module'); // Fresh instance
+
+// REAL-WORLD EXAMPLES:
+
+// Example 1: Database module
+// database.js
+const mysql = require('mysql2/promise');
+
+class Database {
+    constructor(config) {
+        this.config = config;
+        this.connection = null;
+    }
+    
+    async connect() {
+        this.connection = await mysql.createConnection(this.config);
+        console.log('Database connected');
+    }
+    
+    async query(sql, params) {
+        const [rows] = await this.connection.execute(sql, params);
+        return rows;
+    }
+    
+    async close() {
+        await this.connection.end();
+        console.log('Database disconnected');
+    }
+}
+
+module.exports = Database;
+
+// Example 2: Configuration module
+// config.js
+const fs = require('fs');
+const path = require('path');
+
+function loadConfig(env = 'development') {
+    const configPath = path.join(__dirname, 'config', `${env}.json`);
+    
+    if (fs.existsSync(configPath)) {
+        const configData = fs.readFileSync(configPath, 'utf8');
+        return JSON.parse(configData);
+    }
+    
+    throw new Error(`Configuration file not found: ${configPath}`);
+}
+
+module.exports = {
+    loadConfig,
+    database: loadConfig().database,
+    server: loadConfig().server
+};
+
+// Example 3: Utility library
+// lib/index.js
+const stringUtils = require('./string-utils');
+const dateUtils = require('./date-utils');
+const arrayUtils = require('./array-utils');
+
+module.exports = {
+    string: stringUtils,
+    date: dateUtils,
+    array: arrayUtils
+};
+
+// Usage
+// app.js
+const Database = require('./database');
+const config = require('./config');
+const utils = require('./lib');
+
+async function main() {
+    const db = new Database(config.database);
+    await db.connect();
+    
+    const users = await db.query('SELECT * FROM users');
+    const formattedUsers = users.map(user => ({
+        ...user,
+        name: utils.string.capitalize(user.name),
+        createdAt: utils.date.format(user.created_at)
+    }));
+    
+    console.log('Formatted users:', formattedUsers);
+    
+    await db.close();
+}
+
+main().catch(console.error);
+
+// ERROR HANDLING:
+function safeRequire(modulePath) {
+    try {
+        return require(modulePath);
+    } catch (error) {
+        if (error.code === 'MODULE_NOT_FOUND') {
+            console.error(`Module not found: ${modulePath}`);
+            return null;
+        }
+        throw error; // Re-throw other errors
+    }
+}
+
+// Optional dependencies
+const optionalModule = safeRequire('./optional-module');
+if (optionalModule) {
+    console.log('Optional module loaded');
+} else {
+    console.log('Optional module not available, using fallback');
+}
+```
+</details>
 
 **Beginner: Q3** - What is the difference between CommonJS and ES Modules?
 
+<details>
+<summary>Answer</summary>
+
+CommonJS and ES Modules differ in syntax, loading behavior, and environment support:
+
+```javascript
+// SYNTAX DIFFERENCES:
+
+// CommonJS (require/module.exports)
+// math-commonjs.js
+function add(a, b) {
+    return a + b;
+}
+
+function subtract(a, b) {
+    return a - b;
+}
+
+module.exports = { add, subtract };
+
+// app-commonjs.js
+const { add, subtract } = require('./math-commonjs');
+const math = require('./math-commonjs');
+
+// ES Modules (import/export)
+// math-esm.js
+export function add(a, b) {
+    return a + b;
+}
+
+export function subtract(a, b) {
+    return a - b;
+}
+
+// app-esm.js
+import { add, subtract } from './math-esm.js';
+import * as math from './math-esm.js';
+
+// LOADING BEHAVIOR DIFFERENCES:
+
+// CommonJS: Dynamic, runtime loading
+function loadCommonJS() {
+    // Can require conditionally
+    if (process.env.NODE_ENV === 'development') {
+        const devTools = require('./dev-tools'); // Runtime decision
+        devTools.init();
+    }
+    
+    // Can require in functions
+    function loadWhenNeeded() {
+        const heavyModule = require('./heavy-module'); // Loaded when function runs
+        return heavyModule.process();
+    }
+    
+    // Can build require path dynamically
+    const moduleName = 'lodash';
+    const dynamicRequire = require(moduleName); // Works
+}
+
+// ES Modules: Static, compile-time analysis
+function loadESModules() {
+    // Cannot import conditionally (this breaks)
+    // if (condition) {
+    //     import { something } from './module.js'; // ERROR: imports must be at top level
+    // }
+    
+    // Cannot import in functions (without dynamic import)
+    // function loadWhenNeeded() {
+    //     import { something } from './module.js'; // ERROR
+    // }
+    
+    // Can use dynamic import() for runtime loading
+    async function dynamicLoad() {
+        if (condition) {
+            const module = await import('./module.js'); // Works with dynamic import
+            module.something();
+        }
+    }
+}
+
+// HOISTING DIFFERENCES:
+
+// CommonJS: No hoisting
+console.log(add(2, 3)); // ERROR: add is not defined yet
+const { add } = require('./math');
+
+// ES Modules: Imports are hoisted
+console.log(add(2, 3)); // Works! Import is hoisted
+import { add } from './math.js';
+
+// EXPORTS DIFFERENCES:
+
+// CommonJS: Exports are objects, can be modified
+// module1.js
+module.exports = { value: 1 };
+
+// app.js
+const module1 = require('./module1');
+module1.value = 2; // Modifies the exported object
+module1.newProperty = 'added'; // Can add properties
+
+// ES Modules: Exports are immutable bindings
+// module2.js
+export let value = 1;
+export function increment() {
+    value++; // This works - internal modification
+}
+
+// app.js
+import { value, increment } from './module2.js';
+// value = 2; // ERROR: Assignment to constant variable
+console.log(value); // 1
+increment();
+console.log(value); // 2 - binding reflects internal changes
+
+// TREE SHAKING DIFFERENCES:
+
+// CommonJS: Cannot tree shake (full module imported)
+const lodash = require('lodash'); // Entire library loaded
+const isEmpty = lodash.isEmpty;
+
+// ES Modules: Can tree shake (only used exports)
+import { isEmpty } from 'lodash-es'; // Only isEmpty is bundled
+
+// CIRCULAR DEPENDENCIES:
+
+// CommonJS: Partial exports during cycles
+// a.js
+console.log('a starting');
+exports.done = false;
+const b = require('./b.js');
+console.log('in a, b.done =', b.done);
+exports.done = true;
+console.log('a done');
+
+// b.js
+console.log('b starting');
+exports.done = false;
+const a = require('./a.js');
+console.log('in b, a.done =', a.done);
+exports.done = true;
+console.log('b done');
+
+// ES Modules: Better circular dependency handling
+// a.mjs
+console.log('a starting');
+import { bValue } from './b.mjs';
+export const aValue = 'a';
+console.log('in a, bValue =', bValue);
+
+// b.mjs
+console.log('b starting');
+import { aValue } from './a.mjs';
+export const bValue = 'b';
+console.log('in b, aValue =', aValue);
+
+// ENVIRONMENT SUPPORT:
+
+// CommonJS
+const environmentSupport = {
+    commonjs: {
+        nodejs: 'Native support',
+        browser: 'Requires bundler (webpack, browserify)',
+        support: 'Universal with tooling'
+    },
+    
+    esmodules: {
+        nodejs: 'Support since v12 (with .mjs or "type": "module")',
+        browser: 'Native support in modern browsers',
+        support: 'Growing native support'
+    }
+};
+
+// FILE EXTENSIONS:
+
+// CommonJS
+// .js files (default in Node.js)
+// No special extension needed
+
+// ES Modules in Node.js
+// .mjs files, or
+// .js files with "type": "module" in package.json
+
+// PERFORMANCE:
+
+// CommonJS: Runtime overhead
+const performanceCommonJS = {
+    loading: 'Synchronous, blocking',
+    parsing: 'Runtime execution required',
+    optimization: 'Limited bundler optimizations'
+};
+
+// ES Modules: Better performance
+const performanceESM = {
+    loading: 'Can be asynchronous',
+    parsing: 'Static analysis possible',
+    optimization: 'Tree shaking, better bundling'
+};
+
+// MIGRATION EXAMPLE:
+
+// Converting CommonJS to ES Modules
+// Before (CommonJS)
+// utils.js
+const fs = require('fs');
+const path = require('path');
+
+function readConfigFile(filename) {
+    const filePath = path.join(__dirname, filename);
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+module.exports = { readConfigFile };
+
+// After (ES Modules)
+// utils.mjs
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+export function readConfigFile(filename) {
+    const filePath = path.join(__dirname, filename);
+    return JSON.parse(fs.readFileSync(filePath, 'utf8'));
+}
+
+// INTEROPERABILITY:
+
+// Using CommonJS in ES Modules
+import util from 'util'; // CommonJS module
+import { promisify } from 'util'; // Named import from CommonJS
+
+// Using ES Modules in CommonJS (dynamic import)
+async function useESModule() {
+    const { someFunction } = await import('./es-module.mjs');
+    return someFunction();
+}
+
+// COMPARISON TABLE:
+const comparison = {
+    feature: {
+        commonjs: 'CommonJS',
+        esmodules: 'ES Modules'
+    },
+    syntax: {
+        commonjs: 'require/module.exports',
+        esmodules: 'import/export'
+    },
+    loading: {
+        commonjs: 'Dynamic, runtime',
+        esmodules: 'Static, compile-time'
+    },
+    hoisting: {
+        commonjs: 'No',
+        esmodules: 'Yes'
+    },
+    treeShaking: {
+        commonjs: 'No',
+        esmodules: 'Yes'
+    },
+    environment: {
+        commonjs: 'Node.js native',
+        esmodules: 'Browser + Node.js'
+    }
+};
+
+console.table(comparison);
+```
+</details>
+
 **Intermediate: Q1** - What is UMD and why was it created?
 
+<details>
+<summary>Answer</summary>
+
+UMD (Universal Module Definition) is a pattern that makes modules work across different environments (CommonJS, AMD, and global):
+
+```javascript
+// WHAT IS UMD:
+// UMD = Universal Module Definition
+// A pattern that detects the environment and adapts accordingly
+
+// BASIC UMD PATTERN:
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD environment (RequireJS)
+        define(['dependency'], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        // CommonJS environment (Node.js)
+        module.exports = factory(require('dependency'));
+    } else {
+        // Browser global environment
+        root.MyLibrary = factory(root.Dependency);
+    }
+}(typeof self !== 'undefined' ? self : this, function (dependency) {
+    // Module code here
+    function MyLibrary() {
+        // Library implementation
+    }
+    
+    return MyLibrary;
+}));
+
+// WHY UMD WAS CREATED:
+
+// Problem 1: Module system fragmentation
+function demonstrateFragmentation() {
+    // Before UMD, libraries needed separate builds:
+    
+    // For CommonJS (Node.js)
+    // library-commonjs.js
+    const dependency = require('dependency');
+    function MyLibrary() { /* ... */ }
+    module.exports = MyLibrary;
+    
+    // For AMD (RequireJS)
+    // library-amd.js
+    define(['dependency'], function(dependency) {
+        function MyLibrary() { /* ... */ }
+        return MyLibrary;
+    });
+    
+    // For browsers (global)
+    // library-global.js
+    (function(global, dependency) {
+        function MyLibrary() { /* ... */ }
+        global.MyLibrary = MyLibrary;
+    })(window, window.Dependency);
+    
+    console.log('Problem: Multiple builds for different environments');
+}
+
+// Problem 2: Library maintenance complexity
+function maintenanceComplexity() {
+    const problems = [
+        'Multiple build scripts',
+        'Separate test suites',
+        'Different packaging',
+        'Version synchronization',
+        'Documentation for each format'
+    ];
+    
+    console.log('Maintenance problems before UMD:', problems);
+}
+
+// COMPREHENSIVE UMD PATTERNS:
+
+// Pattern 1: Simple UMD (no dependencies)
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define([], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        module.exports = factory();
+    } else {
+        root.SimpleLibrary = factory();
+    }
+}(typeof self !== 'undefined' ? self : this, function () {
+    'use strict';
+    
+    function SimpleLibrary() {
+        this.version = '1.0.0';
+    }
+    
+    SimpleLibrary.prototype.greet = function(name) {
+        return `Hello, ${name}!`;
+    };
+    
+    return SimpleLibrary;
+}));
+
+// Pattern 2: UMD with dependencies
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        // AMD
+        define(['jquery', 'underscore'], factory);
+    } else if (typeof exports === 'object') {
+        // CommonJS
+        module.exports = factory(require('jquery'), require('underscore'));
+    } else {
+        // Browser globals
+        root.MyPlugin = factory(root.jQuery, root._);
+    }
+}(typeof self !== 'undefined' ? self : this, function ($, _) {
+    'use strict';
+    
+    function MyPlugin(options) {
+        this.options = _.defaults(options || {}, {
+            selector: '.my-plugin',
+            animation: 'fade'
+        });
+        
+        this.init();
+    }
+    
+    MyPlugin.prototype.init = function() {
+        const self = this;
+        $(this.options.selector).on('click', function() {
+            self.animate(this);
+        });
+    };
+    
+    MyPlugin.prototype.animate = function(element) {
+        $(element).fadeToggle();
+    };
+    
+    return MyPlugin;
+}));
+
+// Pattern 3: UMD with conditional dependencies
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define(['jquery'], function($) {
+            return factory(root, $);
+        });
+    } else if (typeof module === 'object' && module.exports) {
+        module.exports = factory(root, require('jquery'));
+    } else {
+        root.ConditionalLibrary = factory(root, root.jQuery);
+    }
+}(typeof self !== 'undefined' ? self : this, function (root, $) {
+    'use strict';
+    
+    function ConditionalLibrary() {
+        // Use jQuery if available, otherwise vanilla JS
+        this.$ = $ || null;
+    }
+    
+    ConditionalLibrary.prototype.select = function(selector) {
+        if (this.$) {
+            return this.$(selector);
+        } else {
+            return document.querySelectorAll(selector);
+        }
+    };
+    
+    return ConditionalLibrary;
+}));
+
+// REAL-WORLD UMD EXAMPLES:
+
+// Example 1: Math utility library
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define([], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        module.exports = factory();
+    } else {
+        root.MathUtils = factory();
+    }
+}(typeof self !== 'undefined' ? self : this, function () {
+    'use strict';
+    
+    const MathUtils = {
+        add: function(a, b) {
+            return a + b;
+        },
+        
+        subtract: function(a, b) {
+            return a - b;
+        },
+        
+        multiply: function(a, b) {
+            return a * b;
+        },
+        
+        divide: function(a, b) {
+            if (b === 0) throw new Error('Division by zero');
+            return a / b;
+        },
+        
+        // Utility methods
+        isEven: function(num) {
+            return num % 2 === 0;
+        },
+        
+        factorial: function(n) {
+            if (n < 0) throw new Error('Negative number');
+            if (n === 0 || n === 1) return 1;
+            return n * this.factorial(n - 1);
+        }
+    };
+    
+    return MathUtils;
+}));
+
+// Example 2: Event emitter library
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define([], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        module.exports = factory();
+    } else {
+        root.EventEmitter = factory();
+    }
+}(typeof self !== 'undefined' ? self : this, function () {
+    'use strict';
+    
+    function EventEmitter() {
+        this.events = {};
+    }
+    
+    EventEmitter.prototype.on = function(event, listener) {
+        if (!this.events[event]) {
+            this.events[event] = [];
+        }
+        this.events[event].push(listener);
+        return this;
+    };
+    
+    EventEmitter.prototype.emit = function(event, ...args) {
+        if (!this.events[event]) return false;
+        
+        this.events[event].forEach(listener => {
+            listener.apply(this, args);
+        });
+        
+        return true;
+    };
+    
+    EventEmitter.prototype.off = function(event, listenerToRemove) {
+        if (!this.events[event]) return this;
+        
+        if (!listenerToRemove) {
+            delete this.events[event];
+        } else {
+            this.events[event] = this.events[event].filter(
+                listener => listener !== listenerToRemove
+            );
+        }
+        
+        return this;
+    };
+    
+    return EventEmitter;
+}));
+
+// USAGE IN DIFFERENT ENVIRONMENTS:
+
+// In Node.js (CommonJS)
+function nodeUsage() {
+    const MathUtils = require('./math-utils-umd');
+    console.log(MathUtils.add(2, 3)); // 5
+    console.log(MathUtils.factorial(5)); // 120
+}
+
+// In RequireJS (AMD)
+function amdUsage() {
+    require(['math-utils-umd'], function(MathUtils) {
+        console.log(MathUtils.add(2, 3)); // 5
+        console.log(MathUtils.factorial(5)); // 120
+    });
+}
+
+// In browser (global)
+function browserUsage() {
+    // <script src="math-utils-umd.js"></script>
+    console.log(window.MathUtils.add(2, 3)); // 5
+    console.log(window.MathUtils.factorial(5)); // 120
+}
+
+// MODERN ALTERNATIVES TO UMD:
+
+// 1. ES Modules with build tools
+function modernApproach() {
+    // math-utils.js (ES Module)
+    export function add(a, b) {
+        return a + b;
+    }
+    
+    export function subtract(a, b) {
+        return a - b;
+    }
+    
+    // Build tools (webpack, rollup) can generate UMD if needed
+    // webpack.config.js
+    const config = {
+        output: {
+            library: 'MathUtils',
+            libraryTarget: 'umd',
+            globalObject: 'typeof self !== \'undefined\' ? self : this'
+        }
+    };
+}
+
+// 2. Conditional exports (package.json)
+function conditionalExports() {
+    // package.json
+    const packageJson = {
+        "name": "my-library",
+        "version": "1.0.0",
+        "main": "./lib/index.cjs",    // CommonJS
+        "module": "./lib/index.mjs",  // ES Module
+        "browser": "./lib/index.umd.js", // UMD for browsers
+        "exports": {
+            ".": {
+                "import": "./lib/index.mjs",
+                "require": "./lib/index.cjs",
+                "browser": "./lib/index.umd.js"
+            }
+        }
+    };
+}
+
+// UMD GENERATOR UTILITY:
+function createUMD(name, dependencies, factory) {
+    const dependencyNames = dependencies.map(dep => dep.name);
+    const dependencyPaths = dependencies.map(dep => dep.path);
+    const dependencyGlobals = dependencies.map(dep => dep.global);
+    
+    return `
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define([${dependencyPaths.map(p => `'${p}'`).join(', ')}], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        module.exports = factory(${dependencyPaths.map(p => `require('${p}')`).join(', ')});
+    } else {
+        root.${name} = factory(${dependencyGlobals.map(g => `root.${g}`).join(', ')});
+    }
+}(typeof self !== 'undefined' ? self : this, function (${dependencyNames.join(', ')}) {
+    'use strict';
+    
+    ${factory.toString()}
+    
+    return ${name};
+}));
+    `;
+}
+
+// WHEN TO USE UMD TODAY:
+const umdUseCases = {
+    libraryDevelopment: 'Creating libraries for maximum compatibility',
+    legacySupport: 'Supporting older environments without ES modules',
+    standaloneScripts: 'Scripts that work without build tools',
+    backwards compatibility: 'Maintaining compatibility with existing code'
+};
+
+const modernAlternatives = {
+    esBuild: 'Use ES modules with build tools',
+    conditionalExports: 'Use package.json exports field',
+    dualPackaging: 'Publish both ES and CommonJS versions',
+    polyfills: 'Use polyfills for ES module support'
+};
+
+console.log('UMD use cases:', umdUseCases);
+console.log('Modern alternatives:', modernAlternatives);
+
+demonstrateFragmentation();
+maintenanceComplexity();
+```
+</details>
+
 **Intermediate: Q2** - How do you create a module that works in both Node.js and browsers?
+
+<details>
+<summary>Answer</summary>
+
+Create universal modules using UMD pattern, build tools, or modern dual packaging approaches:
+
+```javascript
+// METHOD 1: UMD PATTERN (Universal)
+
+// universal-module.js
+(function (root, factory) {
+    // Detect environment and adapt
+    if (typeof define === 'function' && define.amd) {
+        // AMD (RequireJS) environment
+        define(['dependency'], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        // CommonJS (Node.js) environment
+        module.exports = factory(require('dependency'));
+    } else {
+        // Browser global environment
+        root.UniversalModule = factory(root.Dependency);
+    }
+}(typeof self !== 'undefined' ? self : this, function (dependency) {
+    'use strict';
+    
+    // Universal module implementation
+    function UniversalModule(options) {
+        this.options = Object.assign({
+            debug: false,
+            timeout: 5000
+        }, options);
+    }
+    
+    UniversalModule.prototype.init = function() {
+        if (this.options.debug) {
+            console.log('UniversalModule initialized');
+        }
+    };
+    
+    UniversalModule.prototype.fetch = function(url) {
+        // Environment-specific implementations
+        if (typeof window !== 'undefined' && window.fetch) {
+            // Browser fetch
+            return window.fetch(url);
+        } else if (typeof require === 'function') {
+            // Node.js with dynamic require
+            try {
+                const https = require('https');
+                const http = require('http');
+                
+                return new Promise((resolve, reject) => {
+                    const protocol = url.startsWith('https:') ? https : http;
+                    protocol.get(url, (res) => {
+                        let data = '';
+                        res.on('data', chunk => data += chunk);
+                        res.on('end', () => resolve({ text: () => Promise.resolve(data) }));
+                        res.on('error', reject);
+                    });
+                });
+            } catch (error) {
+                return Promise.reject(error);
+            }
+        } else {
+            return Promise.reject(new Error('No fetch implementation available'));
+        }
+    };
+    
+    return UniversalModule;
+}));
+
+// METHOD 2: CONDITIONAL ENVIRONMENT DETECTION
+
+// environment-aware.js
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define([], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        module.exports = factory();
+    } else {
+        root.EnvironmentAware = factory();
+    }
+}(typeof self !== 'undefined' ? self : this, function () {
+    'use strict';
+    
+    // Detect environment
+    const isNode = typeof process !== 'undefined' && 
+                   process.versions && 
+                   process.versions.node;
+    
+    const isBrowser = typeof window !== 'undefined' && 
+                      typeof document !== 'undefined';
+    
+    const isWebWorker = typeof importScripts === 'function';
+    
+    function EnvironmentAware() {
+        this.environment = this.detectEnvironment();
+    }
+    
+    EnvironmentAware.prototype.detectEnvironment = function() {
+        if (isNode) return 'node';
+        if (isWebWorker) return 'webworker';
+        if (isBrowser) return 'browser';
+        return 'unknown';
+    };
+    
+    // Environment-specific storage
+    EnvironmentAware.prototype.getStorage = function() {
+        switch (this.environment) {
+            case 'node':
+                // Use filesystem
+                const fs = require('fs');
+                return {
+                    set: (key, value) => {
+                        fs.writeFileSync(`${key}.json`, JSON.stringify(value));
+                    },
+                    get: (key) => {
+                        try {
+                            return JSON.parse(fs.readFileSync(`${key}.json`, 'utf8'));
+                        } catch (e) {
+                            return null;
+                        }
+                    }
+                };
+                
+            case 'browser':
+                // Use localStorage
+                return {
+                    set: (key, value) => {
+                        localStorage.setItem(key, JSON.stringify(value));
+                    },
+                    get: (key) => {
+                        try {
+                            return JSON.parse(localStorage.getItem(key));
+                        } catch (e) {
+                            return null;
+                        }
+                    }
+                };
+                
+            case 'webworker':
+                // Use in-memory storage
+                const storage = {};
+                return {
+                    set: (key, value) => {
+                        storage[key] = value;
+                    },
+                    get: (key) => {
+                        return storage[key] || null;
+                    }
+                };
+                
+            default:
+                throw new Error('Unsupported environment');
+        }
+    };
+    
+    return EnvironmentAware;
+}));
+
+// METHOD 3: BUILD TOOL APPROACH (Webpack/Rollup)
+
+// Source: universal-logger.js (ES Module)
+class UniversalLogger {
+    constructor(options = {}) {
+        this.level = options.level || 'info';
+        this.timestamp = options.timestamp !== false;
+    }
+    
+    log(level, message, ...args) {
+        if (!this.shouldLog(level)) return;
+        
+        const timestamp = this.timestamp ? new Date().toISOString() : '';
+        const prefix = timestamp ? `[${timestamp}] ` : '';
+        
+        // Environment-specific output
+        if (typeof console !== 'undefined') {
+            console[level] && console[level](`${prefix}${message}`, ...args);
+        }
+    }
+    
+    shouldLog(level) {
+        const levels = ['error', 'warn', 'info', 'debug'];
+        return levels.indexOf(level) <= levels.indexOf(this.level);
+    }
+    
+    error(message, ...args) { this.log('error', message, ...args); }
+    warn(message, ...args) { this.log('warn', message, ...args); }
+    info(message, ...args) { this.log('info', message, ...args); }
+    debug(message, ...args) { this.log('debug', message, ...args); }
+}
+
+export default UniversalLogger;
+
+// Webpack config for universal build
+const webpackConfig = {
+    entry: './src/universal-logger.js',
+    output: {
+        filename: 'universal-logger.js',
+        library: 'UniversalLogger',
+        libraryTarget: 'umd',
+        globalObject: 'typeof self !== \'undefined\' ? self : this'
+    },
+    mode: 'production',
+    target: ['web', 'node']
+};
+
+// METHOD 4: DUAL PACKAGING (Modern Approach)
+
+// Package structure:
+/*
+my-universal-package/
+├── package.json
+├── src/
+│   └── index.js (ES Module source)
+├── lib/
+│   ├── index.cjs (CommonJS build)
+│   ├── index.mjs (ES Module build)
+│   └── index.umd.js (UMD build)
+└── types/
+    └── index.d.ts (TypeScript definitions)
+*/
+
+// package.json with conditional exports
+const packageJsonConfig = {
+    "name": "my-universal-package",
+    "version": "1.0.0",
+    "description": "Universal package that works everywhere",
+    "main": "./lib/index.cjs",        // CommonJS entry
+    "module": "./lib/index.mjs",      // ES Module entry
+    "browser": "./lib/index.umd.js",  // Browser UMD entry
+    "types": "./types/index.d.ts",    // TypeScript definitions
+    "exports": {
+        ".": {
+            "import": "./lib/index.mjs",    // ES Module import
+            "require": "./lib/index.cjs",   // CommonJS require
+            "browser": "./lib/index.umd.js" // Browser script tag
+        }
+    },
+    "scripts": {
+        "build": "npm run build:cjs && npm run build:esm && npm run build:umd",
+        "build:cjs": "babel src --out-dir lib --presets @babel/preset-env",
+        "build:esm": "babel src --out-dir lib --keep-file-extension",
+        "build:umd": "webpack --config webpack.config.js"
+    }
+};
+
+// METHOD 5: FEATURE DETECTION APPROACH
+
+// feature-based-module.js
+(function (root, factory) {
+    if (typeof define === 'function' && define.amd) {
+        define([], factory);
+    } else if (typeof module === 'object' && module.exports) {
+        module.exports = factory();
+    } else {
+        root.FeatureBasedModule = factory();
+    }
+}(typeof self !== 'undefined' ? self : this, function () {
+    'use strict';
+    
+    function FeatureBasedModule() {
+        this.features = this.detectFeatures();
+    }
+    
+    FeatureBasedModule.prototype.detectFeatures = function() {
+        return {
+            fetch: typeof fetch !== 'undefined',
+            promise: typeof Promise !== 'undefined',
+            localStorage: typeof localStorage !== 'undefined',
+            fileSystem: typeof require === 'function' && (() => {
+                try {
+                    require('fs');
+                    return true;
+                } catch (e) {
+                    return false;
+                }
+            })(),
+            webWorker: typeof importScripts === 'function',
+            crypto: typeof crypto !== 'undefined'
+        };
+    };
+    
+    FeatureBasedModule.prototype.request = function(url, options) {
+        if (this.features.fetch) {
+            return fetch(url, options);
+        } else if (this.features.fileSystem) {
+            // Node.js implementation
+            const https = require('https');
+            const http = require('http');
+            
+            return new Promise((resolve, reject) => {
+                const protocol = url.startsWith('https:') ? https : http;
+                const req = protocol.request(url, options, (res) => {
+                    let data = '';
+                    res.on('data', chunk => data += chunk);
+                    res.on('end', () => resolve({ 
+                        text: () => Promise.resolve(data),
+                        json: () => Promise.resolve(JSON.parse(data))
+                    }));
+                });
+                req.on('error', reject);
+                req.end();
+            });
+        } else {
+            throw new Error('No HTTP implementation available');
+        }
+    };
+    
+    FeatureBasedModule.prototype.store = function(key, value) {
+        if (this.features.localStorage) {
+            localStorage.setItem(key, JSON.stringify(value));
+        } else if (this.features.fileSystem) {
+            const fs = require('fs');
+            fs.writeFileSync(`${key}.json`, JSON.stringify(value));
+        } else {
+            // In-memory fallback
+            this._storage = this._storage || {};
+            this._storage[key] = value;
+        }
+    };
+    
+    FeatureBasedModule.prototype.retrieve = function(key) {
+        if (this.features.localStorage) {
+            try {
+                return JSON.parse(localStorage.getItem(key));
+            } catch (e) {
+                return null;
+            }
+        } else if (this.features.fileSystem) {
+            try {
+                const fs = require('fs');
+                return JSON.parse(fs.readFileSync(`${key}.json`, 'utf8'));
+            } catch (e) {
+                return null;
+            }
+        } else {
+            return (this._storage && this._storage[key]) || null;
+        }
+    };
+    
+    return FeatureBasedModule;
+}));
+
+// USAGE EXAMPLES:
+
+// In Node.js
+function nodeUsage() {
+    const UniversalModule = require('./universal-module');
+    const module = new UniversalModule({ debug: true });
+    
+    module.init();
+    module.fetch('https://api.example.com/data')
+        .then(response => response.text())
+        .then(data => console.log(data));
+}
+
+// In browser
+function browserUsage() {
+    // <script src="universal-module.js"></script>
+    const module = new UniversalModule({ debug: true });
+    
+    module.init();
+    module.fetch('/api/data')
+        .then(response => response.text())
+        .then(data => console.log(data));
+}
+
+// In RequireJS
+function amdUsage() {
+    require(['universal-module'], function(UniversalModule) {
+        const module = new UniversalModule({ debug: true });
+        module.init();
+    });
+}
+
+// TESTING UNIVERSAL MODULES:
+
+// test-universal.js
+function testUniversalModule() {
+    // Environment detection
+    const isNode = typeof process !== 'undefined';
+    const isBrowser = typeof window !== 'undefined';
+    
+    if (isNode) {
+        // Node.js tests
+        const UniversalModule = require('./universal-module');
+        const assert = require('assert');
+        
+        const module = new UniversalModule();
+        assert(module instanceof UniversalModule);
+        console.log('Node.js tests passed');
+    }
+    
+    if (isBrowser) {
+        // Browser tests
+        const module = new UniversalModule();
+        console.assert(module instanceof UniversalModule);
+        console.log('Browser tests passed');
+    }
+}
+
+// Modern development approach
+const modernDevelopment = {
+    source: 'Write in ES modules',
+    build: 'Use build tools (webpack/rollup) to generate multiple formats',
+    distribute: 'Publish with conditional exports in package.json',
+    test: 'Test in all target environments',
+    maintain: 'Single source of truth with automated builds'
+};
+
+console.log('Modern universal module development:', modernDevelopment);
+```
+</details>
 
 ## DOM manipulation (querySelector, createElement, etc.)
 
