@@ -18144,21 +18144,159 @@ console.log('Modern universal module development:', modernDevelopment);
 
 **Beginner: Q1** - How do you select elements from the DOM?
 
+<details>
+<summary>Answer</summary>
+
+Use `querySelector()`, `getElementById()`, and related methods:
+
+```javascript
+// Single element
+document.getElementById('myId');
+document.querySelector('.class');
+document.querySelector('#id');
+
+// Multiple elements
+document.querySelectorAll('.class');
+document.getElementsByClassName('class');
+document.getElementsByTagName('div');
+```
+</details>
+
 **Beginner: Q2** - How do you create and append new elements to the DOM?
+
+<details>
+<summary>Answer</summary>
+
+Use `createElement()` and `appendChild()`:
+
+```javascript
+const div = document.createElement('div');
+div.textContent = 'Hello World';
+div.className = 'my-class';
+
+document.body.appendChild(div);
+// or
+document.getElementById('container').appendChild(div);
+```
+</details>
 
 **Beginner: Q3** - What is the difference between `innerHTML`, `innerText`, and `textContent`?
 
+<details>
+<summary>Answer</summary>
+
+- `innerHTML`: Gets/sets HTML content including tags
+- `innerText`: Gets/sets visible text only (respects styling)
+- `textContent`: Gets/sets all text content (ignores styling)
+
+```javascript
+const div = document.querySelector('div');
+div.innerHTML = '<b>Bold</b>'; // Renders bold text
+div.innerText = '<b>Bold</b>'; // Shows literal <b>Bold</b>
+div.textContent = '<b>Bold</b>'; // Shows literal <b>Bold</b>
+```
+</details>
+
 **Intermediate: Q1** - How do you efficiently manipulate multiple DOM elements?
 
+<details>
+<summary>Answer</summary>
+
+Use `DocumentFragment` or batch operations to minimize reflows:
+
+```javascript
+// DocumentFragment
+const fragment = document.createDocumentFragment();
+for (let i = 0; i < 100; i++) {
+    const div = document.createElement('div');
+    fragment.appendChild(div);
+}
+document.body.appendChild(fragment); // Single reflow
+
+// Batch with CSS
+element.style.display = 'none'; // Batch changes
+element.style.width = '100px';
+element.style.display = 'block';
+```
+</details>
+
 **Intermediate: Q2** - What is the difference between `querySelector` and `getElementById` in terms of performance?
+
+<details>
+<summary>Answer</summary>
+
+`getElementById` is faster than `querySelector`:
+
+- `getElementById`: Direct hash table lookup, optimized by browsers
+- `querySelector`: Must parse CSS selector, more flexible but slower
+
+```javascript
+// Faster
+document.getElementById('myId');
+
+// Slower but more flexible
+document.querySelector('#myId');
+document.querySelector('.class[data-attr]');
+```
+
+Use `getElementById` when selecting by ID only.
+</details>
 
 ## Event bubbling & capturing
 
 **Beginner: Q1** - What is event bubbling?
 
+<details>
+<summary>Answer</summary>
+
+Event bubbling is when events propagate from the target element up to the root:
+
+```javascript
+// HTML: <div id="parent"><button id="child">Click</button></div>
+
+document.getElementById('parent').addEventListener('click', () => 
+    console.log('Parent'));
+document.getElementById('child').addEventListener('click', () => 
+    console.log('Child'));
+
+// Click button logs: "Child" then "Parent"
+```
+</details>
+
 **Beginner: Q2** - What is event capturing?
 
+<details>
+<summary>Answer</summary>
+
+Event capturing propagates from root down to the target element. Use third parameter `true`:
+
+```javascript
+document.getElementById('parent').addEventListener('click', () => 
+    console.log('Parent'), true); // true = capturing
+document.getElementById('child').addEventListener('click', () => 
+    console.log('Child'));
+
+// Click button logs: "Parent" then "Child"
+```
+</details>
+
 **Beginner: Q3** - How do you stop event bubbling?
+
+<details>
+<summary>Answer</summary>
+
+Use `event.stopPropagation()`:
+
+```javascript
+document.getElementById('child').addEventListener('click', (e) => {
+    console.log('Child');
+    e.stopPropagation(); // Stops bubbling to parent
+});
+
+document.getElementById('parent').addEventListener('click', () => 
+    console.log('Parent')); // Won't trigger
+```
+</details>
 
 **Intermediate: Q1** - What will happen in this code?
 ```javascript
@@ -18167,87 +18305,937 @@ document.getElementById('button').addEventListener('click', () => console.log('b
 // User clicks the button
 ```
 
+<details>
+<summary>Answer</summary>
+
+Output: "body" then "button"
+
+The body listener uses capturing (third parameter `true`), so it fires first during the capturing phase. Then the button listener fires during the bubbling phase.
+</details>
+
 **Intermediate: Q2** - What is the difference between `stopPropagation()` and `stopImmediatePropagation()`?
+
+<details>
+<summary>Answer</summary>
+
+- `stopPropagation()`: Stops event from bubbling/capturing to other elements
+- `stopImmediatePropagation()`: Stops propagation AND prevents other listeners on the same element
+
+```javascript
+element.addEventListener('click', (e) => {
+    e.stopImmediatePropagation();
+    console.log('First'); // Runs
+});
+
+element.addEventListener('click', () => {
+    console.log('Second'); // Won't run
+});
+```
+</details>
 
 ## Event listeners & passive events
 
 **Beginner: Q1** - How do you add and remove event listeners?
 
+<details>
+<summary>Answer</summary>
+
+Use `addEventListener()` and `removeEventListener()`:
+
+```javascript
+// Add listener
+function handleClick() {
+    console.log('Clicked');
+}
+element.addEventListener('click', handleClick);
+
+// Remove listener (must use same function reference)
+element.removeEventListener('click', handleClick);
+
+// With options
+element.addEventListener('click', handleClick, { once: true });
+```
+</details>
+
 **Beginner: Q2** - What is the difference between `addEventListener` and inline event handlers?
+
+<details>
+<summary>Answer</summary>
+
+- `addEventListener`: Can attach multiple listeners, better separation, more options
+- Inline handlers: Only one per event, mixed with HTML
+
+```javascript
+// addEventListener (preferred)
+element.addEventListener('click', handler1);
+element.addEventListener('click', handler2); // Both work
+
+// Inline (overwrites previous)
+element.onclick = handler1;
+element.onclick = handler2; // Only handler2 works
+```
+</details>
 
 **Beginner: Q3** - Can you add multiple event listeners to the same element?
 
+<details>
+<summary>Answer</summary>
+
+Yes, with `addEventListener()`:
+
+```javascript
+element.addEventListener('click', () => console.log('First'));
+element.addEventListener('click', () => console.log('Second'));
+element.addEventListener('click', () => console.log('Third'));
+
+// All three will execute when clicked
+```
+</details>
+
 **Intermediate: Q1** - What are passive event listeners and when would you use them?
 
+<details>
+<summary>Answer</summary>
+
+Passive listeners promise not to call `preventDefault()`, allowing browser optimizations:
+
+```javascript
+// Passive listener (can't prevent default)
+element.addEventListener('touchstart', handler, { passive: true });
+
+// Use for:
+// - Scroll events
+// - Touch events
+// - When you don't need preventDefault()
+
+// Benefits: Better scroll performance
+```
+</details>
+
 **Intermediate: Q2** - How do you prevent the default behavior of an event?
+
+<details>
+<summary>Answer</summary>
+
+Use `event.preventDefault()`:
+
+```javascript
+// Prevent form submission
+form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    // Custom validation
+});
+
+// Prevent link navigation
+link.addEventListener('click', (e) => {
+    e.preventDefault();
+    // Custom action
+});
+```
+</details>
 
 ## LocalStorage, SessionStorage, Cookies
 
 **Beginner: Q1** - What are the differences between localStorage, sessionStorage, and cookies?
 
+<details>
+<summary>Answer</summary>
+
+| Feature | localStorage | sessionStorage | Cookies |
+|---------|-------------|----------------|---------|
+| Persistence | Until cleared | Until tab closed | Set expiration |
+| Storage | 5-10MB | 5-10MB | 4KB |
+| Server Access | No | No | Yes (auto-sent) |
+| Scope | Domain | Tab/window | Domain |
+
+```javascript
+localStorage.setItem('key', 'value'); // Persistent
+sessionStorage.setItem('key', 'value'); // Tab session
+document.cookie = 'key=value'; // Can expire
+```
+</details>
+
 **Beginner: Q2** - How do you store and retrieve data from localStorage?
+
+<details>
+<summary>Answer</summary>
+
+Use `setItem()` and `getItem()`:
+
+```javascript
+// Store data
+localStorage.setItem('username', 'john');
+localStorage.setItem('settings', JSON.stringify({theme: 'dark'}));
+
+// Retrieve data
+const username = localStorage.getItem('username');
+const settings = JSON.parse(localStorage.getItem('settings'));
+
+// Remove data
+localStorage.removeItem('username');
+localStorage.clear(); // Remove all
+```
+</details>
 
 **Beginner: Q3** - What happens to sessionStorage when the browser tab is closed?
 
+<details>
+<summary>Answer</summary>
+
+sessionStorage is completely cleared when the tab is closed. Data is only available during the browser session and is isolated per tab/window.
+
+```javascript
+// This data disappears when tab closes
+sessionStorage.setItem('tempData', 'value');
+
+// localStorage persists across browser restarts
+localStorage.setItem('persistentData', 'value');
+```
+</details>
+
 **Intermediate: Q1** - What are the storage limits for each storage mechanism?
 
+<details>
+<summary>Answer</summary>
+
+- **localStorage/sessionStorage**: 5-10MB per origin (browser-dependent)
+- **Cookies**: 4KB per cookie, ~50 cookies per domain
+- **IndexedDB**: Much larger (hundreds of MB to GB)
+
+```javascript
+// Check available storage
+if (navigator.storage && navigator.storage.estimate) {
+    navigator.storage.estimate().then(estimate => {
+        console.log(`Used: ${estimate.usage}, Quota: ${estimate.quota}`);
+    });
+}
+```
+</details>
+
 **Intermediate: Q2** - How do you handle storage events and synchronize data across tabs?
+
+<details>
+<summary>Answer</summary>
+
+Use the `storage` event to sync across tabs:
+
+```javascript
+// Listen for storage changes
+window.addEventListener('storage', (e) => {
+    if (e.key === 'username') {
+        console.log(`Username changed from ${e.oldValue} to ${e.newValue}`);
+        updateUI(e.newValue);
+    }
+});
+
+// Storage event only fires in OTHER tabs, not the one making changes
+localStorage.setItem('username', 'newUser');
+```
+</details>
 
 ## Fetch API / XMLHttpRequest
 
 **Beginner: Q1** - How do you make an HTTP request using the Fetch API?
 
+<details>
+<summary>Answer</summary>
+
+Use `fetch()` with URL and optional options:
+
+```javascript
+// Basic GET request
+fetch('https://api.example.com/users')
+    .then(response => response.json())
+    .then(data => console.log(data));
+
+// With options
+fetch('https://api.example.com/users', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({name: 'John'})
+});
+```
+</details>
+
 **Beginner: Q2** - How do you handle the response from a fetch request?
+
+<details>
+<summary>Answer</summary>
+
+Chain `.then()` to process the response:
+
+```javascript
+fetch('/api/data')
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Network response was not ok');
+        }
+        return response.json(); // or .text(), .blob()
+    })
+    .then(data => console.log(data))
+    .catch(error => console.error('Error:', error));
+
+// Async/await version
+async function fetchData() {
+    try {
+        const response = await fetch('/api/data');
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+```
+</details>
 
 **Beginner: Q3** - What is the difference between Fetch API and XMLHttpRequest?
 
+<details>
+<summary>Answer</summary>
+
+- **Fetch**: Modern, Promise-based, cleaner syntax
+- **XMLHttpRequest**: Older, callback-based, more verbose
+
+```javascript
+// Fetch (modern)
+fetch('/api/data')
+    .then(response => response.json())
+    .then(data => console.log(data));
+
+// XMLHttpRequest (older)
+const xhr = new XMLHttpRequest();
+xhr.open('GET', '/api/data');
+xhr.onload = function() {
+    if (xhr.status === 200) {
+        console.log(JSON.parse(xhr.responseText));
+    }
+};
+xhr.send();
+```
+</details>
+
 **Intermediate: Q1** - How do you handle different types of errors in fetch requests?
 
+<details>
+<summary>Answer</summary>
+
+Check `response.ok` and handle network vs HTTP errors:
+
+```javascript
+async function handleFetch() {
+    try {
+        const response = await fetch('/api/data');
+        
+        // HTTP errors (404, 500, etc.)
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        if (error instanceof TypeError) {
+            // Network error
+            console.error('Network error:', error);
+        } else {
+            // HTTP error
+            console.error('HTTP error:', error);
+        }
+    }
+}
+```
+</details>
+
 **Intermediate: Q2** - How do you send POST requests with JSON data using fetch?
+
+<details>
+<summary>Answer</summary>
+
+Set method, headers, and stringify the body:
+
+```javascript
+const userData = { name: 'John', email: 'john@example.com' };
+
+fetch('/api/users', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(userData)
+})
+.then(response => response.json())
+.then(data => console.log('Success:', data));
+
+// With async/await
+async function createUser(userData) {
+    const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(userData)
+    });
+    return response.json();
+}
+```
+</details>
 
 ## CORS
 
 **Beginner: Q1** - What is CORS and why does it exist?
 
+<details>
+<summary>Answer</summary>
+
+CORS (Cross-Origin Resource Sharing) is a security mechanism that restricts web pages from accessing resources from different origins:
+
+```javascript
+// Same origin (allowed)
+// From: https://example.com
+fetch('https://example.com/api/data'); // ✓ Same origin
+
+// Cross-origin (needs CORS)
+// From: https://example.com  
+fetch('https://api.other.com/data'); // ✗ Different origin
+
+// CORS exists to prevent malicious websites from:
+// - Reading sensitive data from other sites
+// - Making unauthorized requests on user's behalf
+```
+</details>
+
 **Beginner: Q2** - What is a CORS error and when do you encounter it?
+
+<details>
+<summary>Answer</summary>
+
+CORS error occurs when trying to access a resource from a different origin without proper headers:
+
+```javascript
+// This will cause CORS error if server doesn't allow it
+fetch('https://api.external.com/data')
+    .then(response => response.json())
+    .catch(error => {
+        // Error: "Access to fetch at 'https://api.external.com/data' 
+        // from origin 'https://mysite.com' has been blocked by CORS policy"
+        console.error('CORS error:', error);
+    });
+
+// Common scenarios:
+// - API calls to different domains
+// - Different ports (localhost:3000 → localhost:8080)
+// - Different protocols (http → https)
+```
+</details>
 
 **Beginner: Q3** - How do you enable CORS on the server side?
 
+<details>
+<summary>Answer</summary>
+
+Set appropriate CORS headers on the server:
+
+```javascript
+// Express.js server
+app.use((req, res, next) => {
+    res.header('Access-Control-Allow-Origin', '*'); // or specific domain
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+});
+
+// Or use cors middleware
+const cors = require('cors');
+app.use(cors({
+    origin: 'https://mywebsite.com',
+    credentials: true
+}));
+```
+</details>
+
 **Intermediate: Q1** - What are preflight requests and when do they occur?
 
+<details>
+<summary>Answer</summary>
+
+Preflight requests are OPTIONS requests sent before complex requests to check permissions:
+
+```javascript
+// Simple request (no preflight)
+fetch('/api/data', {
+    method: 'GET',
+    headers: { 'Content-Type': 'text/plain' }
+});
+
+// Complex request (triggers preflight)
+fetch('https://api.example.com/data', {
+    method: 'PUT', // Non-simple method
+    headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Bearer token' // Custom header
+    },
+    body: JSON.stringify({data: 'value'})
+});
+
+// Browser sends OPTIONS request first:
+// OPTIONS /api/data
+// Access-Control-Request-Method: PUT
+// Access-Control-Request-Headers: authorization,content-type
+```
+</details>
+
 **Intermediate: Q2** - How do you handle credentials in CORS requests?
+
+<details>
+<summary>Answer</summary>
+
+Use `credentials: 'include'` and proper server headers:
+
+```javascript
+// Client side - include cookies/credentials
+fetch('https://api.example.com/data', {
+    method: 'GET',
+    credentials: 'include' // Include cookies
+});
+
+// Server side - allow credentials
+res.header('Access-Control-Allow-Credentials', 'true');
+res.header('Access-Control-Allow-Origin', 'https://specificdomain.com'); // Cannot use '*' with credentials
+
+// XMLHttpRequest version
+xhr.withCredentials = true;
+```
+</details>
 
 ## WebSockets
 
 **Beginner: Q1** - What are WebSockets and how are they different from HTTP?
 
+<details>
+<summary>Answer</summary>
+
+WebSockets provide persistent, bi-directional communication between client and server:
+
+| Feature | HTTP | WebSockets |
+|---------|------|------------|
+| Connection | Request-response | Persistent |
+| Direction | Unidirectional | Bi-directional |
+| Overhead | High (headers each request) | Low (after handshake) |
+| Use case | Traditional web | Real-time apps |
+
+```javascript
+// HTTP - request/response
+fetch('/api/data').then(response => response.json());
+
+// WebSocket - persistent connection
+const ws = new WebSocket('ws://localhost:8080');
+ws.send('Hello Server'); // Can send anytime
+```
+</details>
+
 **Beginner: Q2** - How do you create a WebSocket connection?
+
+<details>
+<summary>Answer</summary>
+
+Use the `WebSocket` constructor:
+
+```javascript
+// Create connection
+const socket = new WebSocket('ws://localhost:8080');
+
+// Connection opened
+socket.addEventListener('open', (event) => {
+    console.log('Connected to server');
+    socket.send('Hello Server!');
+});
+
+// Receive messages
+socket.addEventListener('message', (event) => {
+    console.log('Message from server:', event.data);
+});
+
+// Connection closed
+socket.addEventListener('close', (event) => {
+    console.log('Connection closed');
+});
+```
+</details>
 
 **Beginner: Q3** - What events can you listen for on a WebSocket?
 
+<details>
+<summary>Answer</summary>
+
+Four main events: `open`, `message`, `close`, and `error`:
+
+```javascript
+const socket = new WebSocket('ws://localhost:8080');
+
+socket.onopen = () => console.log('Connection opened');
+socket.onmessage = (event) => console.log('Received:', event.data);
+socket.onclose = (event) => console.log('Connection closed:', event.code);
+socket.onerror = (error) => console.error('WebSocket error:', error);
+
+// Or with addEventListener
+socket.addEventListener('open', handleOpen);
+socket.addEventListener('message', handleMessage);
+socket.addEventListener('close', handleClose);
+socket.addEventListener('error', handleError);
+```
+</details>
+
 **Intermediate: Q1** - How do you handle WebSocket reconnection and error recovery?
 
+<details>
+<summary>Answer</summary>
+
+Implement automatic reconnection with exponential backoff:
+
+```javascript
+class ReconnectingWebSocket {
+    constructor(url) {
+        this.url = url;
+        this.reconnectAttempts = 0;
+        this.maxReconnectAttempts = 5;
+        this.reconnectInterval = 1000;
+        this.connect();
+    }
+    
+    connect() {
+        this.socket = new WebSocket(this.url);
+        
+        this.socket.onopen = () => {
+            console.log('Connected');
+            this.reconnectAttempts = 0;
+        };
+        
+        this.socket.onclose = () => this.handleReconnect();
+        this.socket.onerror = () => this.handleReconnect();
+    }
+    
+    handleReconnect() {
+        if (this.reconnectAttempts < this.maxReconnectAttempts) {
+            setTimeout(() => {
+                this.reconnectAttempts++;
+                this.connect();
+            }, this.reconnectInterval * Math.pow(2, this.reconnectAttempts));
+        }
+    }
+}
+```
+</details>
+
 **Intermediate: Q2** - When would you choose WebSockets over HTTP polling?
+
+<details>
+<summary>Answer</summary>
+
+Choose WebSockets for real-time, bi-directional communication:
+
+**Use WebSockets for:**
+- Real-time chat applications
+- Live data feeds (stock prices, sports scores)
+- Online gaming
+- Collaborative editing (Google Docs)
+- Live notifications
+
+**Use HTTP polling for:**
+- Occasional data updates
+- Simple request-response patterns
+- Better caching requirements
+- Simpler server infrastructure
+
+```javascript
+// HTTP Polling (every 5 seconds)
+setInterval(() => {
+    fetch('/api/notifications').then(res => res.json());
+}, 5000);
+
+// WebSocket (real-time)
+socket.onmessage = (event) => {
+    const notification = JSON.parse(event.data);
+    displayNotification(notification);
+};
+```
+</details>
 
 ## Service Workers
 
 **Beginner: Q1** - What are Service Workers and what are they used for?
 
+<details>
+<summary>Answer</summary>
+
+Service Workers are scripts that run in the background, separate from web pages, enabling offline functionality and caching:
+
+**Main uses:**
+- Offline functionality
+- Background sync
+- Push notifications
+- Caching strategies
+- Network request interception
+
+```javascript
+// Service Worker acts as a proxy between app and network
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request)
+            .then(response => response || fetch(event.request))
+    );
+});
+```
+</details>
+
 **Beginner: Q2** - How do you register a Service Worker?
+
+<details>
+<summary>Answer</summary>
+
+Register in main thread using `navigator.serviceWorker.register()`:
+
+```javascript
+// In main app (main thread)
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+            console.log('SW registered:', registration);
+        })
+        .catch(error => {
+            console.log('SW registration failed:', error);
+        });
+}
+
+// Check if already registered
+navigator.serviceWorker.ready.then(registration => {
+    console.log('SW is ready:', registration);
+});
+```
+</details>
 
 **Beginner: Q3** - What is the lifecycle of a Service Worker?
 
+<details>
+<summary>Answer</summary>
+
+Service Worker has three main lifecycle events:
+
+```javascript
+// sw.js - Service Worker file
+
+// 1. Install - SW is installing
+self.addEventListener('install', (event) => {
+    console.log('SW installing');
+    event.waitUntil(
+        caches.open('v1').then(cache => {
+            return cache.addAll(['/index.html', '/app.js']);
+        })
+    );
+    self.skipWaiting(); // Activate immediately
+});
+
+// 2. Activate - SW is activated
+self.addEventListener('activate', (event) => {
+    console.log('SW activated');
+    event.waitUntil(clients.claim()); // Take control immediately
+});
+
+// 3. Fetch - Intercept network requests
+self.addEventListener('fetch', (event) => {
+    // Handle requests
+});
+```
+</details>
+
 **Intermediate: Q1** - How do you implement caching strategies with Service Workers?
 
+<details>
+<summary>Answer</summary>
+
+Implement different caching strategies based on resource type:
+
+```javascript
+self.addEventListener('fetch', (event) => {
+    const url = new URL(event.request.url);
+    
+    // Cache First (for static assets)
+    if (url.pathname.includes('/static/')) {
+        event.respondWith(
+            caches.match(event.request)
+                .then(response => response || fetch(event.request))
+        );
+    }
+    
+    // Network First (for API calls)
+    else if (url.pathname.includes('/api/')) {
+        event.respondWith(
+            fetch(event.request)
+                .catch(() => caches.match(event.request))
+        );
+    }
+    
+    // Stale While Revalidate (for pages)
+    else {
+        event.respondWith(
+            caches.match(event.request)
+                .then(response => {
+                    const fetchPromise = fetch(event.request);
+                    if (response) {
+                        fetchPromise.then(res => {
+                            caches.open('v1').then(cache => cache.put(event.request, res.clone()));
+                        });
+                        return response;
+                    }
+                    return fetchPromise;
+                })
+        );
+    }
+});
+```
+</details>
+
 **Intermediate: Q2** - How do Service Workers enable offline functionality?
+
+<details>
+<summary>Answer</summary>
+
+Service Workers cache resources and serve them when offline:
+
+```javascript
+// Cache essential resources during install
+self.addEventListener('install', (event) => {
+    event.waitUntil(
+        caches.open('offline-v1').then(cache => {
+            return cache.addAll([
+                '/',
+                '/index.html',
+                '/app.js',
+                '/styles.css',
+                '/offline.html'
+            ]);
+        })
+    );
+});
+
+// Serve cached content when offline
+self.addEventListener('fetch', (event) => {
+    event.respondWith(
+        caches.match(event.request)
+            .then(response => {
+                // Return cached version or try network
+                return response || fetch(event.request);
+            })
+            .catch(() => {
+                // If both fail, show offline page
+                if (event.request.destination === 'document') {
+                    return caches.match('/offline.html');
+                }
+            })
+    );
+});
+```
+</details>
 
 ## try/catch/finally
 
 **Beginner: Q1** - How do you handle errors using try/catch/finally?
 
+<details>
+<summary>Answer</summary>
+
+Use try/catch/finally blocks to handle errors gracefully:
+
+```javascript
+try {
+    // Code that might throw an error
+    const data = JSON.parse(jsonString);
+    console.log(data);
+} catch (error) {
+    // Handle the error
+    console.error('Parsing failed:', error.message);
+} finally {
+    // Always executes (optional)
+    console.log('Cleanup or logging');
+}
+
+// With functions
+function safeOperation() {
+    try {
+        return riskyFunction();
+    } catch (error) {
+        return null; // Fallback value
+    }
+}
+```
+</details>
+
 **Beginner: Q2** - When does the finally block execute?
 
+<details>
+<summary>Answer</summary>
+
+The finally block always executes, regardless of success or error:
+
+```javascript
+function testFinally() {
+    try {
+        console.log('try'); // Executes
+        return 'from try';
+    } catch (error) {
+        console.log('catch'); // Doesn't execute
+        return 'from catch';
+    } finally {
+        console.log('finally'); // Always executes
+    }
+}
+
+testFinally(); 
+// Output: 'try', 'finally'
+// Returns: 'from try'
+
+// Finally executes even with errors
+try {
+    throw new Error('test');
+} catch (e) {
+    console.log('caught');
+} finally {
+    console.log('cleanup'); // Still executes
+}
+```
+</details>
+
 **Beginner: Q3** - Can you have try/catch without finally, or try/finally without catch?
+
+<details>
+<summary>Answer</summary>
+
+Yes, both combinations are valid:
+
+```javascript
+// try/catch without finally
+try {
+    riskyOperation();
+} catch (error) {
+    handleError(error);
+}
+
+// try/finally without catch (error will propagate)
+try {
+    riskyOperation();
+} finally {
+    cleanup(); // Always runs, even if error occurs
+}
+
+// All three together
+try {
+    riskyOperation();
+} catch (error) {
+    handleError(error);
+} finally {
+    cleanup();
+}
+```
+</details>
 
 **Intermediate: Q1** - What will be the output of this code?
 ```javascript
@@ -18263,7 +19251,70 @@ function test() {
 console.log(test());
 ```
 
+<details>
+<summary>Answer</summary>
+
+Output: `'finally'`
+
+The finally block's return statement overrides the try block's return:
+
+```javascript
+function test() {
+    try {
+        return 'try';    // This is overridden
+    } finally {
+        return 'finally'; // This wins
+    }
+}
+console.log(test()); // 'finally'
+
+// Without return in finally
+function test2() {
+    try {
+        return 'try';
+    } finally {
+        console.log('cleanup'); // No return
+    }
+}
+console.log(test2()); // 'try'
+```
+</details>
+
 **Intermediate: Q2** - How do you handle async errors in try/catch blocks?
+
+<details>
+<summary>Answer</summary>
+
+Use try/catch with async/await for async operations:
+
+```javascript
+// Async/await with try/catch
+async function fetchData() {
+    try {
+        const response = await fetch('/api/data');
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Fetch failed:', error);
+        throw error; // Re-throw if needed
+    } finally {
+        console.log('Request completed');
+    }
+}
+
+// Won't work with regular Promises
+try {
+    fetch('/api/data'); // Returns Promise, won't catch
+} catch (error) {
+    // This won't catch fetch errors
+}
+
+// Use .catch() instead
+fetch('/api/data')
+    .then(response => response.json())
+    .catch(error => console.error(error));
+```
+</details>
 
 ## Custom errors
 
