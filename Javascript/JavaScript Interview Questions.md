@@ -4173,9 +4173,139 @@ console.log(obj.getName());
 
 **Beginner: Q1** - How do you set default values for function parameters in ES6?
 
+<details>
+<summary>Answer</summary>
+
+Use `=` to assign default values to parameters:
+
+```javascript
+// Basic default parameters
+function greet(name = 'World', greeting = 'Hello') {
+    return `${greeting}, ${name}!`;
+}
+
+console.log(greet()); // "Hello, World!"
+console.log(greet('Alice')); // "Hello, Alice!"
+console.log(greet('Bob', 'Hi')); // "Hi, Bob!"
+
+// Default values can be expressions
+function createUser(name, role = 'user', id = Date.now()) {
+    return { name, role, id };
+}
+
+// Default values can reference other parameters
+function calculateArea(width, height = width) {
+    return width * height; // Square if height not provided
+}
+
+console.log(calculateArea(5)); // 25 (5 * 5)
+console.log(calculateArea(5, 3)); // 15 (5 * 3)
+
+// Only undefined triggers default value
+function test(value = 'default') {
+    return value;
+}
+
+console.log(test()); // 'default'
+console.log(test(undefined)); // 'default'
+console.log(test(null)); // null (not default)
+console.log(test(0)); // 0 (not default)
+console.log(test('')); // '' (not default)
+```
+</details>
+
 **Beginner: Q2** - What are rest parameters and how do you use them?
 
+<details>
+<summary>Answer</summary>
+
+Rest parameters collect remaining arguments into an array using `...`:
+
+```javascript
+// Rest parameters collect remaining arguments
+function sum(...numbers) {
+    return numbers.reduce((total, num) => total + num, 0);
+}
+
+console.log(sum(1, 2, 3, 4)); // 10
+console.log(sum(5)); // 5
+console.log(sum()); // 0
+
+// Mix regular parameters with rest
+function introduce(name, age, ...hobbies) {
+    return `${name} is ${age} years old and likes ${hobbies.join(', ')}`;
+}
+
+console.log(introduce('Alice', 25, 'reading', 'coding', 'gaming'));
+// "Alice is 25 years old and likes reading, coding, gaming"
+
+// Rest parameter must be last
+function invalid(first, ...middle, last) {} // SyntaxError
+
+// Replacing arguments object
+function oldWay() {
+    const args = Array.from(arguments); // Convert arguments to array
+    return args.slice(1); // Skip first argument
+}
+
+function newWay(first, ...rest) {
+    return rest; // Already an array
+}
+
+// Arrow functions with rest parameters
+const multiply = (...nums) => nums.reduce((a, b) => a * b, 1);
+console.log(multiply(2, 3, 4)); // 24
+```
+</details>
+
 **Beginner: Q3** - What is the spread operator and how is it used with arrays?
+
+<details>
+<summary>Answer</summary>
+
+Spread operator `...` expands arrays into individual elements:
+
+```javascript
+// Spread array elements
+const numbers = [1, 2, 3];
+console.log(...numbers); // 1 2 3 (individual arguments)
+
+// Copy arrays
+const original = [1, 2, 3];
+const copy = [...original]; // Shallow copy
+copy.push(4);
+console.log(original); // [1, 2, 3] (unchanged)
+console.log(copy); // [1, 2, 3, 4]
+
+// Merge arrays
+const arr1 = [1, 2];
+const arr2 = [3, 4];
+const merged = [...arr1, ...arr2]; // [1, 2, 3, 4]
+
+// Insert elements
+const numbers = [2, 3, 4];
+const withOne = [1, ...numbers]; // [1, 2, 3, 4]
+const withFive = [...numbers, 5]; // [2, 3, 4, 5]
+const between = [1, ...numbers, 5, 6]; // [1, 2, 3, 4, 5, 6]
+
+// Function arguments
+function add(a, b, c) {
+    return a + b + c;
+}
+
+const values = [1, 2, 3];
+console.log(add(...values)); // 6 (same as add(1, 2, 3))
+
+// Math operations
+const scores = [85, 92, 78, 96, 88];
+console.log(Math.max(...scores)); // 96
+console.log(Math.min(...scores)); // 78
+
+// Convert string to array
+const word = 'hello';
+const letters = [...word]; // ['h', 'e', 'l', 'l', 'o']
+```
+</details>
 
 **Intermediate: Q1** - What will be the output of this code?
 ```javascript
@@ -4186,15 +4316,269 @@ console.log(test(5));
 console.log(test());
 ```
 
+<details>
+<summary>Answer</summary>
+
+Output:
+```
+[5, 6, 11]
+[1, 2, 3]
+```
+
+Explanation:
+
+```javascript
+function test(a = 1, b = a + 1, c = b + a) {
+    return [a, b, c];
+}
+
+// First call: test(5)
+// a = 5 (provided)
+// b = a + 1 = 5 + 1 = 6
+// c = b + a = 6 + 5 = 11
+console.log(test(5)); // [5, 6, 11]
+
+// Second call: test()
+// a = 1 (default)
+// b = a + 1 = 1 + 1 = 2
+// c = b + a = 2 + 1 = 3
+console.log(test()); // [1, 2, 3]
+
+// Default parameters can reference previous parameters
+// They are evaluated left to right
+// Each parameter can use values of parameters to its left
+
+// More examples:
+function example(x = 0, y = x * 2, z = x + y) {
+    return { x, y, z };
+}
+
+console.log(example(3)); // { x: 3, y: 6, z: 9 }
+console.log(example()); // { x: 0, y: 0, z: 0 }
+
+// Cannot reference parameters to the right
+function invalid(a = b, b = 1) {} // ReferenceError: b is not defined
+```
+</details>
+
 **Intermediate: Q2** - How can you use the spread operator to merge objects and arrays?
+
+<details>
+<summary>Answer</summary>
+
+Spread operator works with both arrays and objects for merging:
+
+```javascript
+// Array merging
+const fruits = ['apple', 'banana'];
+const vegetables = ['carrot', 'broccoli'];
+const food = [...fruits, ...vegetables]; // ['apple', 'banana', 'carrot', 'broccoli']
+
+// Multiple arrays
+const first = [1, 2];
+const second = [3, 4];
+const third = [5, 6];
+const all = [...first, ...second, ...third]; // [1, 2, 3, 4, 5, 6]
+
+// Object merging (ES2018+)
+const person = { name: 'John', age: 30 };
+const job = { title: 'Developer', company: 'Tech Corp' };
+const employee = { ...person, ...job };
+// { name: 'John', age: 30, title: 'Developer', company: 'Tech Corp' }
+
+// Override properties (later values win)
+const defaults = { theme: 'light', size: 'medium' };
+const userPrefs = { theme: 'dark', notifications: true };
+const settings = { ...defaults, ...userPrefs };
+// { theme: 'dark', size: 'medium', notifications: true }
+
+// Add new properties while spreading
+const original = { a: 1, b: 2 };
+const extended = { ...original, c: 3, a: 10 }; // Override 'a'
+// { a: 10, b: 2, c: 3 }
+
+// Conditional spreading
+const includeExtra = true;
+const config = {
+    base: 'config',
+    ...(includeExtra && { extra: 'data' }), // Only spread if condition is true
+    ...(false && { skipped: 'value' }) // This won't be included
+};
+
+// Nested object merging (shallow only)
+const user = {
+    name: 'Alice',
+    preferences: { theme: 'light', lang: 'en' }
+};
+
+const updates = {
+    preferences: { theme: 'dark' } // This replaces entire preferences object
+};
+
+const merged = { ...user, ...updates };
+// { name: 'Alice', preferences: { theme: 'dark' } } - lang is lost!
+
+// Deep merge requires custom function or library
+const deepMerged = {
+    ...user,
+    preferences: { ...user.preferences, ...updates.preferences }
+};
+// { name: 'Alice', preferences: { theme: 'dark', lang: 'en' } }
+```
+</details>
 
 ## Destructuring (arrays, objects)
 
 **Beginner: Q1** - How do you destructure arrays and objects in JavaScript?
 
+<details>
+<summary>Answer</summary>
+
+Destructuring extracts values from arrays and objects into variables:
+
+```javascript
+// Array destructuring
+const numbers = [1, 2, 3, 4, 5];
+const [first, second, third] = numbers;
+console.log(first); // 1
+console.log(second); // 2
+console.log(third); // 3
+
+// Skip elements
+const [a, , c] = numbers; // Skip second element
+console.log(a); // 1
+console.log(c); // 3
+
+// Object destructuring
+const person = { name: 'Alice', age: 30, city: 'New York' };
+const { name, age, city } = person;
+console.log(name); // 'Alice'
+console.log(age); // 30
+console.log(city); // 'New York'
+
+// Extract specific properties
+const { name: personName, age: personAge } = person;
+console.log(personName); // 'Alice'
+console.log(personAge); // 30
+
+// Function parameters
+function greet({ name, age }) {
+    return `Hello ${name}, you are ${age} years old`;
+}
+
+console.log(greet(person)); // "Hello Alice, you are 30 years old"
+
+// Array in function parameters
+function sum([a, b, c]) {
+    return a + b + c;
+}
+
+console.log(sum([1, 2, 3])); // 6
+```
+</details>
+
 **Beginner: Q2** - How do you assign default values during destructuring?
 
+<details>
+<summary>Answer</summary>
+
+Use `=` to provide default values in case the property/element is undefined:
+
+```javascript
+// Array destructuring with defaults
+const numbers = [1];
+const [first = 0, second = 0, third = 0] = numbers;
+console.log(first); // 1 (from array)
+console.log(second); // 0 (default)
+console.log(third); // 0 (default)
+
+// Object destructuring with defaults
+const person = { name: 'Alice' };
+const { name = 'Unknown', age = 0, city = 'Unknown' } = person;
+console.log(name); // 'Alice' (from object)
+console.log(age); // 0 (default)
+console.log(city); // 'Unknown' (default)
+
+// Defaults only for undefined values
+const data = { value: null, count: 0 };
+const { value = 'default', count = 10, missing = 'fallback' } = data;
+console.log(value); // null (not undefined, so no default)
+console.log(count); // 0 (not undefined, so no default)
+console.log(missing); // 'fallback' (undefined, so default used)
+
+// Function parameters with defaults
+function processUser({ name = 'Guest', role = 'user', active = true } = {}) {
+    return { name, role, active };
+}
+
+console.log(processUser()); // { name: 'Guest', role: 'user', active: true }
+console.log(processUser({ name: 'Alice' })); // { name: 'Alice', role: 'user', active: true }
+
+// Combined with renaming
+const config = { theme: 'dark' };
+const { theme: selectedTheme = 'light', lang: language = 'en' } = config;
+console.log(selectedTheme); // 'dark'
+console.log(language); // 'en'
+```
+</details>
+
 **Beginner: Q3** - How do you rename variables during object destructuring?
+
+<details>
+<summary>Answer</summary>
+
+Use `:` to rename variables during object destructuring:
+
+```javascript
+// Basic renaming
+const user = { name: 'Alice', age: 30 };
+const { name: userName, age: userAge } = user;
+console.log(userName); // 'Alice'
+console.log(userAge); // 30
+// console.log(name); // ReferenceError: name is not defined
+
+// Avoid naming conflicts
+const person = { name: 'Bob' };
+const company = { name: 'Tech Corp' };
+
+const { name: personName } = person;
+const { name: companyName } = company;
+console.log(personName); // 'Bob'
+console.log(companyName); // 'Tech Corp'
+
+// Renaming with defaults
+const settings = { theme: 'dark' };
+const { 
+    theme: selectedTheme = 'light', 
+    lang: selectedLang = 'en',
+    notifications: enableNotifications = true 
+} = settings;
+
+console.log(selectedTheme); // 'dark'
+console.log(selectedLang); // 'en'
+console.log(enableNotifications); // true
+
+// Function parameters with renaming
+function displayUser({ name: fullName, age: years, email: contact }) {
+    return `${fullName} (${years}) - Contact: ${contact}`;
+}
+
+const userData = { name: 'John Doe', age: 25, email: 'john@example.com' };
+console.log(displayUser(userData)); // "John Doe (25) - Contact: john@example.com"
+
+// Nested object renaming
+const response = {
+    data: {
+        user: { id: 1, name: 'Alice' },
+        meta: { count: 100 }
+    }
+};
+
+const { data: { user: { name: displayName }, meta: { count: totalCount } } } = response;
+console.log(displayName); // 'Alice'
+console.log(totalCount); // 100
+```
+</details>
 
 **Intermediate: Q1** - What will be the output of this code?
 ```javascript
@@ -4203,7 +4587,144 @@ const [first, , third, ...rest] = arr;
 console.log(first, third, rest);
 ```
 
+<details>
+<summary>Answer</summary>
+
+Output: `1 3 [4, 5]`
+
+Explanation:
+
+```javascript
+const arr = [1, 2, 3, 4, 5];
+const [first, , third, ...rest] = arr;
+
+// Destructuring breakdown:
+// first = arr[0] = 1
+// (skip) = arr[1] = 2 (skipped with empty slot)
+// third = arr[2] = 3
+// ...rest = remaining elements = [4, 5]
+
+console.log(first, third, rest); // 1 3 [4, 5]
+
+// Step-by-step:
+// Position 0: first gets value 1
+// Position 1: empty (comma with no variable name)
+// Position 2: third gets value 3
+// Position 3+: rest parameter collects [4, 5]
+
+// More examples of skipping elements:
+const [a, , , d] = [10, 20, 30, 40]; // Skip 2nd and 3rd
+console.log(a, d); // 10 40
+
+const [x, , ...remaining] = [1, 2, 3, 4, 5];
+console.log(x); // 1
+console.log(remaining); // [3, 4, 5] (starts from position 2)
+
+// Rest parameter must be last
+// const [first, ...middle, last] = arr; // SyntaxError
+```
+</details>
+
 **Intermediate: Q2** - How do you destructure nested objects and arrays?
+
+<details>
+<summary>Answer</summary>
+
+Use nested patterns to destructure deeply nested structures:
+
+```javascript
+// Nested object destructuring
+const user = {
+    name: 'Alice',
+    address: {
+        street: '123 Main St',
+        city: 'New York',
+        coordinates: { lat: 40.7128, lng: -74.0060 }
+    },
+    hobbies: ['reading', 'coding', 'gaming']
+};
+
+// Extract nested object properties
+const {
+    name,
+    address: { 
+        city, 
+        coordinates: { lat, lng } 
+    },
+    hobbies: [firstHobby, ...otherHobbies]
+} = user;
+
+console.log(name); // 'Alice'
+console.log(city); // 'New York'
+console.log(lat); // 40.7128
+console.log(lng); // -74.0060
+console.log(firstHobby); // 'reading'
+console.log(otherHobbies); // ['coding', 'gaming']
+
+// Nested arrays
+const matrix = [[1, 2], [3, 4], [5, 6]];
+const [[a, b], [c, d]] = matrix;
+console.log(a, b, c, d); // 1 2 3 4
+
+// Mixed nested destructuring
+const response = {
+    data: {
+        users: [
+            { id: 1, name: 'John', tags: ['admin', 'user'] },
+            { id: 2, name: 'Jane', tags: ['user'] }
+        ]
+    }
+};
+
+const {
+    data: {
+        users: [
+            { name: firstName, tags: [firstTag] },
+            { name: secondName }
+        ]
+    }
+} = response;
+
+console.log(firstName); // 'John'
+console.log(firstTag); // 'admin'
+console.log(secondName); // 'Jane'
+
+// With defaults for nested properties
+const config = {
+    server: {
+        port: 3000
+    }
+};
+
+const {
+    server: { 
+        port = 8080, 
+        host = 'localhost' 
+    } = {}
+} = config;
+
+console.log(port); // 3000
+console.log(host); // 'localhost' (default)
+
+// Function parameters with nested destructuring
+function processOrder({ 
+    customer: { name, email }, 
+    items: [{ product, quantity }],
+    shipping: { method = 'standard' } = {}
+}) {
+    return `Order for ${name} (${email}): ${quantity}x ${product}, shipped via ${method}`;
+}
+
+const order = {
+    customer: { name: 'Bob', email: 'bob@example.com' },
+    items: [{ product: 'Laptop', quantity: 1 }],
+    shipping: { method: 'express' }
+};
+
+console.log(processOrder(order));
+// "Order for Bob (bob@example.com): 1x Laptop, shipped via express"
+```
+</details>
 
 ## Template literals
 
@@ -4620,23 +5141,6 @@ import MyUser from './user.js'; // Can rename default import
 // Mixed imports
 import User, { validateEmail } from './user.js';
 
-// Export patterns:
-
-// 1. Inline named exports
-export const config = { api: 'url' };
-export function helper() {}
-
-// 2. Grouped named exports
-const a = 1;
-const b = 2;
-export { a, b };
-
-// 3. Default export variations
-export default function() {} // Anonymous function
-export default class {} // Anonymous class
-export default 42; // Primitive value
-export default { name: 'Object' }; // Object literal
-
 // Key differences:
 // Named: import { exact, names } from 'module'
 // Default: import anyName from 'module'
@@ -4691,17 +5195,8 @@ import calculator, * as math from './math.js';
 import './polyfills.js'; // Runs the module code
 
 // Real-world example
-// lodash.js (hypothetical)
-export function debounce() {}
-export function throttle() {}
-export function cloneDeep() {}
-
-// Usage
 import * as _ from './lodash.js';
 const debouncedFn = _.debounce(myFunction, 300);
-
-// Or destructure from namespace
-const { debounce, throttle } = await import('./lodash.js');
 ```
 </details>
 
@@ -4754,16 +5249,7 @@ if (!Array.prototype.includes) {
 const locale = 'en';
 const translations = await import(`./locales/${locale}.js`);
 
-// 4. Feature detection
-if (supportsWebGL) {
-    const { WebGLRenderer } = await import('./webgl-renderer.js');
-    new WebGLRenderer();
-} else {
-    const { CanvasRenderer } = await import('./canvas-renderer.js');
-    new CanvasRenderer();
-}
-
-// 5. Plugin system
+// 4. Plugin system
 class PluginManager {
     async loadPlugin(pluginName) {
         try {
@@ -4775,30 +5261,10 @@ class PluginManager {
     }
 }
 
-// 6. Route-based loading (React/Vue)
-const routes = [
-    {
-        path: '/home',
-        component: () => import('./components/Home.js')
-    },
-    {
-        path: '/about',
-        component: () => import('./components/About.js')
-    }
-];
-
-// Error handling
-try {
-    const module = await import('./maybe-missing.js');
-} catch (error) {
-    console.error('Module failed to load:', error);
-}
-
 // Benefits:
 // - Smaller initial bundle size
 // - Faster page load
 // - Load features on demand
-// - Better user experience
 ```
 </details>
 
@@ -4832,18 +5298,14 @@ import Calculator from './calculator.js';
 
 // Key Differences:
 
-// 1. Syntax
-// CommonJS: require() / module.exports
-// ES6: import / export
-
-// 2. Loading behavior
+// 1. Loading behavior
 // CommonJS: Synchronous, runtime
 const fs = require('fs'); // Loaded immediately
 
 // ES6: Asynchronous, compile-time
 import fs from 'fs'; // Analyzed before execution
 
-// 3. Static vs Dynamic
+// 2. Static vs Dynamic
 // CommonJS: Dynamic (can be conditional)
 if (condition) {
     const module = require('./module'); // Works
@@ -4854,7 +5316,7 @@ if (condition) {
 //     import module from './module'; // SyntaxError
 // }
 
-// 4. Live bindings
+// 3. Live bindings
 // CommonJS: Copy of value
 // counter.js (CommonJS)
 let count = 0;
@@ -4876,35 +5338,12 @@ import { count, increment } from './counter.js';
 increment();
 console.log(count); // 1 (live binding, updated)
 
-// 5. Tree shaking
+// 4. Tree shaking
 // CommonJS: No tree shaking
 const utils = require('./utils'); // Entire module loaded
 
 // ES6: Tree shaking possible
 import { onlyThis } from './utils.js'; // Only used exports bundled
-
-// 6. Interoperability
-// ES6 can import CommonJS
-import fs from 'fs'; // Works with Node.js modules
-
-// CommonJS can import ES6 (with dynamic import)
-const esmModule = await import('./esm-module.js');
-
-// 7. File extensions
-// CommonJS: .js (default)
-// ES6: .mjs or .js with "type": "module" in package.json
-
-// Migration example:
-// CommonJS -> ES6
-// Before
-const express = require('express');
-const { validateUser } = require('./utils');
-module.exports = function createApp() {};
-
-// After
-import express from 'express';
-import { validateUser } from './utils.js';
-export default function createApp() {}
 ```
 </details>
 
@@ -5750,11 +6189,262 @@ async function robustConcurrentFetch() {
 
 **Beginner: Q1** - What is a Promise and what are its three states?
 
+<details>
+<summary>Answer</summary>
+
+A Promise represents an eventual completion or failure of an asynchronous operation. It has three states:
+
+```javascript
+// Three states:
+// 1. Pending - initial state, neither fulfilled nor rejected
+// 2. Fulfilled (resolved) - operation completed successfully
+// 3. Rejected - operation failed
+
+// Creating a Promise
+const promise = new Promise((resolve, reject) => {
+    // Asynchronous operation
+    setTimeout(() => {
+        const success = Math.random() > 0.5;
+        
+        if (success) {
+            resolve('Operation successful!'); // Fulfilled state
+        } else {
+            reject(new Error('Operation failed!')); // Rejected state
+        }
+    }, 1000);
+});
+
+// Promise states are immutable - once settled, they can't change
+const resolvedPromise = Promise.resolve('Already resolved');
+const rejectedPromise = Promise.reject(new Error('Already rejected'));
+
+// Check promise state (not directly accessible, but can be observed)
+promise
+    .then(result => {
+        console.log('Fulfilled:', result);
+    })
+    .catch(error => {
+        console.log('Rejected:', error.message);
+    });
+
+// Promise state transitions:
+// Pending → Fulfilled (via resolve())
+// Pending → Rejected (via reject())
+// Once settled (fulfilled or rejected), state cannot change
+```
+</details>
+
 **Beginner: Q2** - How do you create a Promise and handle its result?
+
+<details>
+<summary>Answer</summary>
+
+Create Promises using the Promise constructor and handle results with `.then()` and `.catch()`:
+
+```javascript
+// Creating a Promise
+function fetchData() {
+    return new Promise((resolve, reject) => {
+        // Simulate async operation
+        setTimeout(() => {
+            const data = { id: 1, name: 'John' };
+            const error = Math.random() > 0.8;
+            
+            if (error) {
+                reject(new Error('Failed to fetch data'));
+            } else {
+                resolve(data);
+            }
+        }, 1000);
+    });
+}
+
+// Handling Promise results
+fetchData()
+    .then(data => {
+        console.log('Success:', data);
+        return data.id; // Return value for next .then()
+    })
+    .then(id => {
+        console.log('User ID:', id);
+    })
+    .catch(error => {
+        console.error('Error:', error.message);
+    })
+    .finally(() => {
+        console.log('Operation completed');
+    });
+
+// Alternative with async/await
+async function handleData() {
+    try {
+        const data = await fetchData();
+        console.log('Success:', data);
+        return data;
+    } catch (error) {
+        console.error('Error:', error.message);
+    } finally {
+        console.log('Operation completed');
+    }
+}
+
+// Creating resolved/rejected Promises directly
+const immediateSuccess = Promise.resolve('Immediate success');
+const immediateFailure = Promise.reject(new Error('Immediate failure'));
+
+immediateSuccess.then(value => console.log(value));
+immediateFailure.catch(error => console.log(error.message));
+
+// Chaining Promises
+function step1() {
+    return Promise.resolve(1);
+}
+
+function step2(value) {
+    return Promise.resolve(value * 2);
+}
+
+function step3(value) {
+    return Promise.resolve(value + 10);
+}
+
+step1()
+    .then(step2)
+    .then(step3)
+    .then(result => console.log('Final result:', result)); // 12
+```
+</details>
 
 **Beginner: Q3** - What is the difference between `.then()` and `.catch()`?
 
+<details>
+<summary>Answer</summary>
+
+`.then()` handles fulfilled promises, `.catch()` handles rejected promises:
+
+```javascript
+const promise = new Promise((resolve, reject) => {
+    const success = Math.random() > 0.5;
+    
+    if (success) {
+        resolve('Success!');
+    } else {
+        reject(new Error('Failed!'));
+    }
+});
+
+// .then() - handles fulfilled promises
+promise.then(value => {
+    console.log('Fulfilled:', value);
+});
+
+// .catch() - handles rejected promises
+promise.catch(error => {
+    console.log('Rejected:', error.message);
+});
+
+// Combined usage
+promise
+    .then(value => {
+        console.log('Success:', value);
+        return value.toUpperCase();
+    })
+    .catch(error => {
+        console.log('Error:', error.message);
+        return 'DEFAULT VALUE'; // Recovery value
+    });
+
+// .then() can also handle both states
+promise.then(
+    value => console.log('Success:', value),    // onFulfilled
+    error => console.log('Error:', error.message) // onRejected
+);
+
+// Error propagation
+Promise.resolve(1)
+    .then(x => {
+        if (x === 1) throw new Error('Something went wrong');
+        return x * 2;
+    })
+    .then(x => {
+        console.log('This won\'t run');
+        return x + 1;
+    })
+    .catch(error => {
+        console.log('Caught:', error.message); // Catches the thrown error
+        return 10; // Recovery value
+    })
+    .then(x => {
+        console.log('Continues with:', x); // 10
+    });
+
+// Key differences:
+// .then() - for success handling and transformation
+// .catch() - for error handling and recovery
+// .finally() - runs regardless of outcome
+```
+</details>
+
 **Intermediate: Q1** - What is the difference between `Promise.all()`, `Promise.race()`, and `Promise.allSettled()`?
+
+<details>
+<summary>Answer</summary>
+
+These methods handle multiple promises differently:
+
+```javascript
+const fast = new Promise(resolve => setTimeout(() => resolve('fast'), 100));
+const slow = new Promise(resolve => setTimeout(() => resolve('slow'), 300));
+const failing = new Promise((_, reject) => setTimeout(() => reject(new Error('failed')), 200));
+
+// Promise.all() - waits for ALL to resolve, fails if ANY rejects
+Promise.all([fast, slow])
+    .then(results => console.log('All results:', results)) // ['fast', 'slow']
+    .catch(error => console.log('Any failed:', error));
+
+Promise.all([fast, failing, slow])
+    .then(results => console.log('Won\'t run'))
+    .catch(error => console.log('Failed because:', error.message)); // 'failed'
+
+// Promise.race() - returns first settled (resolved OR rejected)
+Promise.race([fast, slow])
+    .then(result => console.log('First result:', result)) // 'fast'
+    .catch(error => console.log('First error:', error));
+
+Promise.race([failing, slow])
+    .then(result => console.log('Won\'t run'))
+    .catch(error => console.log('First to settle failed:', error.message)); // 'failed'
+
+// Promise.allSettled() - waits for ALL to settle, never rejects
+Promise.allSettled([fast, failing, slow])
+    .then(results => {
+        console.log('All settled:');
+        results.forEach((result, index) => {
+            if (result.status === 'fulfilled') {
+                console.log(`${index}: Success -`, result.value);
+            } else {
+                console.log(`${index}: Failed -`, result.reason.message);
+            }
+        });
+    });
+// Output:
+// 0: Success - fast
+// 1: Failed - failed  
+// 2: Success - slow
+
+// Comparison table:
+//                    | Promise.all | Promise.race | Promise.allSettled
+// Waits for all      |     ✓      |      ✗       |        ✓
+// Fails if one fails |     ✓      |      ✗       |        ✗
+// Returns array      |     ✓      |      ✗       |        ✓
+// Can reject         |     ✓      |      ✓       |        ✗
+
+// Use cases:
+// Promise.all: When you need ALL operations to succeed
+// Promise.race: Timeout scenarios, fastest response
+// Promise.allSettled: When you want results regardless of failures
+```
+</details>
 
 **Intermediate: Q2** - What will be the output of this code?
 ```javascript
@@ -5766,13 +6456,252 @@ Promise.resolve(1)
     .then(x => x + 1);
 ```
 
+<details>
+<summary>Answer</summary>
+
+The final result will be a Promise that resolves to `6`.
+
+Step-by-step execution:
+
+```javascript
+Promise.resolve(1)                           // Resolves to 1
+    .then(x => x + 1)                       // 1 + 1 = 2
+    .then(x => { throw new Error('Error!'); }) // Throws error, goes to catch
+    .then(x => x + 1)                       // Skipped (previous threw error)
+    .catch(err => 5)                        // Catches error, returns 5
+    .then(x => x + 1);                      // 5 + 1 = 6
+
+// Final result: Promise resolves to 6
+
+// Execution flow:
+// 1. Promise.resolve(1) → value: 1
+// 2. .then(x => x + 1) → value: 2
+// 3. .then(x => { throw new Error('Error!'); }) → error thrown
+// 4. .then(x => x + 1) → SKIPPED (chain is in error state)
+// 5. .catch(err => 5) → catches error, returns 5 (chain recovers)
+// 6. .then(x => x + 1) → 5 + 1 = 6
+
+// To see the result:
+Promise.resolve(1)
+    .then(x => x + 1)
+    .then(x => { throw new Error('Error!'); })
+    .then(x => x + 1)
+    .catch(err => 5)
+    .then(x => x + 1)
+    .then(result => console.log('Final result:', result)); // 6
+
+// Key points:
+// - Error skips subsequent .then() handlers until .catch()
+// - .catch() can return a value to recover the chain
+// - After .catch() returns a value, chain continues normally
+// - If .catch() threw an error, it would continue to next .catch()
+```
+</details>
+
 ## Event loop & call stack
 
 **Beginner: Q1** - What is the call stack in JavaScript?
 
+<details>
+<summary>Answer</summary>
+
+The call stack is a data structure that tracks function calls in JavaScript using LIFO (Last In, First Out):
+
+```javascript
+function first() {
+    console.log('First function');
+    second();
+    console.log('First function ends');
+}
+
+function second() {
+    console.log('Second function');
+    third();
+    console.log('Second function ends');
+}
+
+function third() {
+    console.log('Third function');
+}
+
+first();
+
+// Call stack execution:
+// 1. first() pushed to stack
+// 2. second() pushed to stack  
+// 3. third() pushed to stack
+// 4. third() completes, popped from stack
+// 5. second() completes, popped from stack
+// 6. first() completes, popped from stack
+
+// Output:
+// First function
+// Second function  
+// Third function
+// Second function ends
+// First function ends
+
+// Stack visualization:
+// Step 1: [first]
+// Step 2: [first, second]
+// Step 3: [first, second, third]
+// Step 4: [first, second]
+// Step 5: [first]
+// Step 6: []
+
+// Stack overflow example
+function recursiveFunction() {
+    recursiveFunction(); // No base case
+}
+
+// recursiveFunction(); // RangeError: Maximum call stack size exceeded
+
+// Checking stack with console.trace()
+function a() {
+    console.trace('Stack trace from function a');
+    b();
+}
+
+function b() {
+    console.trace('Stack trace from function b');
+}
+
+a(); // Shows call stack in browser dev tools
+```
+</details>
+
 **Beginner: Q2** - What is the event loop and how does it work?
 
+<details>
+<summary>Answer</summary>
+
+The event loop manages asynchronous operations by coordinating the call stack, callback queue, and microtask queue:
+
+```javascript
+// Event loop phases:
+// 1. Execute synchronous code (call stack)
+// 2. Process microtasks (Promise callbacks)
+// 3. Process macrotasks (setTimeout, setInterval)
+// 4. Repeat
+
+console.log('1'); // Synchronous - call stack
+
+setTimeout(() => {
+    console.log('2'); // Macrotask - callback queue
+}, 0);
+
+Promise.resolve().then(() => {
+    console.log('3'); // Microtask - microtask queue
+});
+
+console.log('4'); // Synchronous - call stack
+
+// Output: 1, 4, 3, 2
+
+// Event loop workflow:
+function eventLoopDemo() {
+    console.log('Start');
+    
+    // Macrotask
+    setTimeout(() => console.log('Timeout 1'), 0);
+    
+    // Microtask
+    Promise.resolve().then(() => console.log('Promise 1'));
+    
+    // Another microtask
+    Promise.resolve().then(() => {
+        console.log('Promise 2');
+        // Nested microtask
+        Promise.resolve().then(() => console.log('Nested Promise'));
+    });
+    
+    // Another macrotask
+    setTimeout(() => console.log('Timeout 2'), 0);
+    
+    console.log('End');
+}
+
+eventLoopDemo();
+// Output: Start, End, Promise 1, Promise 2, Nested Promise, Timeout 1, Timeout 2
+
+// Visual representation:
+// Call Stack: [eventLoopDemo] → [console.log] → empty
+// Microtask Queue: [Promise 1] → [Promise 2] → [Nested Promise]
+// Callback Queue: [Timeout 1] → [Timeout 2]
+```
+</details>
+
 **Beginner: Q3** - What happens when the call stack is empty?
+
+<details>
+<summary>Answer</summary>
+
+When the call stack is empty, the event loop processes queued tasks:
+
+```javascript
+// When call stack empties:
+// 1. Process all microtasks first
+// 2. Then process one macrotask
+// 3. Check for more microtasks
+// 4. Repeat
+
+console.log('Start'); // Call stack: [console.log] → empty
+
+setTimeout(() => {
+    console.log('Macrotask 1'); // Added to callback queue
+}, 0);
+
+Promise.resolve().then(() => {
+    console.log('Microtask 1'); // Added to microtask queue
+    
+    // Add another microtask
+    Promise.resolve().then(() => {
+        console.log('Microtask 2');
+    });
+});
+
+setTimeout(() => {
+    console.log('Macrotask 2'); // Added to callback queue
+}, 0);
+
+console.log('End'); // Call stack: [console.log] → empty
+
+// Execution order:
+// 1. 'Start' (call stack)
+// 2. 'End' (call stack)
+// 3. Call stack empty → process microtasks
+// 4. 'Microtask 1' → 'Microtask 2' (all microtasks)
+// 5. Process one macrotask: 'Macrotask 1'
+// 6. Check microtasks (none), process next macrotask: 'Macrotask 2'
+
+// Blocking the call stack
+function blockingOperation() {
+    const start = Date.now();
+    while (Date.now() - start < 3000) {
+        // Block for 3 seconds
+    }
+    console.log('Blocking done');
+}
+
+console.log('Before blocking');
+setTimeout(() => console.log('This waits'), 0);
+blockingOperation(); // Blocks everything
+console.log('After blocking');
+
+// setTimeout callback won't run until blockingOperation finishes
+// Output: Before blocking, Blocking done, After blocking, This waits
+
+// Non-blocking alternative
+function nonBlockingOperation() {
+    return new Promise(resolve => {
+        setTimeout(() => {
+            console.log('Non-blocking done');
+            resolve();
+        }, 0);
+    });
+}
+```
+</details>
 
 **Intermediate: Q1** - What will be the output of this code?
 ```javascript
@@ -5783,51 +6712,1749 @@ Promise.resolve().then(() => console.log('4'));
 console.log('5');
 ```
 
+<details>
+<summary>Answer</summary>
+
+Output:
+```
+1
+3
+5
+4
+2
+```
+
+Explanation:
+
+```javascript
+console.log('1');                              // 1. Call stack: synchronous
+setTimeout(() => console.log('2'), 0);         // 2. Macrotask: added to callback queue
+console.log('3');                              // 3. Call stack: synchronous
+Promise.resolve().then(() => console.log('4')); // 4. Microtask: added to microtask queue
+console.log('5');                              // 5. Call stack: synchronous
+
+// Step-by-step execution:
+// 1. console.log('1') → output: '1'
+// 2. setTimeout schedules callback → callback queue: [() => console.log('2')]
+// 3. console.log('3') → output: '3'
+// 4. Promise.then schedules callback → microtask queue: [() => console.log('4')]
+// 5. console.log('5') → output: '5'
+// 6. Call stack empty → process microtasks first
+// 7. Execute Promise callback → output: '4'
+// 8. Microtask queue empty → process macrotasks
+// 9. Execute setTimeout callback → output: '2'
+
+// Event loop priority:
+// Call Stack (synchronous) → Microtask Queue → Callback Queue (macrotasks)
+
+// Even with setTimeout(0), it goes to callback queue
+// Microtasks always have higher priority than macrotasks
+```
+</details>
+
 **Intermediate: Q2** - Explain the relationship between the call stack, callback queue, and microtask queue.
+
+<details>
+<summary>Answer</summary>
+
+These three components work together in the event loop with specific priority order:
+
+```javascript
+// 1. CALL STACK - Synchronous execution (highest priority)
+function synchronousFunction() {
+    console.log('Synchronous');
+}
+
+// 2. MICROTASK QUEUE - Promise callbacks, queueMicrotask (high priority)
+Promise.resolve().then(() => console.log('Microtask'));
+queueMicrotask(() => console.log('Explicit microtask'));
+
+// 3. CALLBACK QUEUE (MACROTASK) - setTimeout, setInterval, DOM events (lower priority)
+setTimeout(() => console.log('Macrotask'), 0);
+
+// Execution priority:
+// Call Stack → Microtask Queue → Callback Queue
+
+// Detailed example:
+function demonstrateQueues() {
+    console.log('1: Synchronous start');
+    
+    // Macrotasks
+    setTimeout(() => console.log('7: setTimeout 1'), 0);
+    setTimeout(() => console.log('8: setTimeout 2'), 0);
+    
+    // Microtasks
+    Promise.resolve().then(() => {
+        console.log('4: Promise 1');
+        Promise.resolve().then(() => console.log('5: Nested Promise'));
+    });
+    
+    queueMicrotask(() => console.log('6: queueMicrotask'));
+    
+    Promise.resolve().then(() => console.log('9: Promise 2'));
+    
+    console.log('2: Synchronous middle');
+    
+    setTimeout(() => {
+        console.log('10: setTimeout 3');
+        Promise.resolve().then(() => console.log('11: Promise in setTimeout'));
+    }, 0);
+    
+    console.log('3: Synchronous end');
+}
+
+demonstrateQueues();
+
+// Output:
+// 1: Synchronous start
+// 2: Synchronous middle  
+// 3: Synchronous end
+// 4: Promise 1
+// 5: Nested Promise
+// 6: queueMicrotask
+// 9: Promise 2
+// 7: setTimeout 1
+// 8: setTimeout 2
+// 10: setTimeout 3
+// 11: Promise in setTimeout
+
+// Key relationships:
+// 1. Call stack must be empty before processing queues
+// 2. All microtasks processed before any macrotask
+// 3. After each macrotask, check for microtasks again
+// 4. Microtasks can spawn more microtasks (processed immediately)
+// 5. Macrotasks are processed one at a time
+
+// Queue types:
+const examples = {
+    callStack: ['function calls', 'synchronous code'],
+    microtaskQueue: ['Promise.then()', 'queueMicrotask()', 'async/await'],
+    macrotaskQueue: ['setTimeout()', 'setInterval()', 'DOM events', 'I/O operations']
+};
+```
+</details>
 
 ## Callback functions
 
 **Beginner: Q1** - What is a callback function? Give an example.
 
+<details>
+<summary>Answer</summary>
+
+A callback function is a function passed as an argument to another function and executed later:
+
+```javascript
+// Basic callback example
+function greet(name, callback) {
+    console.log(`Hello ${name}`);
+    callback();
+}
+
+function afterGreeting() {
+    console.log('Nice to meet you!');
+}
+
+greet('Alice', afterGreeting);
+// Output: 
+// "Hello Alice"
+// "Nice to meet you!"
+
+// Array methods using callbacks
+const numbers = [1, 2, 3, 4, 5];
+
+// map() takes a callback
+const doubled = numbers.map(function(num) {
+    return num * 2;
+});
+console.log(doubled); // [2, 4, 6, 8, 10]
+
+// filter() takes a callback
+const evens = numbers.filter(function(num) {
+    return num % 2 === 0;
+});
+console.log(evens); // [2, 4]
+
+// Anonymous callback
+numbers.forEach(function(num) {
+    console.log(num);
+});
+
+// Arrow function callback
+const squares = numbers.map(num => num * num);
+console.log(squares); // [1, 4, 9, 16, 25]
+```
+</details>
+
 **Beginner: Q2** - Why are callbacks used in asynchronous operations?
+
+<details>
+<summary>Answer</summary>
+
+Callbacks allow code to continue executing while waiting for asynchronous operations to complete:
+
+```javascript
+// Synchronous operation (blocks execution)
+function syncOperation() {
+    for (let i = 0; i < 1000000000; i++) {
+        // Blocking operation
+    }
+    return 'Done';
+}
+
+console.log('Before sync');
+const result = syncOperation(); // Blocks here
+console.log('After sync');
+
+// Asynchronous operation with callback (non-blocking)
+function fetchData(callback) {
+    setTimeout(() => {
+        const data = { id: 1, name: 'Alice' };
+        callback(data); // Execute callback when data is ready
+    }, 1000);
+}
+
+console.log('Before async');
+fetchData(function(data) {
+    console.log('Received data:', data);
+});
+console.log('After async'); // Executes immediately
+
+// File reading example
+const fs = require('fs');
+
+// Asynchronous file read
+fs.readFile('data.txt', 'utf8', function(err, data) {
+    if (err) {
+        console.error('Error reading file:', err);
+    } else {
+        console.log('File contents:', data);
+    }
+});
+
+console.log('This runs while file is being read');
+
+// Event handling with callbacks
+button.addEventListener('click', function() {
+    console.log('Button clicked!');
+});
+
+// AJAX request with callback
+function makeRequest(url, callback) {
+    const xhr = new XMLHttpRequest();
+    xhr.open('GET', url);
+    xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+            callback(JSON.parse(xhr.responseText));
+        }
+    };
+    xhr.send();
+}
+```
+</details>
 
 **Beginner: Q3** - What is a callback passed to `setTimeout`?
 
+<details>
+<summary>Answer</summary>
+
+The callback in `setTimeout` is the function executed after the specified delay:
+
+```javascript
+// Basic setTimeout with callback
+setTimeout(function() {
+    console.log('This runs after 2 seconds');
+}, 2000);
+
+console.log('This runs immediately');
+
+// Arrow function callback
+setTimeout(() => {
+    console.log('Arrow function callback');
+}, 1000);
+
+// Named function as callback
+function delayedFunction() {
+    console.log('Named function executed');
+}
+
+setTimeout(delayedFunction, 500);
+
+// Callback with parameters (using closure)
+function greetUser(name) {
+    setTimeout(function() {
+        console.log(`Hello ${name}!`);
+    }, 1000);
+}
+
+greetUser('Alice'); // "Hello Alice!" after 1 second
+
+// Multiple timeouts
+setTimeout(() => console.log('First'), 1000);
+setTimeout(() => console.log('Second'), 2000);
+setTimeout(() => console.log('Third'), 1500);
+// Output order: "First" (1s), "Third" (1.5s), "Second" (2s)
+
+// Clearing timeout
+const timeoutId = setTimeout(() => {
+    console.log('This might not run');
+}, 3000);
+
+// Cancel the timeout
+clearTimeout(timeoutId);
+
+// Common pattern: delayed execution
+function debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+const debouncedLog = debounce(console.log, 300);
+debouncedLog('Hello'); // Only the last call executes after 300ms
+```
+</details>
+
 **Intermediate: Q1** - How do you handle errors in callback-based functions?
 
+<details>
+<summary>Answer</summary>
+
+Use error-first callback pattern where the first parameter is an error object:
+
+```javascript
+// Error-first callback pattern (Node.js style)
+function readFileAsync(filename, callback) {
+    setTimeout(() => {
+        if (filename === 'invalid.txt') {
+            const error = new Error('File not found');
+            callback(error, null); // Error first, data second
+        } else {
+            const data = 'File contents here';
+            callback(null, data); // No error, data provided
+        }
+    }, 100);
+}
+
+// Handling the callback
+readFileAsync('data.txt', function(err, data) {
+    if (err) {
+        console.error('Error occurred:', err.message);
+        return;
+    }
+    console.log('File data:', data);
+});
+
+// Try-catch doesn't work with async callbacks
+function asyncOperation(callback) {
+    setTimeout(() => {
+        throw new Error('Async error'); // This won't be caught
+    }, 100);
+}
+
+try {
+    asyncOperation(function() {
+        console.log('Done');
+    });
+} catch (error) {
+    console.log('This will NOT catch the error');
+}
+
+// Proper error handling in callbacks
+function safeAsyncOperation(callback) {
+    setTimeout(() => {
+        try {
+            // Potentially dangerous operation
+            const result = riskyFunction();
+            callback(null, result);
+        } catch (error) {
+            callback(error, null); // Pass error to callback
+        }
+    }, 100);
+}
+
+// Multiple operation error handling
+function fetchUserData(userId, callback) {
+    fetchUser(userId, function(err, user) {
+        if (err) return callback(err);
+        
+        fetchUserPosts(user.id, function(err, posts) {
+            if (err) return callback(err);
+            
+            callback(null, { user, posts });
+        });
+    });
+}
+
+// Usage with error handling
+fetchUserData(123, function(err, data) {
+    if (err) {
+        console.error('Failed to fetch user data:', err.message);
+        return;
+    }
+    console.log('Success:', data);
+});
+```
+</details>
+
 **Intermediate: Q2** - What are the problems with deeply nested callbacks?
+
+<details>
+<summary>Answer</summary>
+
+Deeply nested callbacks create several problems including readability and error handling:
+
+```javascript
+// Callback hell example - pyramid of doom
+function fetchUserProfile(userId) {
+    fetchUser(userId, function(err, user) {
+        if (err) {
+            console.error('User fetch failed:', err);
+            return;
+        }
+        
+        fetchUserPosts(user.id, function(err, posts) {
+            if (err) {
+                console.error('Posts fetch failed:', err);
+                return;
+            }
+            
+            fetchPostComments(posts[0].id, function(err, comments) {
+                if (err) {
+                    console.error('Comments fetch failed:', err);
+                    return;
+                }
+                
+                fetchUserProfile(comments[0].authorId, function(err, commenter) {
+                    if (err) {
+                        console.error('Commenter fetch failed:', err);
+                        return;
+                    }
+                    
+                    // Finally use the data
+                    displayProfile({
+                        user: user,
+                        posts: posts,
+                        comments: comments,
+                        commenter: commenter
+                    });
+                });
+            });
+        });
+    });
+}
+
+// Problems with this approach:
+
+// 1. Readability - "Pyramid of Doom"
+// 2. Error handling repetition
+// 3. Difficult to maintain and debug
+// 4. Hard to test individual functions
+// 5. Inversion of control
+
+// Solutions:
+
+// 1. Named functions
+function handleUser(err, user) {
+    if (err) return console.error('User error:', err);
+    fetchUserPosts(user.id, handlePosts);
+}
+
+function handlePosts(err, posts) {
+    if (err) return console.error('Posts error:', err);
+    fetchPostComments(posts[0].id, handleComments);
+}
+
+function handleComments(err, comments) {
+    if (err) return console.error('Comments error:', err);
+    // Continue...
+}
+
+fetchUser(userId, handleUser);
+
+// 2. Promises
+fetchUser(userId)
+    .then(user => fetchUserPosts(user.id))
+    .then(posts => fetchPostComments(posts[0].id))
+    .then(comments => fetchUserProfile(comments[0].authorId))
+    .then(commenter => displayProfile({ commenter }))
+    .catch(err => console.error('Error:', err));
+
+// 3. Async/await
+async function fetchUserProfileAsync(userId) {
+    try {
+        const user = await fetchUser(userId);
+        const posts = await fetchUserPosts(user.id);
+        const comments = await fetchPostComments(posts[0].id);
+        const commenter = await fetchUserProfile(comments[0].authorId);
+        
+        displayProfile({ user, posts, comments, commenter });
+    } catch (err) {
+        console.error('Error:', err);
+    }
+}
+```
+</details>
 
 ## Callback hell
 
 **Beginner: Q1** - What is callback hell?
 
+<details>
+<summary>Answer</summary>
+
+Callback hell refers to deeply nested callbacks that make code hard to read and maintain:
+
+```javascript
+// Callback hell example
+getData(function(a) {
+    getMoreData(a, function(b) {
+        getMoreData(b, function(c) {
+            getMoreData(c, function(d) {
+                getMoreData(d, function(e) {
+                    // Finally do something with e
+                    console.log(e);
+                });
+            });
+        });
+    });
+});
+
+// Real-world example
+function orderFood() {
+    checkMenu(function(menu) {
+        selectItem(menu, function(item) {
+            checkInventory(item, function(available) {
+                if (available) {
+                    placeOrder(item, function(order) {
+                        processPayment(order, function(payment) {
+                            if (payment.success) {
+                                prepareFood(order, function(food) {
+                                    deliverFood(food, function(delivered) {
+                                        console.log('Food delivered!', delivered);
+                                    });
+                                });
+                            }
+                        });
+                    });
+                }
+            });
+        });
+    });
+}
+
+// Characteristics of callback hell:
+// 1. Pyramid-like structure (indentation grows)
+// 2. Hard to read and follow
+// 3. Difficult error handling
+// 4. Poor maintainability
+// 5. Testing becomes complex
+```
+</details>
+
 **Beginner: Q2** - Why is callback hell considered a problem?
+
+<details>
+<summary>Answer</summary>
+
+Callback hell creates multiple development and maintenance issues:
+
+```javascript
+// 1. Readability Problem
+fetchUser(id, function(user) {
+    fetchPosts(user.id, function(posts) {
+        fetchComments(posts[0].id, function(comments) {
+            // Hard to see the flow of logic
+            displayData(user, posts, comments);
+        });
+    });
+});
+
+// 2. Error Handling Complexity
+fetchUser(id, function(err, user) {
+    if (err) return handleError(err);
+    
+    fetchPosts(user.id, function(err, posts) {
+        if (err) return handleError(err);
+        
+        fetchComments(posts[0].id, function(err, comments) {
+            if (err) return handleError(err);
+            
+            // Repetitive error handling
+            displayData(user, posts, comments);
+        });
+    });
+});
+
+// 3. Debugging Difficulty
+// Stack traces become confusing
+// Hard to set breakpoints effectively
+// Difficult to trace execution flow
+
+// 4. Testing Challenges
+// Hard to test individual pieces
+// Mocking becomes complex
+// Unit tests are difficult to write
+
+// 5. Code Reusability
+// Functions become tightly coupled
+// Hard to extract reusable components
+// Logic is spread across callbacks
+
+// 6. Modification Issues
+// Adding new steps requires restructuring
+// Changing order of operations is complex
+// Parallel execution becomes difficult
+
+// Compare with Promise-based approach:
+fetchUser(id)
+    .then(user => fetchPosts(user.id))
+    .then(posts => fetchComments(posts[0].id))
+    .then(comments => displayData(comments))
+    .catch(handleError); // Single error handler
+
+// Or async/await:
+try {
+    const user = await fetchUser(id);
+    const posts = await fetchPosts(user.id);
+    const comments = await fetchComments(posts[0].id);
+    displayData(user, posts, comments);
+} catch (error) {
+    handleError(error);
+}
+```
+</details>
 
 **Beginner: Q3** - Give an example of callback hell.
 
+<details>
+<summary>Answer</summary>
+
+Here's a practical example showing progression from simple to callback hell:
+
+```javascript
+// Simple callback (no problem)
+setTimeout(function() {
+    console.log('Timer finished');
+}, 1000);
+
+// Nested callbacks (beginning of problem)
+setTimeout(function() {
+    console.log('First timer');
+    setTimeout(function() {
+        console.log('Second timer');
+    }, 1000);
+}, 1000);
+
+// Callback hell example - File processing
+function processFiles() {
+    readFile('config.json', function(err, config) {
+        if (err) throw err;
+        
+        readFile(config.inputFile, function(err, data) {
+            if (err) throw err;
+            
+            processData(data, function(err, processed) {
+                if (err) throw err;
+                
+                validateData(processed, function(err, valid) {
+                    if (err) throw err;
+                    
+                    if (valid) {
+                        saveFile(config.outputFile, processed, function(err) {
+                            if (err) throw err;
+                            
+                            logActivity('Processing complete', function(err) {
+                                if (err) throw err;
+                                
+                                sendNotification('File processed successfully', function(err) {
+                                    if (err) throw err;
+                                    console.log('All done!');
+                                });
+                            });
+                        });
+                    } else {
+                        console.log('Data validation failed');
+                    }
+                });
+            });
+        });
+    });
+}
+
+// E-commerce example
+function purchaseItem(userId, itemId) {
+    getUser(userId, function(err, user) {
+        if (err) return handleError(err);
+        
+        getItem(itemId, function(err, item) {
+            if (err) return handleError(err);
+            
+            checkInventory(item.id, function(err, available) {
+                if (err) return handleError(err);
+                
+                if (available > 0) {
+                    calculatePrice(item, user.discountLevel, function(err, price) {
+                        if (err) return handleError(err);
+                        
+                        processPayment(user.paymentMethod, price, function(err, payment) {
+                            if (err) return handleError(err);
+                            
+                            updateInventory(item.id, -1, function(err) {
+                                if (err) return handleError(err);
+                                
+                                createOrder(user.id, item.id, payment.id, function(err, order) {
+                                    if (err) return handleError(err);
+                                    
+                                    sendConfirmationEmail(user.email, order, function(err) {
+                                        if (err) console.log('Email failed but order succeeded');
+                                        console.log('Purchase complete!');
+                                    });
+                                });
+                            });
+                        });
+                    });
+                } else {
+                    console.log('Item out of stock');
+                }
+            });
+        });
+    });
+}
+
+// This is callback hell because:
+// 1. 8+ levels of nesting
+// 2. Difficult to follow the logic
+// 3. Error handling is repetitive
+// 4. Hard to modify or extend
+// 5. Testing individual steps is complex
+```
+</details>
+
 **Intermediate: Q1** - How can Promises help solve callback hell?
 
+<details>
+<summary>Answer</summary>
+
+Promises flatten nested callbacks into sequential chains:
+
+```javascript
+// Callback hell version
+function fetchUserData(userId) {
+    fetchUser(userId, function(err, user) {
+        if (err) return console.error(err);
+        
+        fetchPosts(user.id, function(err, posts) {
+            if (err) return console.error(err);
+            
+            fetchComments(posts[0].id, function(err, comments) {
+                if (err) return console.error(err);
+                
+                console.log({ user, posts, comments });
+            });
+        });
+    });
+}
+
+// Promise version
+function fetchUserDataPromise(userId) {
+    return fetchUser(userId)
+        .then(user => {
+            return fetchPosts(user.id).then(posts => ({ user, posts }));
+        })
+        .then(({ user, posts }) => {
+            return fetchComments(posts[0].id).then(comments => ({ user, posts, comments }));
+        })
+        .then(data => {
+            console.log(data);
+        })
+        .catch(err => {
+            console.error(err);
+        });
+}
+
+// Even better Promise version (flattened)
+function fetchUserDataFlat(userId) {
+    let userData = {};
+    
+    return fetchUser(userId)
+        .then(user => {
+            userData.user = user;
+            return fetchPosts(user.id);
+        })
+        .then(posts => {
+            userData.posts = posts;
+            return fetchComments(posts[0].id);
+        })
+        .then(comments => {
+            userData.comments = comments;
+            return userData;
+        })
+        .catch(err => {
+            console.error('Error:', err);
+            throw err;
+        });
+}
+
+// Using Promise.all for parallel operations
+function fetchUserDataParallel(userId) {
+    return fetchUser(userId)
+        .then(user => {
+            return Promise.all([
+                Promise.resolve(user),
+                fetchPosts(user.id),
+                fetchUserProfile(user.id)
+            ]);
+        })
+        .then(([user, posts, profile]) => {
+            return { user, posts, profile };
+        })
+        .catch(err => {
+            console.error('Error:', err);
+        });
+}
+
+// Converting callback to Promise
+function promisify(callbackFn) {
+    return function(...args) {
+        return new Promise((resolve, reject) => {
+            callbackFn(...args, (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
+    };
+}
+
+// Usage
+const fetchUserPromise = promisify(fetchUser);
+const fetchPostsPromise = promisify(fetchPosts);
+
+fetchUserPromise(userId)
+    .then(user => fetchPostsPromise(user.id))
+    .then(posts => console.log(posts))
+    .catch(console.error);
+
+// Benefits of Promises:
+// 1. Linear flow instead of nested callbacks
+// 2. Single .catch() for error handling
+// 3. Better readability and maintainability
+// 4. Easier to test individual steps
+// 5. Support for parallel execution with Promise.all
+```
+</details>
+
 **Intermediate: Q2** - What are other strategies to avoid callback hell?
+
+<details>
+<summary>Answer</summary>
+
+Several strategies can help avoid callback hell:
+
+```javascript
+// 1. Named Functions (Extract callbacks)
+function handleUser(err, user) {
+    if (err) return console.error('User error:', err);
+    fetchPosts(user.id, handlePosts);
+}
+
+function handlePosts(err, posts) {
+    if (err) return console.error('Posts error:', err);
+    fetchComments(posts[0].id, handleComments);
+}
+
+function handleComments(err, comments) {
+    if (err) return console.error('Comments error:', err);
+    console.log('Success:', comments);
+}
+
+// Usage
+fetchUser(userId, handleUser);
+
+// 2. Modularization
+const userModule = {
+    fetch: function(id, callback) {
+        // Implementation
+        callback(null, { id, name: 'User' });
+    },
+    
+    processData: function(user, callback) {
+        // Process user data
+        callback(null, processedUser);
+    }
+};
+
+// 3. Control Flow Libraries (like async.js)
+const async = require('async');
+
+async.waterfall([
+    function(callback) {
+        fetchUser(userId, callback);
+    },
+    function(user, callback) {
+        fetchPosts(user.id, callback);
+    },
+    function(posts, callback) {
+        fetchComments(posts[0].id, callback);
+    }
+], function(err, result) {
+    if (err) return console.error(err);
+    console.log('Final result:', result);
+});
+
+// 4. Async/Await (ES2017)
+async function fetchUserDataAsync(userId) {
+    try {
+        const user = await fetchUser(userId);
+        const posts = await fetchPosts(user.id);
+        const comments = await fetchComments(posts[0].id);
+        
+        return { user, posts, comments };
+    } catch (error) {
+        console.error('Error:', error);
+        throw error;
+    }
+}
+
+// 5. Event Emitters
+const EventEmitter = require('events');
+class DataFetcher extends EventEmitter {
+    fetchUserData(userId) {
+        this.fetchUser(userId);
+    }
+    
+    fetchUser(userId) {
+        // Simulate async operation
+        setTimeout(() => {
+            this.emit('userFetched', { id: userId, name: 'User' });
+        }, 100);
+    }
+    
+    fetchPosts(userId) {
+        setTimeout(() => {
+            this.emit('postsFetched', [{ id: 1, title: 'Post' }]);
+        }, 100);
+    }
+}
+
+const fetcher = new DataFetcher();
+fetcher.on('userFetched', user => fetcher.fetchPosts(user.id));
+fetcher.on('postsFetched', posts => console.log('Posts:', posts));
+
+// 6. State Machines
+const states = {
+    INITIAL: 'initial',
+    FETCHING_USER: 'fetchingUser',
+    FETCHING_POSTS: 'fetchingPosts',
+    COMPLETE: 'complete',
+    ERROR: 'error'
+};
+
+class DataFetcherState {
+    constructor() {
+        this.state = states.INITIAL;
+        this.data = {};
+    }
+    
+    async start(userId) {
+        try {
+            this.state = states.FETCHING_USER;
+            this.data.user = await fetchUser(userId);
+            
+            this.state = states.FETCHING_POSTS;
+            this.data.posts = await fetchPosts(this.data.user.id);
+            
+            this.state = states.COMPLETE;
+            return this.data;
+        } catch (error) {
+            this.state = states.ERROR;
+            throw error;
+        }
+    }
+}
+
+// 7. Reactive Programming (RxJS)
+const { from } = require('rxjs');
+const { mergeMap, map, catchError } = require('rxjs/operators');
+
+from(fetchUser(userId))
+    .pipe(
+        mergeMap(user => fetchPosts(user.id)),
+        map(posts => posts.filter(post => post.active)),
+        catchError(err => {
+            console.error('Error:', err);
+            return [];
+        })
+    )
+    .subscribe(posts => console.log('Posts:', posts));
+```
+</details>
 
 ## Promises & chaining
 
 **Beginner: Q1** - How do you chain multiple Promises together?
 
+<details>
+<summary>Answer</summary>
+
+Chain Promises using `.then()` methods, where each returns a new Promise:
+
+```javascript
+// Basic Promise chaining
+fetchUser(1)
+    .then(user => {
+        console.log('User:', user);
+        return fetchPosts(user.id);
+    })
+    .then(posts => {
+        console.log('Posts:', posts);
+        return fetchComments(posts[0].id);
+    })
+    .then(comments => {
+        console.log('Comments:', comments);
+    })
+    .catch(error => {
+        console.error('Error:', error);
+    });
+
+// Each .then() can return:
+// 1. A value (wrapped in resolved Promise)
+fetchData()
+    .then(data => {
+        return data.id; // Returns Promise.resolve(data.id)
+    })
+    .then(id => {
+        console.log('ID:', id);
+    });
+
+// 2. A Promise
+fetchUser(1)
+    .then(user => {
+        return fetchProfile(user.id); // Returns actual Promise
+    })
+    .then(profile => {
+        console.log('Profile:', profile);
+    });
+
+// 3. Throw an error (rejected Promise)
+fetchData()
+    .then(data => {
+        if (!data) {
+            throw new Error('No data found');
+        }
+        return data;
+    })
+    .catch(error => {
+        console.error('Caught:', error.message);
+    });
+
+// Practical example: Authentication flow
+login(credentials)
+    .then(authToken => {
+        localStorage.setItem('token', authToken);
+        return fetchUserProfile(authToken);
+    })
+    .then(profile => {
+        updateUI(profile);
+        return fetchUserPreferences(profile.id);
+    })
+    .then(preferences => {
+        applyTheme(preferences.theme);
+        console.log('Login complete');
+    })
+    .catch(error => {
+        showErrorMessage(error.message);
+        redirectToLogin();
+    });
+```
+</details>
+
 **Beginner: Q2** - What does each `.then()` return?
+
+<details>
+<summary>Answer</summary>
+
+Each `.then()` returns a new Promise, enabling chaining:
+
+```javascript
+// .then() always returns a Promise
+const promise1 = fetchData();
+const promise2 = promise1.then(data => data.name);
+const promise3 = promise2.then(name => name.toUpperCase());
+
+console.log(promise1); // Promise (original)
+console.log(promise2); // Promise (new one)
+console.log(promise3); // Promise (another new one)
+
+// What .then() returns depends on the handler's return value:
+
+// 1. Return a value → Promise.resolve(value)
+Promise.resolve(5)
+    .then(x => x * 2)     // Returns Promise.resolve(10)
+    .then(x => x + 3)     // Returns Promise.resolve(13)
+    .then(console.log);   // Logs: 13
+
+// 2. Return a Promise → That exact Promise
+Promise.resolve(1)
+    .then(x => {
+        return Promise.resolve(x * 2); // Returns this Promise
+    })
+    .then(x => {
+        console.log(x); // 2
+    });
+
+// 3. Throw an error → Promise.reject(error)
+Promise.resolve(1)
+    .then(x => {
+        throw new Error('Something went wrong');
+    })
+    .then(x => {
+        console.log('This will not run');
+    })
+    .catch(error => {
+        console.log('Caught:', error.message);
+    });
+
+// 4. No return statement → Promise.resolve(undefined)
+Promise.resolve('hello')
+    .then(message => {
+        console.log(message); // 'hello'
+        // No return statement
+    })
+    .then(result => {
+        console.log(result); // undefined
+    });
+
+// Chain behavior examples
+fetchUser(1)
+    .then(user => {
+        console.log('Got user:', user.name);
+        return user.id; // Promise.resolve(user.id)
+    })
+    .then(userId => {
+        console.log('User ID:', userId);
+        return fetchPosts(userId); // Returns actual Promise
+    })
+    .then(posts => {
+        console.log('Got posts:', posts.length);
+        // No return - returns Promise.resolve(undefined)
+    })
+    .then(result => {
+        console.log('Result:', result); // undefined
+    });
+```
+</details>
 
 **Beginner: Q3** - How do you handle errors in a Promise chain?
 
+<details>
+<summary>Answer</summary>
+
+Use `.catch()` to handle errors at any point in the Promise chain:
+
+```javascript
+// Basic error handling
+fetchUser(1)
+    .then(user => fetchPosts(user.id))
+    .then(posts => processPosts(posts))
+    .catch(error => {
+        console.error('Error occurred:', error.message);
+    });
+
+// Multiple catch blocks
+fetchData()
+    .then(data => {
+        if (!data) throw new Error('No data');
+        return processData(data);
+    })
+    .catch(error => {
+        console.error('Processing error:', error);
+        return defaultData; // Recovery
+    })
+    .then(result => {
+        console.log('Final result:', result);
+    })
+    .catch(error => {
+        console.error('Final error:', error);
+    });
+
+// Specific error handling
+fetchUserData(userId)
+    .then(user => {
+        if (user.status === 'inactive') {
+            throw new Error('User inactive');
+        }
+        return fetchUserPosts(user.id);
+    })
+    .then(posts => {
+        if (posts.length === 0) {
+            throw new Error('No posts found');
+        }
+        return posts;
+    })
+    .catch(error => {
+        if (error.message === 'User inactive') {
+            redirectToActivation();
+        } else if (error.message === 'No posts found') {
+            showEmptyState();
+        } else {
+            showGenericError(error);
+        }
+    });
+
+// Error propagation
+step1()
+    .then(result1 => {
+        if (result1.error) {
+            throw new Error('Step 1 failed');
+        }
+        return step2(result1);
+    })
+    .then(result2 => {
+        return step3(result2); // If this fails, goes to catch
+    })
+    .then(result3 => {
+        console.log('Success:', result3);
+    })
+    .catch(error => {
+        // Catches errors from any step
+        console.error('Pipeline failed:', error.message);
+    });
+
+// Finally block equivalent
+fetchData()
+    .then(data => processData(data))
+    .catch(error => {
+        console.error('Error:', error);
+        throw error; // Re-throw to continue error chain
+    })
+    .finally(() => {
+        hideLoadingSpinner(); // Always runs
+        console.log('Cleanup complete');
+    });
+
+// Error recovery patterns
+fetchFromPrimary()
+    .catch(error => {
+        console.warn('Primary failed, trying backup');
+        return fetchFromBackup();
+    })
+    .catch(error => {
+        console.warn('Backup failed, using cache');
+        return fetchFromCache();
+    })
+    .catch(error => {
+        console.error('All sources failed');
+        return defaultValue;
+    })
+    .then(data => {
+        console.log('Got data:', data);
+    });
+```
+</details>
+
 **Intermediate: Q1** - What happens if you don't return anything from a `.then()` handler?
 
+<details>
+<summary>Answer</summary>
+
+When no return statement is used, `.then()` returns `Promise.resolve(undefined)`:
+
+```javascript
+// No return statement
+Promise.resolve('hello')
+    .then(message => {
+        console.log(message); // 'hello'
+        // No return statement
+    })
+    .then(result => {
+        console.log(result); // undefined
+        console.log(typeof result); // 'undefined'
+    });
+
+// Comparison with explicit return
+Promise.resolve('hello')
+    .then(message => {
+        console.log(message); // 'hello'
+        return message.toUpperCase(); // Explicit return
+    })
+    .then(result => {
+        console.log(result); // 'HELLO'
+    });
+
+// Common mistake: Forgetting to return Promise
+function fetchUserData(id) {
+    return getUser(id)
+        .then(user => {
+            getUserPosts(user.id); // Missing return!
+            // This returns Promise.resolve(undefined)
+        })
+        .then(posts => {
+            console.log(posts); // undefined, not the posts!
+        });
+}
+
+// Correct version
+function fetchUserData(id) {
+    return getUser(id)
+        .then(user => {
+            return getUserPosts(user.id); // Proper return
+        })
+        .then(posts => {
+            console.log(posts); // Actual posts array
+        });
+}
+
+// Side effects without return
+fetchData()
+    .then(data => {
+        // Side effects are fine without return
+        updateUI(data);
+        logAnalytics(data);
+        cacheData(data);
+        // No return needed if next .then() doesn't need data
+    })
+    .then(() => {
+        // This handler receives undefined
+        console.log('UI updated, analytics logged');
+    });
+
+// When to return vs not return
+Promise.resolve(5)
+    .then(x => {
+        console.log('Processing:', x);
+        // Don't return if you want to break the chain
+        saveToDatabase(x);
+    })
+    .then(result => {
+        console.log(result); // undefined
+        // Can't use the original value here
+    });
+
+// Better approach: Return for chaining
+Promise.resolve(5)
+    .then(x => {
+        console.log('Processing:', x);
+        saveToDatabase(x);
+        return x; // Keep value in chain
+    })
+    .then(x => {
+        console.log('Original value still available:', x);
+        return x * 2;
+    })
+    .then(doubled => {
+        console.log('Doubled:', doubled);
+    });
+```
+</details>
+
 **Intermediate: Q2** - How do you convert callback-based functions to Promises?
+
+<details>
+<summary>Answer</summary>
+
+Wrap callback functions in Promise constructor or use utility functions:
+
+```javascript
+// Manual conversion using Promise constructor
+function readFilePromise(filename) {
+    return new Promise((resolve, reject) => {
+        fs.readFile(filename, 'utf8', (err, data) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(data);
+            }
+        });
+    });
+}
+
+// Usage
+readFilePromise('data.txt')
+    .then(content => console.log(content))
+    .catch(error => console.error(error));
+
+// Generic promisify utility
+function promisify(callbackFn) {
+    return function(...args) {
+        return new Promise((resolve, reject) => {
+            callbackFn(...args, (err, result) => {
+                if (err) {
+                    reject(err);
+                } else {
+                    resolve(result);
+                }
+            });
+        });
+    };
+}
+
+// Convert multiple functions
+const fs = require('fs');
+const readFileAsync = promisify(fs.readFile);
+const writeFileAsync = promisify(fs.writeFile);
+
+// Node.js built-in promisify
+const { promisify } = require('util');
+const readFileAsync = promisify(fs.readFile);
+
+// Custom callback conversion examples
+function timeoutCallback(delay, callback) {
+    setTimeout(() => {
+        callback(null, `Completed after ${delay}ms`);
+    }, delay);
+}
+
+function timeoutPromise(delay) {
+    return new Promise((resolve, reject) => {
+        timeoutCallback(delay, (err, result) => {
+            if (err) reject(err);
+            else resolve(result);
+        });
+    });
+}
+
+// Database query conversion
+function queryCallback(sql, params, callback) {
+    // Simulate database query
+    setTimeout(() => {
+        if (sql.includes('SELECT')) {
+            callback(null, [{ id: 1, name: 'John' }]);
+        } else {
+            callback(new Error('Invalid query'));
+        }
+    }, 100);
+}
+
+function queryPromise(sql, params) {
+    return new Promise((resolve, reject) => {
+        queryCallback(sql, params, (err, results) => {
+            if (err) {
+                reject(err);
+            } else {
+                resolve(results);
+            }
+        });
+    });
+}
+
+// Usage
+queryPromise('SELECT * FROM users', [])
+    .then(users => console.log('Users:', users))
+    .catch(error => console.error('Query failed:', error));
+
+// Converting APIs with different callback signatures
+function apiCallCallback(endpoint, options, successCallback, errorCallback) {
+    setTimeout(() => {
+        if (endpoint.startsWith('/api/')) {
+            successCallback({ data: 'API response' });
+        } else {
+            errorCallback(new Error('Invalid endpoint'));
+        }
+    }, 100);
+}
+
+function apiCallPromise(endpoint, options) {
+    return new Promise((resolve, reject) => {
+        apiCallCallback(
+            endpoint,
+            options,
+            (response) => resolve(response), // Success callback
+            (error) => reject(error)        // Error callback
+        );
+    });
+}
+
+// Class method conversion
+class DatabaseService {
+    queryCallback(sql, callback) {
+        setTimeout(() => {
+            callback(null, { rows: [], count: 0 });
+        }, 100);
+    }
+    
+    queryPromise(sql) {
+        return new Promise((resolve, reject) => {
+            this.queryCallback(sql, (err, result) => {
+                if (err) reject(err);
+                else resolve(result);
+            });
+        });
+    }
+}
+
+const db = new DatabaseService();
+db.queryPromise('SELECT * FROM users')
+    .then(result => console.log('Query result:', result))
+    .catch(error => console.error('Query error:', error));
+```
+</details>
 
 ## Microtasks vs macrotasks
 
 **Beginner: Q1** - What are microtasks and macrotasks?
 
+<details>
+<summary>Answer</summary>
+
+Microtasks and macrotasks are different queues for asynchronous operations in the event loop:
+
+```javascript
+// MACROTASKS (Task Queue)
+// - setTimeout, setInterval
+// - setImmediate (Node.js)
+// - I/O operations
+// - UI events (clicks, etc.)
+
+setTimeout(() => {
+    console.log('Macrotask: setTimeout');
+}, 0);
+
+// MICROTASKS (Microtask Queue) 
+// - Promise.then/catch/finally
+// - queueMicrotask()
+// - MutationObserver
+// - process.nextTick (Node.js - highest priority)
+
+Promise.resolve().then(() => {
+    console.log('Microtask: Promise');
+});
+
+queueMicrotask(() => {
+    console.log('Microtask: queueMicrotask');
+});
+
+// Event Loop Processing Order:
+// 1. Execute synchronous code
+// 2. Process ALL microtasks
+// 3. Process ONE macrotask
+// 4. Process ALL microtasks again
+// 5. Repeat steps 3-4
+
+// Visualization:
+// Call Stack: [main execution]
+// Microtask Queue: [Promise callbacks, queueMicrotask]
+// Macrotask Queue: [setTimeout, setInterval, I/O]
+
+console.log('sync start');
+
+setTimeout(() => console.log('macro 1'), 0);
+Promise.resolve().then(() => console.log('micro 1'));
+setTimeout(() => console.log('macro 2'), 0);
+Promise.resolve().then(() => console.log('micro 2'));
+
+console.log('sync end');
+
+// Output:
+// sync start
+// sync end
+// micro 1
+// micro 2
+// macro 1
+// macro 2
+```
+</details>
+
 **Beginner: Q2** - Which has higher priority: microtasks or macrotasks?
 
+<details>
+<summary>Answer</summary>
+
+Microtasks have higher priority than macrotasks and must be fully emptied before processing macrotasks:
+
+```javascript
+// Microtasks are processed BEFORE macrotasks
+console.log('1: sync start');
+
+// Macrotask
+setTimeout(() => {
+    console.log('4: macrotask');
+}, 0);
+
+// Microtask  
+Promise.resolve().then(() => {
+    console.log('3: microtask');
+});
+
+console.log('2: sync end');
+
+// Output order:
+// 1: sync start
+// 2: sync end  
+// 3: microtask (processed first)
+// 4: macrotask (processed after all microtasks)
+
+// Event loop priority:
+// 1. Call Stack (synchronous code)
+// 2. Microtask Queue (ALL microtasks)
+// 3. Macrotask Queue (ONE macrotask)
+// 4. Back to step 2
+
+// Microtasks can add more microtasks
+Promise.resolve().then(() => {
+    console.log('Micro 1');
+    
+    // Adding another microtask
+    Promise.resolve().then(() => {
+        console.log('Micro 2 (nested)');
+    });
+    
+    queueMicrotask(() => {
+        console.log('Micro 3 (queued)');
+    });
+});
+
+setTimeout(() => {
+    console.log('Macro 1 (waits for all microtasks)');
+}, 0);
+
+// Output:
+// Micro 1
+// Micro 2 (nested)
+// Micro 3 (queued)
+// Macro 1 (waits for all microtasks)
+
+// Potential infinite microtask loop (blocks macrotasks)
+function infiniteMicrotasks() {
+    Promise.resolve().then(() => {
+        console.log('Microtask running...');
+        infiniteMicrotasks(); // Keeps adding microtasks
+    });
+}
+
+// This would block setTimeout from running:
+// infiniteMicrotasks();
+// setTimeout(() => console.log('This may never run'), 0);
+
+// In Node.js: process.nextTick has even higher priority
+process.nextTick(() => console.log('nextTick'));
+Promise.resolve().then(() => console.log('Promise'));
+setTimeout(() => console.log('setTimeout'), 0);
+
+// Node.js output:
+// nextTick (highest priority)
+// Promise 
+// setTimeout
+```
+</details>
+
 **Beginner: Q3** - Give examples of microtasks and macrotasks.
+
+<details>
+<summary>Answer</summary>
+
+Here are common examples of microtasks and macrotasks:
+
+```javascript
+// MICROTASKS (higher priority)
+
+// 1. Promise callbacks
+Promise.resolve('data').then(data => {
+    console.log('Promise.then:', data);
+});
+
+Promise.reject('error').catch(err => {
+    console.log('Promise.catch:', err);
+});
+
+// 2. queueMicrotask()
+queueMicrotask(() => {
+    console.log('queueMicrotask callback');
+});
+
+// 3. async/await (uses Promise microtasks)
+async function asyncFunction() {
+    console.log('async function start');
+    await Promise.resolve();
+    console.log('after await (microtask)');
+}
+asyncFunction();
+
+// 4. MutationObserver (browser)
+if (typeof MutationObserver !== 'undefined') {
+    const observer = new MutationObserver(() => {
+        console.log('DOM mutation detected');
+    });
+}
+
+// 5. process.nextTick (Node.js only)
+if (typeof process !== 'undefined') {
+    process.nextTick(() => {
+        console.log('process.nextTick');
+    });
+}
+
+// MACROTASKS (lower priority)
+
+// 1. setTimeout & setInterval
+setTimeout(() => {
+    console.log('setTimeout 0ms');
+}, 0);
+
+setInterval(() => {
+    console.log('setInterval');
+}, 1000);
+
+// 2. setImmediate (Node.js)
+if (typeof setImmediate !== 'undefined') {
+    setImmediate(() => {
+        console.log('setImmediate');
+    });
+}
+
+// 3. I/O operations
+if (typeof require !== 'undefined') {
+    const fs = require('fs');
+    fs.readFile('example.txt', (err, data) => {
+        console.log('File read complete');
+    });
+}
+
+// 4. User events (browser)
+if (typeof document !== 'undefined') {
+    document.addEventListener('click', () => {
+        console.log('User clicked');
+    });
+}
+
+// 5. Network requests
+fetch('/api/data')
+    .then(response => {
+        console.log('Fetch response (Promise - microtask)');
+        return response.json();
+    })
+    .then(data => {
+        console.log('JSON parsed (Promise - microtask)');
+    });
+
+// Mixed example showing execution order
+console.log('=== Execution Order Demo ===');
+
+// Macrotasks
+setTimeout(() => console.log('setTimeout 1'), 0);
+setTimeout(() => console.log('setTimeout 2'), 0);
+
+// Microtasks
+Promise.resolve().then(() => console.log('Promise 1'));
+Promise.resolve().then(() => console.log('Promise 2'));
+
+queueMicrotask(() => console.log('queueMicrotask 1'));
+queueMicrotask(() => console.log('queueMicrotask 2'));
+
+console.log('Synchronous code');
+
+// Expected output:
+// === Execution Order Demo ===
+// Synchronous code
+// Promise 1
+// Promise 2
+// queueMicrotask 1
+// queueMicrotask 2
+// setTimeout 1
+// setTimeout 2
+```
+</details>
 
 **Intermediate: Q1** - What will be the execution order of this code?
 ```javascript
@@ -5837,36 +8464,1991 @@ Promise.resolve().then(() => console.log('promise'));
 console.log('end');
 ```
 
+<details>
+<summary>Answer</summary>
+
+Output:
+```
+start
+end
+promise
+timeout
+```
+
+Explanation:
+
+```javascript
+console.log('start');                                    // 1. Synchronous
+setTimeout(() => console.log('timeout'), 0);             // 2. Macrotask queued
+Promise.resolve().then(() => console.log('promise'));    // 3. Microtask queued  
+console.log('end');                                      // 4. Synchronous
+
+// Execution steps:
+
+// Step 1: Execute synchronous code
+console.log('start');  // Output: "start"
+console.log('end');    // Output: "end"
+
+// Step 2: Call stack is empty, check microtask queue
+// Microtask queue: [Promise.then callback]
+// Execute: console.log('promise')  // Output: "promise"
+
+// Step 3: Microtask queue is empty, check macrotask queue
+// Macrotask queue: [setTimeout callback]  
+// Execute: console.log('timeout')  // Output: "timeout"
+
+// Event loop phases:
+// 1. Synchronous execution (call stack)
+// 2. Microtask queue (ALL microtasks)
+// 3. Macrotask queue (ONE macrotask)
+// 4. Repeat from step 2
+
+// More complex example:
+console.log('=== Complex Example ===');
+
+console.log('sync 1');
+
+setTimeout(() => {
+    console.log('macro 1');
+    Promise.resolve().then(() => console.log('micro inside macro'));
+}, 0);
+
+Promise.resolve().then(() => {
+    console.log('micro 1');
+    setTimeout(() => console.log('macro inside micro'), 0);
+});
+
+setTimeout(() => console.log('macro 2'), 0);
+Promise.resolve().then(() => console.log('micro 2'));
+
+console.log('sync 2');
+
+// Output:
+// === Complex Example ===
+// sync 1
+// sync 2
+// micro 1
+// micro 2
+// macro 1
+// micro inside macro
+// macro 2
+// macro inside micro
+
+// The key principle:
+// Microtasks ALWAYS run before the next macrotask
+// Even if microtasks are created by macrotasks
+```
+</details>
+
 **Intermediate: Q2** - How does the event loop process microtasks and macrotasks?
 
 ## setTimeout, setInterval
 
 **Beginner: Q1** - What is the difference between `setTimeout` and `setInterval`?
 
+<details>
+<summary>Answer</summary>
+
+`setTimeout` executes code once after a delay, while `setInterval` executes code repeatedly at regular intervals:
+
+```javascript
+// setTimeout - executes once after delay
+setTimeout(() => {
+    console.log('This runs once after 2 seconds');
+}, 2000);
+
+// setInterval - executes repeatedly every interval
+const intervalId = setInterval(() => {
+    console.log('This runs every 1 second');
+}, 1000);
+
+// Comparison example
+console.log('Start');
+
+// This will run once after 1 second
+setTimeout(() => {
+    console.log('setTimeout: 1 second passed');
+}, 1000);
+
+// This will run every 500ms
+let counter = 0;
+const interval = setInterval(() => {
+    counter++;
+    console.log(`setInterval: ${counter * 500}ms passed`);
+    
+    if (counter === 5) {
+        clearInterval(interval); // Stop after 5 executions
+    }
+}, 500);
+
+// Output:
+// Start
+// setInterval: 500ms passed
+// setTimeout: 1 second passed
+// setInterval: 1000ms passed
+// setInterval: 1500ms passed
+// setInterval: 2000ms passed
+// setInterval: 2500ms passed
+
+// setTimeout with recursive pattern (alternative to setInterval)
+function recursiveTimeout() {
+    console.log('Recursive timeout');
+    setTimeout(recursiveTimeout, 1000); // Schedule next execution
+}
+recursiveTimeout();
+
+// Key differences:
+// 1. setTimeout: One-time execution
+// 2. setInterval: Repeated execution
+// 3. setTimeout is more precise for timing
+// 4. setInterval can accumulate delays
+// 5. setTimeout allows dynamic delays
+```
+</details>
+
 **Beginner: Q2** - How do you cancel a timeout or interval?
+
+<details>
+<summary>Answer</summary>
+
+Use `clearTimeout()` for timeouts and `clearInterval()` for intervals:
+
+```javascript
+// Canceling setTimeout
+const timeoutId = setTimeout(() => {
+    console.log('This will not execute');
+}, 5000);
+
+// Cancel the timeout before it executes
+clearTimeout(timeoutId);
+console.log('Timeout canceled');
+
+// Canceling setInterval
+const intervalId = setInterval(() => {
+    console.log('This will not execute');
+}, 1000);
+
+// Cancel the interval immediately
+clearInterval(intervalId);
+console.log('Interval canceled');
+
+// Practical example: Auto-save with cancellation
+class AutoSave {
+    constructor() {
+        this.saveTimeout = null;
+        this.data = '';
+    }
+    
+    scheduleAutoSave() {
+        // Cancel any existing timeout
+        if (this.saveTimeout) {
+            clearTimeout(this.saveTimeout);
+        }
+        
+        // Schedule new save after 2 seconds of inactivity
+        this.saveTimeout = setTimeout(() => {
+            this.save();
+        }, 2000);
+    }
+    
+    save() {
+        console.log('Auto-saving data:', this.data);
+        this.saveTimeout = null; // Clear reference
+    }
+    
+    updateData(newData) {
+        this.data = newData;
+        this.scheduleAutoSave(); // Reschedule save
+    }
+}
+
+const autoSave = new AutoSave();
+autoSave.updateData('Hello'); // Schedules save
+autoSave.updateData('Hello World'); // Cancels previous, schedules new
+// Only saves after 2 seconds of no updates
+
+// Cleanup pattern for intervals
+class Timer {
+    constructor() {
+        this.interval = null;
+        this.seconds = 0;
+    }
+    
+    start() {
+        if (this.interval) return; // Already running
+        
+        this.interval = setInterval(() => {
+            this.seconds++;
+            console.log(`Timer: ${this.seconds} seconds`);
+        }, 1000);
+    }
+    
+    stop() {
+        if (this.interval) {
+            clearInterval(this.interval);
+            this.interval = null;
+        }
+    }
+    
+    reset() {
+        this.stop();
+        this.seconds = 0;
+    }
+}
+
+const timer = new Timer();
+timer.start(); // Start counting
+setTimeout(() => timer.stop(), 5000); // Stop after 5 seconds
+
+// Component cleanup (React example)
+function useTimer() {
+    const [seconds, setSeconds] = useState(0);
+    
+    useEffect(() => {
+        const interval = setInterval(() => {
+            setSeconds(s => s + 1);
+        }, 1000);
+        
+        // Cleanup on unmount
+        return () => clearInterval(interval);
+    }, []);
+    
+    return seconds;
+}
+
+// Important notes:
+// 1. Always store the returned ID
+// 2. Clear timers to prevent memory leaks
+// 3. Check if ID exists before clearing
+// 4. Set reference to null after clearing
+// 5. Clear in cleanup functions (componentWillUnmount, useEffect return)
+```
+</details>
 
 **Beginner: Q3** - What is the minimum delay you can set with `setTimeout`?
 
+<details>
+<summary>Answer</summary>
+
+The minimum delay is browser-dependent but generally 1ms, though actual execution is usually 4ms or more:
+
+```javascript
+// Minimum delay test
+console.log('Start:', Date.now());
+
+setTimeout(() => {
+    console.log('1ms timeout:', Date.now());
+}, 1);
+
+setTimeout(() => {
+    console.log('0ms timeout:', Date.now());
+}, 0);
+
+// Even with 0ms, there's still a minimum delay
+setTimeout(() => {
+    console.log('Immediate timeout:', Date.now());
+});
+
+// Browser implementation details:
+// - Chrome/Firefox: minimum ~4ms delay
+// - Safari: minimum ~4ms delay  
+// - Node.js: minimum ~1ms delay
+// - HTML5 spec suggests 4ms minimum
+
+// Nested setTimeout delays increase
+function nestedTimeouts(depth) {
+    if (depth > 0) {
+        const start = performance.now();
+        setTimeout(() => {
+            const end = performance.now();
+            console.log(`Depth ${5-depth}: ${end - start}ms delay`);
+            nestedTimeouts(depth - 1);
+        }, 0);
+    }
+}
+
+nestedTimeouts(5);
+// Output shows increasing delays:
+// Depth 0: ~4ms
+// Depth 1: ~4ms  
+// Depth 2: ~4ms
+// Depth 3: ~4ms
+// Depth 4: ~4ms
+
+// Better alternatives for immediate execution:
+// 1. Promise.resolve().then()
+Promise.resolve().then(() => {
+    console.log('Microtask - executes before setTimeout');
+});
+
+setTimeout(() => {
+    console.log('Macrotask - executes after microtasks');
+}, 0);
+
+// 2. queueMicrotask()
+queueMicrotask(() => {
+    console.log('queueMicrotask - also executes before setTimeout');
+});
+
+// 3. MessageChannel (for immediate async execution)
+const channel = new MessageChannel();
+channel.port2.onmessage = () => {
+    console.log('MessageChannel - faster than setTimeout');
+};
+
+channel.port1.postMessage('execute');
+
+// Performance comparison
+function measureDelay(method, iterations = 1000) {
+    return new Promise(resolve => {
+        let count = 0;
+        const start = performance.now();
+        
+        function execute() {
+            count++;
+            if (count >= iterations) {
+                const end = performance.now();
+                resolve((end - start) / iterations);
+            } else {
+                method(execute);
+            }
+        }
+        
+        execute();
+    });
+}
+
+// Test different methods
+async function compareDelays() {
+    const setTimeoutDelay = await measureDelay(fn => setTimeout(fn, 0));
+    const promiseDelay = await measureDelay(fn => Promise.resolve().then(fn));
+    const microtaskDelay = await measureDelay(fn => queueMicrotask(fn));
+    
+    console.log('Average delays:');
+    console.log(`setTimeout(0): ${setTimeoutDelay.toFixed(2)}ms`);
+    console.log(`Promise.resolve(): ${promiseDelay.toFixed(2)}ms`);
+    console.log(`queueMicrotask(): ${microtaskDelay.toFixed(2)}ms`);
+}
+
+compareDelays();
+
+// Practical implications:
+// 1. Don't rely on exact timing for setTimeout(0)
+// 2. Use microtasks for immediate async execution
+// 3. Browser throttling affects background tabs
+// 4. Mobile devices may have different minimums
+// 5. High-frequency animations should use requestAnimationFrame
+
+// Special case: Background tabs
+// Many browsers throttle setTimeout in background tabs to ~1000ms minimum
+let isVisible = !document.hidden;
+
+document.addEventListener('visibilitychange', () => {
+    isVisible = !document.hidden;
+    console.log('Tab is', isVisible ? 'visible' : 'hidden');
+});
+
+function scheduleWork(callback) {
+    if (isVisible) {
+        setTimeout(callback, 0); // Normal delay when visible
+    } else {
+        // Use different strategy for background tabs
+        Promise.resolve().then(callback);
+    }
+}
+```
+</details>
+
 **Intermediate: Q1** - What are the potential issues with `setInterval`? How would you fix them?
 
+<details>
+<summary>Answer</summary>
+
+`setInterval` can accumulate delays and overlap executions. Use recursive `setTimeout` for better control:
+
+```javascript
+// Problem 1: Execution overlap
+console.log('Problem: setInterval with slow operations');
+
+let counter = 0;
+const problemInterval = setInterval(() => {
+    console.log('Start execution:', ++counter);
+    
+    // Simulate slow operation (200ms)
+    const start = Date.now();
+    while (Date.now() - start < 200) {
+        // Blocking operation
+    }
+    
+    console.log('End execution:', counter);
+}, 100); // Interval shorter than execution time!
+
+// This causes overlapping executions and performance issues
+setTimeout(() => clearInterval(problemInterval), 1000);
+
+// Solution 1: Recursive setTimeout
+function recursiveTimeout(callback, delay) {
+    function execute() {
+        callback();
+        setTimeout(execute, delay); // Schedule next after current finishes
+    }
+    return execute;
+}
+
+console.log('\nSolution: Recursive setTimeout');
+let counter2 = 0;
+const solution1 = recursiveTimeout(() => {
+    console.log('Safe execution:', ++counter2);
+    
+    // Same slow operation
+    const start = Date.now();
+    while (Date.now() - start < 200) {}
+    
+    console.log('Safe end:', counter2);
+}, 100);
+
+solution1();
+
+// Problem 2: Accumulating delays
+async function simulateNetworkCall() {
+    // Random delay between 50-300ms
+    const delay = Math.random() * 250 + 50;
+    return new Promise(resolve => setTimeout(resolve, delay));
+}
+
+// setInterval doesn't wait for async operations
+console.log('\nProblem: setInterval with async operations');
+let asyncCounter = 0;
+const asyncProblem = setInterval(async () => {
+    console.log('Async start:', ++asyncCounter);
+    await simulateNetworkCall();
+    console.log('Async end:', asyncCounter);
+}, 100);
+
+setTimeout(() => clearInterval(asyncProblem), 1000);
+
+// Solution 2: Async-aware recursive setTimeout
+async function asyncRecursiveTimeout(callback, delay) {
+    async function execute() {
+        await callback();
+        setTimeout(execute, delay);
+    }
+    return execute;
+}
+
+console.log('\nSolution: Async recursive setTimeout');
+let asyncCounter2 = 0;
+const asyncSolution = await asyncRecursiveTimeout(async () => {
+    console.log('Async safe start:', ++asyncCounter2);
+    await simulateNetworkCall();
+    console.log('Async safe end:', asyncCounter2);
+}, 100);
+
+asyncSolution();
+
+// Problem 3: Browser throttling in background
+// setInterval gets throttled to minimum 1000ms in background tabs
+
+// Solution 3: Page Visibility API awareness
+class SmartTimer {
+    constructor(callback, interval) {
+        this.callback = callback;
+        this.interval = interval;
+        this.timeoutId = null;
+        this.running = false;
+        this.lastExecution = 0;
+        
+        // Handle visibility changes
+        document.addEventListener('visibilitychange', () => {
+            this.handleVisibilityChange();
+        });
+    }
+    
+    start() {
+        if (this.running) return;
+        this.running = true;
+        this.scheduleNext();
+    }
+    
+    stop() {
+        if (this.timeoutId) {
+            clearTimeout(this.timeoutId);
+            this.timeoutId = null;
+        }
+        this.running = false;
+    }
+    
+    scheduleNext() {
+        if (!this.running) return;
+        
+        this.timeoutId = setTimeout(() => {
+            this.execute();
+        }, this.interval);
+    }
+    
+    async execute() {
+        this.lastExecution = Date.now();
+        
+        try {
+            await this.callback();
+        } catch (error) {
+            console.error('Timer callback error:', error);
+        }
+        
+        this.scheduleNext();
+    }
+    
+    handleVisibilityChange() {
+        if (document.hidden) {
+            console.log('Tab hidden - timer continues but may be throttled');
+        } else {
+            console.log('Tab visible - checking if catch-up needed');
+            
+            // If we've been hidden for a while, might need catch-up
+            const timeSinceLastExecution = Date.now() - this.lastExecution;
+            if (timeSinceLastExecution > this.interval * 2) {
+                console.log('Executing catch-up');
+                this.execute(); // Immediate execution
+            }
+        }
+    }
+}
+
+// Usage
+const smartTimer = new SmartTimer(async () => {
+    console.log('Smart timer execution at', new Date().toLocaleTimeString());
+    await simulateNetworkCall();
+}, 2000);
+
+smartTimer.start();
+
+// Problem 4: Memory leaks with closures
+function createLeakyTimer() {
+    const largeData = new Array(1000000).fill('data'); // Large object
+    
+    setInterval(() => {
+        // This closure keeps largeData in memory
+        console.log('Timer with large data:', largeData.length);
+    }, 1000);
+}
+
+// Solution 4: Proper cleanup and avoiding large closures
+class ProperTimer {
+    constructor() {
+        this.intervalId = null;
+        this.data = null;
+    }
+    
+    start(dataSize) {
+        // Don't store large data in closure scope
+        this.data = new Array(dataSize).fill('data');
+        
+        this.intervalId = setInterval(() => {
+            // Access data through 'this' instead of closure
+            if (this.data) {
+                console.log('Timer with proper data access:', this.data.length);
+            }
+        }, 1000);
+    }
+    
+    stop() {
+        if (this.intervalId) {
+            clearInterval(this.intervalId);
+            this.intervalId = null;
+        }
+        // Explicitly clean up large data
+        this.data = null;
+    }
+}
+
+const properTimer = new ProperTimer();
+properTimer.start(1000000);
+
+// Clean up after 5 seconds
+setTimeout(() => {
+    properTimer.stop();
+}, 5000);
+
+// Best practices summary:
+// 1. Use recursive setTimeout for sequential operations
+// 2. Handle async operations properly
+// 3. Consider page visibility changes
+// 4. Clean up references to prevent memory leaks
+// 5. Use requestAnimationFrame for animations
+// 6. Implement error handling in timer callbacks
+// 7. Make timers pausable/resumable when needed
+```
+</details>
+
 **Intermediate: Q2** - What will be the output of this code?
+
 ```javascript
 for (var i = 1; i <= 3; i++) {
     setTimeout(() => console.log(i), 100);
 }
 ```
 
+<details>
+<summary>Answer</summary>
+
+The output will be `4 4 4` because of how `var` and closures work with the event loop:
+
+```javascript
+// Original code
+for (var i = 1; i <= 3; i++) {
+    setTimeout(() => console.log(i), 100);
+}
+// Output: 4 4 4
+
+// Explanation of what happens:
+// 1. Loop runs synchronously, i goes from 1 to 4
+// 2. Three setTimeout callbacks are scheduled
+// 3. When callbacks execute, loop has finished and i = 4
+// 4. All three callbacks reference the same variable i
+
+console.log('--- Step by step execution ---');
+
+// Step 1: Loop executes (synchronous)
+console.log('Loop starting...');
+for (var i = 1; i <= 3; i++) {
+    console.log('Scheduling timeout for i =', i);
+    setTimeout(() => {
+        console.log('Timeout executing, i is now:', i);
+    }, 100);
+}
+console.log('Loop finished, final i =', i); // i = 4
+
+// Solutions to get the expected output (1, 2, 3):
+
+// Solution 1: Use let instead of var (block scoping)
+console.log('\n--- Solution 1: let ---');
+for (let i = 1; i <= 3; i++) {
+    setTimeout(() => console.log('let solution:', i), 200);
+}
+// Output: 1 2 3
+
+// Solution 2: Use IIFE to capture the value
+console.log('\n--- Solution 2: IIFE ---');
+for (var i = 1; i <= 3; i++) {
+    (function(capturedI) {
+        setTimeout(() => console.log('IIFE solution:', capturedI), 300);
+    })(i);
+}
+
+// Solution 3: Use bind to capture the value
+console.log('\n--- Solution 3: bind ---');
+for (var i = 1; i <= 3; i++) {
+    setTimeout(function(capturedI) {
+        console.log('bind solution:', capturedI);
+    }.bind(null, i), 400);
+}
+
+// Solution 4: Use closure with function
+console.log('\n--- Solution 4: closure function ---');
+function createTimeout(value) {
+    return () => console.log('closure solution:', value);
+}
+
+for (var i = 1; i <= 3; i++) {
+    setTimeout(createTimeout(i), 500);
+}
+
+// Solution 5: Use arrow function with default parameter
+console.log('\n--- Solution 5: default parameter ---');
+for (var i = 1; i <= 3; i++) {
+    setTimeout((capturedI = i) => {
+        console.log('default param solution:', capturedI);
+    }, 600);
+}
+
+// Visual representation of the problem:
+console.log('\n--- Visual representation ---');
+
+// What we think happens (wrong):
+// setTimeout(() => console.log(1), 100)  // i = 1
+// setTimeout(() => console.log(2), 100)  // i = 2
+// setTimeout(() => console.log(3), 100)  // i = 3
+
+// What actually happens:
+// Loop: i = 1, schedule timeout
+// Loop: i = 2, schedule timeout  
+// Loop: i = 3, schedule timeout
+// Loop: i = 4, loop exits
+// All timeouts execute and see i = 4
+
+// Demonstrating the difference with execution order:
+console.log('\n--- Execution order demonstration ---');
+
+console.log('1. Synchronous code starts');
+
+for (var i = 1; i <= 3; i++) {
+    console.log(`2. Loop iteration ${i}, scheduling timeout`);
+    setTimeout(() => {
+        console.log(`4. Timeout executes, i = ${i}`);
+    }, 100);
+}
+
+console.log('3. Loop finished, all timeouts scheduled');
+
+// Advanced example showing the timing:
+console.log('\n--- Advanced timing example ---');
+
+const startTime = Date.now();
+
+for (var i = 1; i <= 3; i++) {
+    const currentI = i;
+    setTimeout(() => {
+        const elapsed = Date.now() - startTime;
+        console.log(`Time: ${elapsed}ms, var i = ${i}, captured i = ${currentI}`);
+    }, 100 * i); // Different delays
+}
+
+// This will show:
+// Time: ~100ms, var i = 4, captured i = 1
+// Time: ~200ms, var i = 4, captured i = 2  
+// Time: ~300ms, var i = 4, captured i = 3
+
+// Real-world scenario where this matters:
+console.log('\n--- Real-world scenario ---');
+
+const buttons = ['Button 1', 'Button 2', 'Button 3'];
+
+// Wrong way (common bug):
+for (var i = 0; i < buttons.length; i++) {
+    setTimeout(() => {
+        console.log(`Clicked ${buttons[i]}`); // All show "undefined"
+    }, 1000);
+}
+
+// Correct way:
+for (let i = 0; i < buttons.length; i++) {
+    setTimeout(() => {
+        console.log(`Correctly clicked ${buttons[i]}`);
+    }, 1100);
+}
+
+// Key takeaways:
+// 1. var has function scope, not block scope
+// 2. Closures capture variables by reference, not value
+// 3. setTimeout is asynchronous - executes after loop completes
+// 4. Use let for block scoping in loops
+// 5. Use IIFE or function parameters to capture values with var
+```
+</details>
+
 ## Web APIs
 
 **Beginner: Q1** - What are Web APIs in the context of JavaScript?
 
+<details>
+<summary>Answer</summary>
+
+Web APIs are browser-provided interfaces that extend JavaScript's capabilities beyond the core language:
+
+```javascript
+// Core JavaScript (ECMAScript) - available everywhere
+const arr = [1, 2, 3];
+const obj = { name: 'John' };
+function greet() { return 'Hello'; }
+
+// Web APIs - browser-specific extensions
+// These are NOT part of JavaScript language itself
+
+// 1. DOM API - Document Object Model
+const element = document.getElementById('myElement');
+element.addEventListener('click', () => {
+    element.style.color = 'red';
+});
+
+// 2. Fetch API - Network requests  
+fetch('https://api.example.com/data')
+    .then(response => response.json())
+    .then(data => console.log(data));
+
+// 3. Geolocation API
+navigator.geolocation.getCurrentPosition(position => {
+    console.log('Latitude:', position.coords.latitude);
+    console.log('Longitude:', position.coords.longitude);
+});
+
+// 4. Local Storage API
+localStorage.setItem('user', JSON.stringify({ name: 'John' }));
+const user = JSON.parse(localStorage.getItem('user'));
+
+// 5. Canvas API
+const canvas = document.querySelector('canvas');
+const ctx = canvas.getContext('2d');
+ctx.fillStyle = 'blue';
+ctx.fillRect(10, 10, 100, 100);
+
+// 6. Web Audio API
+const audioContext = new AudioContext();
+const oscillator = audioContext.createOscillator();
+oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+
+// 7. WebRTC API
+navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+    .then(stream => {
+        const video = document.querySelector('video');
+        video.srcObject = stream;
+    });
+
+// Key characteristics of Web APIs:
+// 1. Browser-specific implementations
+// 2. Extend JavaScript capabilities  
+// 3. Provide access to browser features
+// 4. Often asynchronous operations
+// 5. Follow web standards (W3C, WHATWG)
+
+// Web API vs JavaScript example:
+// JavaScript (core language):
+const numbers = [1, 2, 3, 4, 5];
+const doubled = numbers.map(n => n * 2); // Pure JavaScript
+
+// Web API (browser extension):
+const notification = new Notification('Hello!', { // Web API
+    body: 'This is a browser notification',
+    icon: '/icon.png'
+});
+
+// Feature detection (checking if API exists):
+function checkWebAPISupport() {
+    const features = {
+        localStorage: typeof Storage !== 'undefined',
+        geolocation: 'geolocation' in navigator,
+        notifications: 'Notification' in window,
+        webGL: !!document.createElement('canvas').getContext('webgl'),
+        serviceWorker: 'serviceWorker' in navigator,
+        webAssembly: typeof WebAssembly === 'object'
+    };
+    
+    console.log('Supported Web APIs:', features);
+    return features;
+}
+
+checkWebAPISupport();
+
+// Polyfill example (adding missing Web API):
+if (!window.fetch) {
+    // Polyfill fetch for older browsers
+    window.fetch = function(url, options) {
+        return new Promise((resolve, reject) => {
+            const xhr = new XMLHttpRequest();
+            xhr.open(options?.method || 'GET', url);
+            
+            xhr.onload = () => {
+                resolve({
+                    json: () => Promise.resolve(JSON.parse(xhr.responseText)),
+                    text: () => Promise.resolve(xhr.responseText)
+                });
+            };
+            
+            xhr.onerror = reject;
+            xhr.send(options?.body);
+        });
+    };
+}
+
+// Browser-specific Web APIs:
+// Chrome: Chrome Extension APIs, File System Access API
+// Firefox: Firefox WebExtensions API  
+// Safari: Safari App Extensions API
+// Edge: Edge Extension APIs
+
+// Web APIs provide:
+// - DOM manipulation
+// - Network communication
+// - Hardware access (camera, microphone, GPS)
+// - Storage mechanisms
+// - Graphics and multimedia
+// - Background processing
+// - Push notifications
+// - Real-time communication
+```
+</details>
+
 **Beginner: Q2** - Name some common Web APIs available in browsers.
+
+<details>
+<summary>Answer</summary>
+
+Here are commonly used Web APIs with practical examples:
+
+```javascript
+// 1. DOM API - Document manipulation
+const element = document.createElement('div');
+element.textContent = 'Hello World';
+document.body.appendChild(element);
+
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('DOM fully loaded');
+});
+
+// 2. Fetch API - HTTP requests
+async function getData() {
+    try {
+        const response = await fetch('/api/users');
+        const users = await response.json();
+        return users;
+    } catch (error) {
+        console.error('Fetch error:', error);
+    }
+}
+
+// 3. Geolocation API - Location services
+function getLocation() {
+    if ('geolocation' in navigator) {
+        navigator.geolocation.getCurrentPosition(
+            position => {
+                console.log('Lat:', position.coords.latitude);
+                console.log('Lng:', position.coords.longitude);
+            },
+            error => console.error('Location error:', error)
+        );
+    }
+}
+
+// 4. Storage APIs - Data persistence
+// LocalStorage - persistent across browser sessions
+localStorage.setItem('theme', 'dark');
+const theme = localStorage.getItem('theme');
+
+// SessionStorage - cleared when tab closes
+sessionStorage.setItem('tempData', 'value');
+
+// IndexedDB - More powerful database
+const request = indexedDB.open('MyDB', 1);
+request.onsuccess = event => {
+    const db = event.target.result;
+    console.log('Database opened successfully');
+};
+
+// 5. Canvas API - 2D graphics
+const canvas = document.getElementById('myCanvas');
+const ctx = canvas.getContext('2d');
+
+// Draw a circle
+ctx.beginPath();
+ctx.arc(100, 100, 50, 0, 2 * Math.PI);
+ctx.fillStyle = 'blue';
+ctx.fill();
+
+// 6. Web Audio API - Audio processing
+const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+async function playTone(frequency, duration) {
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    
+    oscillator.frequency.value = frequency;
+    oscillator.start();
+    
+    setTimeout(() => oscillator.stop(), duration);
+}
+
+// 7. MediaDevices API - Camera/Microphone access  
+async function getCamera() {
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+            video: true,
+            audio: true
+        });
+        
+        const video = document.querySelector('video');
+        video.srcObject = stream;
+    } catch (error) {
+        console.error('Camera access denied:', error);
+    }
+}
+
+// 8. Notifications API - Browser notifications
+function showNotification() {
+    if ('Notification' in window) {
+        Notification.requestPermission().then(permission => {
+            if (permission === 'granted') {
+                new Notification('Hello!', {
+                    body: 'This is a notification',
+                    icon: '/icon.png',
+                    tag: 'greeting'
+                });
+            }
+        });
+    }
+}
+
+// 9. WebSockets API - Real-time communication
+const socket = new WebSocket('wss://api.example.com/ws');
+
+socket.onopen = () => {
+    console.log('WebSocket connected');
+    socket.send('Hello Server!');
+};
+
+socket.onmessage = event => {
+    console.log('Received:', event.data);
+};
+
+// 10. Service Worker API - Background processing
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('/sw.js')
+        .then(registration => {
+            console.log('SW registered:', registration);
+        })
+        .catch(error => {
+            console.log('SW registration failed:', error);
+        });
+}
+
+// 11. Intersection Observer API - Lazy loading
+const observer = new IntersectionObserver(entries => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            // Element is visible, load image
+            entry.target.src = entry.target.dataset.src;
+            observer.unobserve(entry.target);
+        }
+    });
+});
+
+document.querySelectorAll('img[data-src]').forEach(img => {
+    observer.observe(img);
+});
+
+// 12. Clipboard API - Copy/paste operations
+async function copyToClipboard(text) {
+    try {
+        await navigator.clipboard.writeText(text);
+        console.log('Text copied to clipboard');
+    } catch (error) {
+        console.error('Failed to copy:', error);
+    }
+}
+
+async function readFromClipboard() {
+    try {
+        const text = await navigator.clipboard.readText();
+        console.log('Clipboard content:', text);
+    } catch (error) {
+        console.error('Failed to read clipboard:', error);
+    }
+}
+
+// 13. Page Visibility API - Tab focus detection
+document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+        console.log('Tab is hidden');
+        // Pause videos, stop animations
+    } else {
+        console.log('Tab is visible');
+        // Resume activities
+    }
+});
+
+// 14. Battery API (deprecated but still in some browsers)
+if ('getBattery' in navigator) {
+    navigator.getBattery().then(battery => {
+        console.log('Battery level:', battery.level * 100 + '%');
+        console.log('Charging:', battery.charging);
+    });
+}
+
+// 15. Vibration API - Mobile device vibration
+if ('vibrate' in navigator) {
+    // Vibrate for 200ms
+    navigator.vibrate(200);
+    
+    // Vibration pattern: vibrate, pause, vibrate
+    navigator.vibrate([100, 50, 100]);
+}
+
+// 16. Performance API - Performance monitoring
+const observer2 = new PerformanceObserver(list => {
+    list.getEntries().forEach(entry => {
+        console.log('Performance entry:', entry);
+    });
+});
+
+observer2.observe({ entryTypes: ['navigation', 'resource'] });
+
+// 17. Resize Observer API - Element size changes
+const resizeObserver = new ResizeObserver(entries => {
+    entries.forEach(entry => {
+        console.log('Element resized:', entry.contentRect);
+    });
+});
+
+resizeObserver.observe(document.body);
+
+// Categories of Web APIs:
+const webAPICategories = {
+    DOM: ['Document', 'Element', 'Event'],
+    Graphics: ['Canvas', 'WebGL', 'SVG'],
+    Media: ['WebAudio', 'WebRTC', 'MediaDevices'],
+    Storage: ['localStorage', 'sessionStorage', 'IndexedDB'],
+    Network: ['Fetch', 'WebSocket', 'EventSource'],
+    Device: ['Geolocation', 'DeviceOrientation', 'Battery'],
+    Background: ['ServiceWorker', 'WebWorker', 'SharedWorker'],
+    Security: ['Crypto', 'Permissions', 'CredentialManagement']
+};
+
+console.log('Web API Categories:', webAPICategories);
+```
+</details>
 
 **Beginner: Q3** - Are Web APIs part of the JavaScript language itself?
 
+<details>
+<summary>Answer</summary>
+
+No, Web APIs are not part of the JavaScript language itself. They are browser-provided extensions:
+
+```javascript
+// JavaScript (ECMAScript) - Core language features
+// These work in ANY JavaScript environment (browser, Node.js, etc.)
+
+// Variables and data types
+const name = 'John';
+const age = 30;
+const isActive = true;
+
+// Functions
+function greet(person) {
+    return `Hello, ${person}!`;
+}
+
+// Objects and arrays
+const user = { name, age };
+const numbers = [1, 2, 3, 4, 5];
+
+// Control structures
+if (age >= 18) {
+    console.log('Adult');
+}
+
+// Array methods
+const doubled = numbers.map(n => n * 2);
+
+// Promises (added to ECMAScript 2015)
+const promise = new Promise((resolve, reject) => {
+    resolve('Success');
+});
+
+// Classes (ECMAScript 2015)
+class Person {
+    constructor(name) {
+        this.name = name;
+    }
+}
+
+// ============================================
+
+// Web APIs - Browser-specific extensions
+// These DON'T work in Node.js or other non-browser environments
+
+// DOM API (Browser only)
+// document.getElementById('myElement'); // ❌ Error in Node.js
+
+// Fetch API (Browser only, but polyfills exist for Node.js)
+// fetch('https://api.example.com'); // ❌ Error in Node.js (without polyfill)
+
+// Browser APIs that don't exist in Node.js:
+// window.alert('Hello'); // ❌ Error in Node.js
+// localStorage.setItem('key', 'value'); // ❌ Error in Node.js
+// navigator.geolocation.getCurrentPosition(); // ❌ Error in Node.js
+
+// Demonstrating the difference:
+function demonstrateEnvironmentDifferences() {
+    console.log('=== Core JavaScript (works everywhere) ===');
+    
+    // These work in browser, Node.js, React Native, etc.
+    const data = [1, 2, 3];
+    const result = data.reduce((sum, num) => sum + num, 0);
+    console.log('Sum:', result); // ✅ Works everywhere
+    
+    console.log('=== Web APIs (browser only) ===');
+    
+    // Check if we're in a browser environment
+    if (typeof window !== 'undefined') {
+        console.log('Running in browser - Web APIs available');
+        
+        // These only work in browsers
+        console.log('User Agent:', navigator.userAgent);
+        console.log('URL:', window.location.href);
+        
+        // DOM manipulation
+        const div = document.createElement('div');
+        console.log('Created div element:', div);
+        
+    } else {
+        console.log('Running in Node.js - Web APIs not available');
+        
+        // Node.js specific APIs (not Web APIs)
+        const fs = require('fs'); // ❌ This doesn't work in browsers
+        const path = require('path');
+    }
+}
+
+// Environment detection
+function detectEnvironment() {
+    const environment = {
+        isBrowser: typeof window !== 'undefined',
+        isNode: typeof process !== 'undefined' && process.versions?.node,
+        isWebWorker: typeof importScripts === 'function',
+        isServiceWorker: typeof self !== 'undefined' && 'serviceWorker' in self
+    };
+    
+    console.log('Environment:', environment);
+    return environment;
+}
+
+// Polyfill example - adding Web API to non-browser environment
+// This is how libraries make Web APIs work in Node.js
+if (typeof fetch === 'undefined') {
+    // In Node.js, you might install 'node-fetch' package
+    // global.fetch = require('node-fetch'); // Polyfill
+}
+
+// Standards bodies responsible for different parts:
+const standards = {
+    JavaScript: {
+        maintainer: 'Ecma International (TC39)',
+        specification: 'ECMAScript',
+        includes: ['Variables', 'Functions', 'Objects', 'Promises', 'Classes'],
+        environment: 'Any JavaScript runtime'
+    },
+    
+    WebAPIs: {
+        maintainer: 'W3C / WHATWG',
+        specification: 'Various Web Standards',
+        includes: ['DOM', 'Fetch', 'Canvas', 'Geolocation', 'Storage'],
+        environment: 'Browsers only (unless polyfilled)'
+    }
+};
+
+console.log('Standards breakdown:', standards);
+
+// Real-world example: Isomorphic code (works in browser AND Node.js)
+function isomorphicFunction(data) {
+    // Only use core JavaScript features
+    return data
+        .filter(item => item.active)
+        .map(item => ({
+            id: item.id,
+            name: item.name.toUpperCase(),
+            created: new Date().toISOString()
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+// This function works in:
+// ✅ Browser
+// ✅ Node.js  
+// ✅ React Native
+// ✅ Web Workers
+// ✅ Any JavaScript environment
+
+// Platform-specific adaptations:
+function makeHttpRequest(url) {
+    if (typeof fetch !== 'undefined') {
+        // Browser environment - use Fetch API
+        return fetch(url).then(r => r.json());
+    } else if (typeof require !== 'undefined') {
+        // Node.js environment - use built-in modules
+        const https = require('https');
+        return new Promise((resolve, reject) => {
+            https.get(url, res => {
+                let data = '';
+                res.on('data', chunk => data += chunk);
+                res.on('end', () => resolve(JSON.parse(data)));
+                res.on('error', reject);
+            });
+        });
+    } else {
+        throw new Error('No HTTP client available in this environment');
+    }
+}
+
+// Key takeaways:
+// 1. JavaScript = Core language (ECMAScript)
+// 2. Web APIs = Browser extensions to JavaScript
+// 3. Web APIs don't work outside browsers (unless polyfilled)
+// 4. Node.js has its own APIs (not Web APIs)
+// 5. Write isomorphic code using only core JavaScript for portability
+// 6. Use feature detection for Web APIs
+// 7. Different standards bodies maintain different parts
+```
+</details>
+
 **Intermediate: Q1** - How do Web APIs interact with the JavaScript event loop?
 
+<details>
+<summary>Answer</summary>
+
+Web APIs work with the event loop by offloading operations to browser threads and queuing callbacks:
+
+```javascript
+// Understanding Web API + Event Loop interaction
+
+console.log('1. Synchronous code starts');
+
+// Web API: setTimeout
+setTimeout(() => {
+    console.log('4. setTimeout callback (macrotask)');
+}, 0);
+
+// Web API: Fetch  
+fetch('https://jsonplaceholder.typicode.com/posts/1')
+    .then(response => response.json())
+    .then(data => {
+        console.log('6. Fetch resolved (microtask)');
+    });
+
+// Web API: DOM Event
+const button = document.createElement('button');
+button.addEventListener('click', () => {
+    console.log('Event callback (when clicked)');
+});
+
+// Promise (native JS, not Web API)
+Promise.resolve().then(() => {
+    console.log('5. Promise microtask');
+});
+
+console.log('2. Synchronous code continues');
+
+// More synchronous code
+for (let i = 0; i < 1000000; i++) {
+    // Blocking the main thread
+}
+
+console.log('3. Synchronous code ends');
+
+// Execution order:
+// 1. Synchronous code starts
+// 2. Synchronous code continues  
+// 3. Synchronous code ends
+// 4. setTimeout callback (macrotask)
+// 5. Promise microtask
+// 6. Fetch resolved (microtask)
+
+// Detailed Web API flow demonstration:
+function demonstrateWebAPIFlow() {
+    console.log('\n=== Web API Flow Demo ===');
+    
+    // 1. Call Stack executes this function
+    console.log('Step 1: Function executing on call stack');
+    
+    // 2. Web API call - browser handles this
+    const timeoutId = setTimeout(() => {
+        console.log('Step 4: Timeout callback from task queue');
+        
+        // Nested Web API call
+        Promise.resolve().then(() => {
+            console.log('Step 5: Nested microtask');
+        });
+        
+    }, 0);
+    
+    // 3. Another Web API call
+    fetch('/api/data')
+        .then(() => {
+            console.log('Step 6: Fetch microtask');
+        })
+        .catch(() => {
+            console.log('Step 6: Fetch error (still microtask)');
+        });
+    
+    console.log('Step 2: Function continues synchronously');
+    
+    // 4. Microtask (not Web API)
+    queueMicrotask(() => {
+        console.log('Step 3: Microtask queue');
+    });
+    
+    console.log('Step 2.5: Function ending');
+}
+
+demonstrateWebAPIFlow();
+
+// Browser threading model:
+class WebAPIThreadingDemo {
+    constructor() {
+        this.setupEventListeners();
+        this.demonstrateThreading();
+    }
+    
+    setupEventListeners() {
+        // Event listener registration (Web API)
+        document.addEventListener('click', (event) => {
+            console.log('Click event handled on main thread');
+            console.log('Event target:', event.target.tagName);
+        });
+        
+        // Multiple event types
+        window.addEventListener('resize', () => {
+            console.log('Resize event - UI thread responsive');
+        });
+    }
+    
+    demonstrateThreading() {
+        console.log('\n=== Threading Demo ===');
+        
+        // Network request - handled by network thread
+        this.makeNetworkRequest();
+        
+        // File operation - handled by I/O thread  
+        this.simulateFileOperation();
+        
+        // Timer - handled by timer thread
+        this.setupTimers();
+        
+        // Animation - handled by compositor thread
+        this.startAnimation();
+    }
+    
+    makeNetworkRequest() {
+        const start = performance.now();
+        
+        // Network thread handles the actual request
+        fetch('https://httpbin.org/delay/2')
+            .then(response => {
+                const end = performance.now();
+                console.log(`Network request completed in ${end - start}ms`);
+                return response.json();
+            })
+            .then(data => {
+                // This callback runs on main thread
+                console.log('Processing response on main thread');
+            })
+            .catch(error => {
+                console.log('Network error handled on main thread');
+            });
+        
+        console.log('Network request initiated - non-blocking');
+    }
+    
+    simulateFileOperation() {
+        // Simulating file read (in real browser, would use File API)
+        const fileInput = document.createElement('input');
+        fileInput.type = 'file';
+        
+        fileInput.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                
+                // File reading handled by I/O thread
+                reader.onload = (e) => {
+                    console.log('File read completed on main thread');
+                    console.log('File size:', e.target.result.length);
+                };
+                
+                reader.readAsText(file);
+                console.log('File reading initiated - non-blocking');
+            }
+        });
+    }
+    
+    setupTimers() {
+        // Different timer types
+        setTimeout(() => {
+            console.log('Single timeout executed');
+        }, 1000);
+        
+        const intervalId = setInterval(() => {
+            console.log('Interval tick');
+        }, 2000);
+        
+        // Clean up after 10 seconds
+        setTimeout(() => {
+            clearInterval(intervalId);
+            console.log('Interval cleared');
+        }, 10000);
+        
+        // requestAnimationFrame - special timer for animations
+        let animationFrame = 0;
+        function animate() {
+            animationFrame++;
+            console.log(`Animation frame: ${animationFrame}`);
+            
+            if (animationFrame < 60) { // Run for ~1 second at 60fps
+                requestAnimationFrame(animate);
+            }
+        }
+        
+        requestAnimationFrame(animate);
+    }
+    
+    startAnimation() {
+        const element = document.createElement('div');
+        element.style.cssText = `
+            position: fixed; 
+            top: 10px; 
+            left: 10px; 
+            width: 50px; 
+            height: 50px; 
+            background: red;
+            transition: transform 2s;
+        `;
+        document.body.appendChild(element);
+        
+        // CSS animations run on compositor thread (when possible)
+        setTimeout(() => {
+            element.style.transform = 'translateX(200px)';
+        }, 100);
+    }
+}
+
+// Task queue priorities:
+function demonstrateTaskPriorities() {
+    console.log('\n=== Task Priority Demo ===');
+    
+    // Macrotasks (Task Queue)
+    setTimeout(() => console.log('Timeout 1'), 0);
+    setTimeout(() => console.log('Timeout 2'), 0);
+    
+    // Microtasks (Job Queue) - higher priority
+    Promise.resolve().then(() => console.log('Promise 1'));
+    Promise.resolve().then(() => console.log('Promise 2'));
+    
+    // queueMicrotask - also microtask
+    queueMicrotask(() => console.log('queueMicrotask'));
+    
+    // Immediate microtask
+    Promise.resolve().then(() => {
+        console.log('Promise 3');
+        
+        // Nested microtask
+        Promise.resolve().then(() => console.log('Nested Promise'));
+        
+        // Nested macrotask
+        setTimeout(() => console.log('Nested Timeout'), 0);
+    });
+    
+    console.log('Synchronous end');
+    
+    // Expected output:
+    // Synchronous end
+    // Promise 1
+    // Promise 2  
+    // queueMicrotask
+    // Promise 3
+    // Nested Promise
+    // Timeout 1
+    // Timeout 2
+    // Nested Timeout
+}
+
+demonstrateTaskPriorities();
+
+// Performance implications:
+function performanceImplications() {
+    console.log('\n=== Performance Implications ===');
+    
+    // Heavy computation blocks event loop
+    function heavyComputation() {
+        const start = performance.now();
+        let result = 0;
+        
+        // This blocks the main thread
+        for (let i = 0; i < 10000000; i++) {
+            result += Math.random();
+        }
+        
+        const end = performance.now();
+        console.log(`Heavy computation: ${end - start}ms`);
+        return result;
+    }
+    
+    // Non-blocking approach using Web Workers
+    function nonBlockingComputation() {
+        if (typeof Worker !== 'undefined') {
+            const worker = new Worker(URL.createObjectURL(new Blob([`
+                self.onmessage = function(e) {
+                    let result = 0;
+                    for (let i = 0; i < 10000000; i++) {
+                        result += Math.random();
+                    }
+                    self.postMessage(result);
+                };
+            `], { type: 'application/javascript' })));
+            
+            worker.postMessage('start');
+            worker.onmessage = (e) => {
+                console.log('Worker result:', e.data);
+                worker.terminate();
+            };
+            
+            console.log('Computation offloaded to worker thread');
+        }
+    }
+    
+    // Demonstrate the difference
+    setTimeout(() => {
+        console.log('This timer should fire promptly');
+    }, 100);
+    
+    // This will delay the timer
+    // heavyComputation();
+    
+    // This won't delay the timer
+    nonBlockingComputation();
+}
+
+performanceImplications();
+
+// Key concepts:
+// 1. Web APIs run in separate browser threads
+// 2. Callbacks are queued when Web API operations complete  
+// 3. Event loop processes queues when call stack is empty
+// 4. Microtasks have higher priority than macrotasks
+// 5. Blocking code delays all queued callbacks
+// 6. Use Web Workers for heavy computations
+// 7. requestAnimationFrame syncs with display refresh
+```
+</details>
+
 **Intermediate: Q2** - What is the difference between browser APIs and Node.js APIs?
+
+<details>
+<summary>Answer</summary>
+
+Browser APIs and Node.js APIs serve different environments with different capabilities and constraints:
+
+```javascript
+// BROWSER APIs (Web APIs) - Client-side environment
+// Available in: Chrome, Firefox, Safari, Edge, etc.
+
+if (typeof window !== 'undefined') {
+    console.log('=== BROWSER ENVIRONMENT ===');
+    
+    // DOM APIs - Manipulate web pages
+    const element = document.createElement('div');
+    element.innerHTML = '<h1>Browser API Demo</h1>';
+    document.body.appendChild(element);
+    
+    // Browser Storage APIs
+    localStorage.setItem('userPreference', 'dark-theme');
+    sessionStorage.setItem('tempData', 'session-value');
+    
+    // Network APIs (browser-specific behavior)
+    fetch('/api/data', {
+        credentials: 'include', // Cookies included
+        mode: 'cors' // CORS handling
+    })
+    .then(response => response.json())
+    .then(data => console.log('Browser fetch:', data));
+    
+    // Geolocation API
+    navigator.geolocation.getCurrentPosition(position => {
+        console.log('User location:', position.coords);
+    });
+    
+    // Camera/Microphone APIs
+    navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+            const video = document.querySelector('video');
+            video.srcObject = stream;
+        });
+    
+    // Notification API
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+            new Notification('Hello from browser!');
+        }
+    });
+    
+    // Service Worker (browser background processing)
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('/sw.js');
+    }
+    
+    // Browser-specific constraints:
+    // - Sandboxed environment (security restrictions)
+    // - No direct file system access
+    // - Same-origin policy
+    // - CORS restrictions
+    // - Limited hardware access
+}
+
+// ============================================
+
+// NODE.JS APIs - Server-side environment  
+// Available in: Node.js runtime
+
+if (typeof process !== 'undefined' && process.versions?.node) {
+    console.log('=== NODE.JS ENVIRONMENT ===');
+    
+    // File System API - Full file access
+    const fs = require('fs');
+    const path = require('path');
+    
+    // Read/write files directly
+    fs.writeFile('example.txt', 'Hello Node.js!', (err) => {
+        if (!err) {
+            fs.readFile('example.txt', 'utf8', (err, data) => {
+                console.log('File content:', data);
+            });
+        }
+    });
+    
+    // Operating System APIs
+    const os = require('os');
+    console.log('OS Info:', {
+        platform: os.platform(),
+        arch: os.arch(),
+        totalMemory: os.totalmem(),
+        freeMemory: os.freemem(),
+        cpuCount: os.cpus().length
+    });
+    
+    // Process APIs
+    console.log('Process Info:', {
+        pid: process.pid,
+        nodeVersion: process.version,
+        platform: process.platform,
+        cwd: process.cwd(),
+        memoryUsage: process.memoryUsage()
+    });
+    
+    // Network APIs (more powerful than browser)
+    const http = require('http');
+    const server = http.createServer((req, res) => {
+        res.writeHead(200, { 'Content-Type': 'application/json' });
+        res.end(JSON.stringify({ message: 'Hello from Node.js server!' }));
+    });
+    
+    // Child Process APIs - Run external programs
+    const { exec, spawn } = require('child_process');
+    
+    exec('ls -la', (error, stdout, stderr) => {
+        if (!error) {
+            console.log('Directory listing:', stdout);
+        }
+    });
+    
+    // Crypto APIs (built-in, not Web Crypto)
+    const crypto = require('crypto');
+    const hash = crypto.createHash('sha256');
+    hash.update('Hello Node.js');
+    console.log('Hash:', hash.digest('hex'));
+    
+    // Stream APIs - Handle large data
+    const stream = require('stream');
+    const { Transform } = stream;
+    
+    const upperCaseTransform = new Transform({
+        transform(chunk, encoding, callback) {
+            this.push(chunk.toString().toUpperCase());
+            callback();
+        }
+    });
+    
+    // Node.js capabilities:
+    // - Full file system access
+    // - Native module loading
+    // - Process control
+    // - System-level operations
+    // - Direct hardware access
+    // - No security sandbox
+}
+
+// ============================================
+
+// COMPARISON TABLE
+const apiComparison = {
+    'File Access': {
+        browser: 'Limited (File API, drag-drop only)',
+        nodejs: 'Full file system access (fs module)'
+    },
+    
+    'Network': {
+        browser: 'Fetch API (CORS restricted)',
+        nodejs: 'http/https modules (no restrictions)'
+    },
+    
+    'Storage': {
+        browser: 'localStorage, sessionStorage, IndexedDB',
+        nodejs: 'Direct file/database access'
+    },
+    
+    'Hardware': {
+        browser: 'Limited (camera, GPS via permissions)',
+        nodejs: 'Full system access'
+    },
+    
+    'Security': {
+        browser: 'Sandboxed, same-origin policy',
+        nodejs: 'Full system privileges'
+    },
+    
+    'UI': {
+        browser: 'DOM, Canvas, WebGL',
+        nodejs: 'CLI, terminal output only'
+    },
+    
+    'Modules': {
+        browser: 'ES modules, script tags',
+        nodejs: 'CommonJS, ES modules, npm packages'
+    }
+};
+
+console.log('API Comparison:', apiComparison);
+
+// ============================================
+
+// ISOMORPHIC CODE - Works in both environments
+function createIsomorphicHTTPClient() {
+    // Detect environment and use appropriate API
+    
+    if (typeof fetch !== 'undefined') {
+        // Browser environment
+        return {
+            get: url => fetch(url).then(r => r.json()),
+            post: (url, data) => fetch(url, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            }).then(r => r.json())
+        };
+    } 
+    else if (typeof require !== 'undefined') {
+        // Node.js environment
+        const https = require('https');
+        const http = require('http');
+        const { URL } = require('url');
+        
+        return {
+            get: url => {
+                return new Promise((resolve, reject) => {
+                    const client = url.startsWith('https') ? https : http;
+                    client.get(url, res => {
+                        let data = '';
+                        res.on('data', chunk => data += chunk);
+                        res.on('end', () => resolve(JSON.parse(data)));
+                        res.on('error', reject);
+                    });
+                });
+            },
+            
+            post: (url, postData) => {
+                return new Promise((resolve, reject) => {
+                    const parsedUrl = new URL(url);
+                    const client = parsedUrl.protocol === 'https:' ? https : http;
+                    
+                    const options = {
+                        hostname: parsedUrl.hostname,
+                        port: parsedUrl.port,
+                        path: parsedUrl.pathname,
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'Content-Length': Buffer.byteLength(JSON.stringify(postData))
+                        }
+                    };
+                    
+                    const req = client.request(options, res => {
+                        let data = '';
+                        res.on('data', chunk => data += chunk);
+                        res.on('end', () => resolve(JSON.parse(data)));
+                    });
+                    
+                    req.on('error', reject);
+                    req.write(JSON.stringify(postData));
+                    req.end();
+                });
+            }
+        };
+    }
+}
+
+// ============================================
+
+// POLYFILLS - Making APIs work across environments
+
+// Node.js polyfill for browser APIs
+if (typeof global !== 'undefined' && !global.localStorage) {
+    // Simple localStorage polyfill for Node.js
+    const fs = require('fs');
+    const storageFile = './localstorage.json';
+    
+    global.localStorage = {
+        getItem: (key) => {
+            try {
+                const data = JSON.parse(fs.readFileSync(storageFile, 'utf8'));
+                return data[key] || null;
+            } catch {
+                return null;
+            }
+        },
+        
+        setItem: (key, value) => {
+            try {
+                let data = {};
+                if (fs.existsSync(storageFile)) {
+                    data = JSON.parse(fs.readFileSync(storageFile, 'utf8'));
+                }
+                data[key] = value;
+                fs.writeFileSync(storageFile, JSON.stringify(data));
+            } catch (error) {
+                console.error('localStorage polyfill error:', error);
+            }
+        }
+    };
+}
+
+// Browser polyfill for Node.js APIs (limited)
+if (typeof window !== 'undefined' && !window.process) {
+    // Minimal process polyfill
+    window.process = {
+        env: {},
+        platform: navigator.platform,
+        version: 'browser',
+        nextTick: (callback) => setTimeout(callback, 0)
+    };
+}
+
+// ============================================
+
+// ENVIRONMENT DETECTION UTILITY
+function detectEnvironment() {
+    const env = {
+        isBrowser: typeof window !== 'undefined',
+        isNode: typeof process !== 'undefined' && process.versions?.node,
+        isWebWorker: typeof importScripts === 'function',
+        isServiceWorker: typeof self !== 'undefined' && 'serviceWorker' in self,
+        
+        // Available APIs
+        apis: {
+            dom: typeof document !== 'undefined',
+            fetch: typeof fetch !== 'undefined',
+            localStorage: typeof localStorage !== 'undefined',
+            geolocation: typeof navigator !== 'undefined' && 'geolocation' in navigator,
+            fileSystem: typeof require !== 'undefined',
+            crypto: typeof crypto !== 'undefined',
+            webWorkers: typeof Worker !== 'undefined'
+        }
+    };
+    
+    return env;
+}
+
+console.log('Environment Detection:', detectEnvironment());
+
+// Key Differences Summary:
+// 1. Browser: UI-focused, sandboxed, user-permission based
+// 2. Node.js: System-focused, full access, server-oriented
+// 3. Browser: Real-time user interaction, visual output
+// 4. Node.js: Batch processing, file operations, networking
+// 5. Browser: Web standards (W3C, WHATWG)
+// 6. Node.js: System APIs, POSIX-like operations
+// 7. Security: Browser restricts, Node.js trusts
+// 8. Performance: Browser optimizes for responsiveness, Node.js for throughput
+```
+</details>
 
 ## Execution context
 
@@ -6152,34 +10734,2060 @@ console.log(test());
 
 **Beginner: Q1** - What does the `test()` method do and what does it return?
 
+<details>
+<summary>Answer</summary>
+
+The `test()` method checks if a pattern exists in a string and returns a boolean:
+
+```javascript
+const regex = /hello/i;
+const text = 'Hello World';
+
+// test() returns true or false
+console.log(regex.test(text)); // true
+console.log(regex.test('goodbye')); // false
+
+// Common use cases
+const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+const isValidEmail = emailRegex.test('user@example.com'); // true
+
+const phoneRegex = /^\d{3}-\d{3}-\d{4}$/;
+const isValidPhone = phoneRegex.test('123-456-7890'); // true
+const isInvalidPhone = phoneRegex.test('123456789'); // false
+
+// With global flag (be careful)
+const globalRegex = /\d/g;
+console.log(globalRegex.test('123')); // true (first call)
+console.log(globalRegex.test('123')); // true (second call)
+console.log(globalRegex.test('123')); // true (third call)
+console.log(globalRegex.test('123')); // false (fourth call - lastIndex reset)
+
+// Reset lastIndex for global regex
+globalRegex.lastIndex = 0; // Reset to start over
+
+// Practical validation example
+function validateInput(input) {
+    const patterns = {
+        username: /^[a-zA-Z0-9_]{3,16}$/,
+        password: /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d).{8,}$/,
+        url: /^https?:\/\/.+/
+    };
+    
+    return {
+        username: patterns.username.test(input.username),
+        password: patterns.password.test(input.password),
+        url: patterns.url.test(input.url)
+    };
+}
+
+// Usage
+const result = validateInput({
+    username: 'john_doe',
+    password: 'MyPass123',
+    url: 'https://example.com'
+});
+console.log(result); // { username: true, password: true, url: true }
+```
+</details>
+
 **Beginner: Q2** - How do you use `match()` to find patterns in a string?
+
+<details>
+<summary>Answer</summary>
+
+The `match()` method returns an array with match details or `null` if no match found:
+
+```javascript
+const text = 'The price is $25.99 and tax is $2.60';
+
+// Simple match (first occurrence)
+const simpleMatch = text.match(/\$\d+\.\d+/);
+console.log(simpleMatch); // ['$25.99', index: 13, input: '...', groups: undefined]
+
+// Global match (all occurrences)
+const globalMatch = text.match(/\$\d+\.\d+/g);
+console.log(globalMatch); // ['$25.99', '$2.60']
+
+// With capture groups
+const emailText = 'Contact us at support@example.com or sales@test.org';
+const emailMatch = emailText.match(/(\w+)@(\w+\.\w+)/);
+console.log(emailMatch);
+// [
+//   'support@example.com',  // Full match
+//   'support',              // First capture group
+//   'example.com',          // Second capture group
+//   index: 14,
+//   input: '...',
+//   groups: undefined
+// ]
+
+// Global match with capture groups (use matchAll instead)
+const allEmails = emailText.match(/(\w+)@(\w+\.\w+)/g);
+console.log(allEmails); // ['support@example.com', 'sales@test.org'] - no groups
+
+// matchAll() for global matches with capture groups
+const allEmailsWithGroups = [...emailText.matchAll(/(\w+)@(\w+\.\w+)/g)];
+console.log(allEmailsWithGroups);
+// [
+//   ['support@example.com', 'support', 'example.com', ...],
+//   ['sales@test.org', 'sales', 'test.org', ...]
+// ]
+
+// Extracting data from strings
+const logEntry = '2023-10-17 14:30:25 ERROR User login failed';
+const logMatch = logEntry.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}) (\w+) (.+)$/);
+
+if (logMatch) {
+    const [, date, time, level, message] = logMatch;
+    console.log({ date, time, level, message });
+}
+
+// No match returns null
+const noMatch = 'hello world'.match(/\d+/);
+console.log(noMatch); // null
+
+// Safe extraction with optional chaining
+const amount = text.match(/\$(\d+\.\d+)/)?.[1];
+console.log(amount); // '25.99'
+```
+</details>
 
 **Beginner: Q3** - How do you replace text using regular expressions?
 
+<details>
+<summary>Answer</summary>
+
+Use `replace()` method with regex patterns for powerful text substitution:
+
+```javascript
+const text = 'Hello World, Hello Universe';
+
+// Simple replacement (first occurrence)
+const replaced = text.replace(/Hello/, 'Hi');
+console.log(replaced); // 'Hi World, Hello Universe'
+
+// Global replacement (all occurrences)
+const globalReplaced = text.replace(/Hello/g, 'Hi');
+console.log(globalReplaced); // 'Hi World, Hi Universe'
+
+// Case-insensitive replacement
+const caseInsensitive = 'HELLO world hello'.replace(/hello/gi, 'Hi');
+console.log(caseInsensitive); // 'Hi world Hi'
+
+// Using capture groups in replacement
+const phoneNumber = 'Call me at 123-456-7890';
+const formatted = phoneNumber.replace(/(\d{3})-(\d{3})-(\d{4})/, '($1) $2-$3');
+console.log(formatted); // 'Call me at (123) 456-7890'
+
+// Named capture groups (ES2018)
+const date = '2023-10-17';
+const namedGroups = date.replace(
+    /(?<year>\d{4})-(?<month>\d{2})-(?<day>\d{2})/,
+    '$<month>/$<day>/$<year>'
+);
+console.log(namedGroups); // '10/17/2023'
+
+// Function as replacement
+const prices = 'Item costs $10.99 and shipping is $5.50';
+const withTax = prices.replace(/\$(\d+\.\d+)/g, (match, price) => {
+    const amount = parseFloat(price);
+    const withTax = (amount * 1.08).toFixed(2);
+    return `$${withTax}`;
+});
+console.log(withTax); // 'Item costs $11.87 and shipping is $5.94'
+
+// Advanced replacement with function
+const camelCase = 'hello-world-example'.replace(/-(\w)/g, (match, letter) => {
+    return letter.toUpperCase();
+});
+console.log(camelCase); // 'helloWorldExample'
+
+// Sanitizing user input
+const userInput = '<script>alert("xss")</script>Hello<b>World</b>';
+const sanitized = userInput.replace(/<[^>]*>/g, '');
+console.log(sanitized); // 'alert("xss")HelloWorld'
+
+// Masking sensitive data
+const creditCard = 'My card number is 1234-5678-9012-3456';
+const masked = creditCard.replace(/(\d{4}-\d{4}-\d{4}-)(\d{4})/, '$1****');
+console.log(masked); // 'My card number is 1234-5678-9012-****'
+
+// replaceAll() method (ES2021)
+const text2 = 'cat and cat and cat';
+const allReplaced = text2.replaceAll('cat', 'dog');
+console.log(allReplaced); // 'dog and dog and dog'
+
+// replaceAll with regex
+const regexReplaceAll = text2.replaceAll(/cat/g, 'dog');
+console.log(regexReplaceAll); // 'dog and dog and dog'
+```
+</details>
+
 **Intermediate: Q1** - What's the difference between `match()` and `exec()` methods?
 
+<details>
+<summary>Answer</summary>
+
+`match()` is a string method while `exec()` is a regex method with different behaviors:
+
+```javascript
+const text = 'The numbers are 123, 456, and 789';
+const regex = /\d+/g;
+
+// MATCH() - String method
+// Simple usage
+console.log(text.match(/\d+/)); // ['123', index: 16, input: '...']
+
+// Global match - returns array of matches only
+console.log(text.match(/\d+/g)); // ['123', '456', '789']
+
+// With capture groups - global loses group details
+console.log(text.match(/(\d)(\d)(\d)/g)); // ['123', '456', '789'] - no groups
+
+// EXEC() - Regex method  
+// Always returns detailed info for one match
+const regex1 = /\d+/;
+console.log(regex1.exec(text)); // ['123', index: 16, input: '...']
+
+// Global exec() - stateful, remembers lastIndex
+const regex2 = /\d+/g;
+console.log(regex2.exec(text)); // ['123', index: 16, ...]
+console.log(regex2.exec(text)); // ['456', index: 21, ...]
+console.log(regex2.exec(text)); // ['789', index: 31, ...]
+console.log(regex2.exec(text)); // null (reset lastIndex to 0)
+
+// With capture groups - exec preserves groups even globally
+const groupRegex = /(\d)(\d)(\d)/g;
+let result;
+while ((result = groupRegex.exec(text)) !== null) {
+    console.log(`Full: ${result[0]}, Groups: ${result[1]}, ${result[2]}, ${result[3]}`);
+    // Full: 123, Groups: 1, 2, 3
+    // Full: 456, Groups: 4, 5, 6
+    // Full: 789, Groups: 7, 8, 9
+}
+
+// Key differences:
+// 1. Return behavior
+const str = 'abc 123 def 456';
+const pattern = /\d+/g;
+
+// match() with global: returns all matches
+console.log(str.match(pattern)); // ['123', '456']
+
+// exec() with global: returns one match at a time
+console.log(pattern.exec(str)); // ['123', ...]
+console.log(pattern.exec(str)); // ['456', ...]
+
+// 2. Capture groups
+const emailText = 'contact@example.com and support@test.org';
+const emailRegex = /(\w+)@(\w+\.\w+)/g;
+
+// match() loses capture group details with global
+console.log(emailText.match(emailRegex)); // ['contact@example.com', 'support@test.org']
+
+// exec() preserves capture groups
+emailRegex.lastIndex = 0; // Reset
+console.log(emailRegex.exec(emailText)); // ['contact@example.com', 'contact', 'example.com', ...]
+
+// 3. Method ownership
+const regex3 = /test/;
+const string = 'test string';
+
+console.log(string.match(regex3)); // String method
+console.log(regex3.exec(string));  // Regex method
+
+// 4. Performance consideration
+// For single matches: similar performance
+// For multiple matches: exec() can be more memory efficient
+
+// Practical example: Processing log entries
+const logText = '2023-01-01 ERROR Failed\n2023-01-02 INFO Success';
+const logRegex = /^(\d{4}-\d{2}-\d{2}) (\w+) (.+)$/gm;
+
+// Using exec() to process each match
+let match;
+const logEntries = [];
+while ((match = logRegex.exec(logText)) !== null) {
+    logEntries.push({
+        date: match[1],
+        level: match[2], 
+        message: match[3]
+    });
+}
+console.log(logEntries);
+```
+</details>
+
 **Intermediate: Q2** - How do you use capture groups in regex replacement?
+
+<details>
+<summary>Answer</summary>
+
+Capture groups allow you to reference matched parts in replacement strings:
+
+```javascript
+// Basic capture groups with $1, $2, etc.
+const fullName = 'John Doe';
+const reversed = fullName.replace(/(\w+) (\w+)/, '$2, $1');
+console.log(reversed); // 'Doe, John'
+
+// Phone number formatting
+const phone = '1234567890';
+const formatted = phone.replace(/(\d{3})(\d{3})(\d{4})/, '($1) $2-$3');
+console.log(formatted); // '(123) 456-7890'
+
+// Date format conversion
+const date = '2023-10-17';
+const usFormat = date.replace(/(\d{4})-(\d{2})-(\d{2})/, '$2/$3/$1');
+console.log(usFormat); // '10/17/2023'
+
+// Named capture groups (ES2018)
+const email = 'user@example.com';
+const masked = email.replace(
+    /(?<username>\w+)@(?<domain>\w+\.\w+)/, 
+    '****@$<domain>'
+);
+console.log(masked); // '****@example.com'
+
+// Using functions for complex replacements
+const text = 'The items cost $10.50 and $25.99';
+const withTax = text.replace(/\$(\d+\.\d+)/g, (match, price) => {
+    const amount = parseFloat(price);
+    const total = (amount * 1.08).toFixed(2);
+    return `$${total} (inc. tax)`;
+});
+console.log(withTax); // 'The items cost $11.34 (inc. tax) and $28.07 (inc. tax)'
+
+// Multiple capture groups in function
+const logEntry = '2023-10-17 14:30:25 ERROR Database connection failed';
+const formatted = logEntry.replace(
+    /^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}) (\w+) (.+)$/,
+    (match, date, time, level, message) => {
+        const formattedLevel = level.padEnd(5);
+        return `[${date} ${time}] ${formattedLevel}: ${message}`;
+    }
+);
+console.log(formatted); // '[2023-10-17 14:30:25] ERROR: Database connection failed'
+
+// Camel case conversion
+const kebabCase = 'hello-world-example';
+const camelCase = kebabCase.replace(/-(\w)/g, (match, letter) => {
+    return letter.toUpperCase();
+});
+console.log(camelCase); // 'helloWorldExample'
+
+// URL parameter extraction and replacement
+const url = 'https://api.example.com/users/123/posts/456';
+const newUrl = url.replace(
+    /\/users\/(\d+)\/posts\/(\d+)/,
+    '/api/v2/user/$1/post/$2'
+);
+console.log(newUrl); // 'https://api.example.com/api/v2/user/123/post/456'
+
+// HTML tag replacement
+const html = '<p>Hello</p><div>World</div>';
+const modified = html.replace(/<(\w+)>([^<]+)<\/\1>/g, (match, tag, content) => {
+    return `<${tag} class="styled">${content}</${tag}>`;
+});
+console.log(modified); // '<p class="styled">Hello</p><div class="styled">World</div>'
+
+// Credit card masking with groups
+const cardNumber = '1234-5678-9012-3456';
+const masked = cardNumber.replace(
+    /^(\d{4})-(\d{4})-(\d{4})-(\d{4})$/, 
+    '$1-****-****-$4'
+);
+console.log(masked); // '1234-****-****-3456'
+
+// Advanced: Conditional replacement
+const text2 = 'Contact: john@example.com or call 123-456-7890';
+const processed = text2.replace(
+    /([\w.]+@[\w.]+)|(\d{3}-\d{3}-\d{4})/g,
+    (match, email, phone) => {
+        if (email) {
+            return `<a href="mailto:${email}">${email}</a>`;
+        } else if (phone) {
+            return `<a href="tel:${phone}">${phone}</a>`;
+        }
+        return match;
+    }
+);
+console.log(processed);
+// 'Contact: <a href="mailto:john@example.com">john@example.com</a> or call <a href="tel:123-456-7890">123-456-7890</a>'
+
+// Special replacement patterns
+const specialText = 'Hello World';
+console.log(specialText.replace(/(Hello)/, '$1 Beautiful')); // 'Hello Beautiful World'
+console.log(specialText.replace(/(Hello)/, '$` - $1 - $\'')); // ' - Hello -  World World'
+// $` = everything before match
+// $& = the match itself  
+// $' = everything after match
+```
+</details>
 
 ## Memory leaks
 
 **Beginner: Q1** - What is a memory leak in JavaScript?
 
+<details>
+<summary>Answer</summary>
+
+A memory leak occurs when memory is allocated but never freed, causing gradual memory consumption increase:
+
+```javascript
+// Memory leak example - global variables
+function createLeak() {
+    // Creates global variable (not garbage collected)
+    leakedData = new Array(1000000).fill('data');
+}
+createLeak();
+
+// Proper approach
+function noLeak() {
+    // Local variable (garbage collected when function ends)
+    const localData = new Array(1000000).fill('data');
+    return localData.length;
+}
+
+// Memory leak - forgotten timer
+function startTimer() {
+    const data = new Array(1000000).fill('data');
+    
+    setInterval(() => {
+        // Timer keeps reference to 'data'
+        console.log(data.length);
+    }, 1000);
+    // Timer never cleared - 'data' never freed
+}
+
+// Fixed version
+function startTimerFixed() {
+    const data = new Array(1000000).fill('data');
+    
+    const timerId = setInterval(() => {
+        console.log(data.length);
+    }, 1000);
+    
+    // Clear timer when done
+    setTimeout(() => {
+        clearInterval(timerId);
+    }, 10000);
+}
+
+// Memory leak signs:
+// 1. Gradually increasing memory usage
+// 2. Slower performance over time
+// 3. Browser/app crashes
+// 4. High memory consumption in dev tools
+
+// Common leak scenarios:
+// - Forgotten event listeners
+// - Unclosed timers/intervals
+// - Circular references
+// - Large objects in closures
+// - Detached DOM nodes
+```
+</details>
+
 **Beginner: Q2** - What are common causes of memory leaks?
+
+<details>
+<summary>Answer</summary>
+
+Common memory leak causes include forgotten cleanup, circular references, and global variables:
+
+```javascript
+// 1. Global variables
+function badPractice() {
+    globalVar = new Array(1000000); // Accidental global
+    window.anotherGlobal = 'data';   // Explicit global
+}
+
+// Fix: Use proper scoping
+function goodPractice() {
+    const localVar = new Array(1000000);
+    // Automatically cleaned up
+}
+
+// 2. Forgotten timers
+function leakyTimer() {
+    const largeData = new Array(1000000);
+    
+    setInterval(() => {
+        console.log('Running with large data');
+    }, 1000);
+    // Timer never cleared - keeps largeData in memory
+}
+
+// Fix: Clear timers
+function cleanTimer() {
+    const largeData = new Array(1000000);
+    
+    const timerId = setInterval(() => {
+        console.log('Running');
+    }, 1000);
+    
+    // Clear when component unmounts/page changes
+    return () => clearInterval(timerId);
+}
+
+// 3. Event listeners not removed
+function setupEventListeners() {
+    const largeObject = { data: new Array(1000000) };
+    
+    function handleClick() {
+        console.log(largeObject.data.length);
+    }
+    
+    document.addEventListener('click', handleClick);
+    // Listener keeps reference to largeObject
+}
+
+// Fix: Remove listeners
+function setupEventListenersFixed() {
+    const largeObject = { data: new Array(1000000) };
+    
+    function handleClick() {
+        console.log(largeObject.data.length);
+    }
+    
+    document.addEventListener('click', handleClick);
+    
+    // Cleanup function
+    return () => document.removeEventListener('click', handleClick);
+}
+
+// 4. Circular references (old IE issue, mostly resolved)
+function circularReference() {
+    const obj1 = {};
+    const obj2 = {};
+    
+    obj1.ref = obj2;
+    obj2.ref = obj1; // Circular reference
+    
+    // Modern JS engines handle this, but can still cause issues
+}
+
+// 5. Closures holding large objects
+function closureLeak() {
+    const largeData = new Array(1000000).fill('data');
+    
+    return function() {
+        // This closure keeps largeData alive
+        console.log('Function called');
+    };
+}
+
+// Fix: Don't capture unnecessary variables
+function closureFixed() {
+    const largeData = new Array(1000000).fill('data');
+    const summary = largeData.length; // Extract what you need
+    
+    return function() {
+        console.log(`Data length: ${summary}`);
+        // Only keeps 'summary', not entire array
+    };
+}
+
+// 6. Detached DOM nodes
+function domLeak() {
+    const parent = document.getElementById('parent');
+    const child = document.createElement('div');
+    parent.appendChild(child);
+    
+    // Remove parent but keep reference to child
+    parent.remove();
+    
+    // 'child' is detached but still referenced - memory leak
+    return child;
+}
+
+// Fix: Clear references
+function domFixed() {
+    const parent = document.getElementById('parent');
+    const child = document.createElement('div');
+    parent.appendChild(child);
+    
+    parent.remove();
+    // Don't return/store references to detached nodes
+}
+```
+</details>
 
 **Beginner: Q3** - How can event listeners cause memory leaks?
 
+<details>
+<summary>Answer</summary>
+
+Event listeners keep references to callback functions and their closures, preventing garbage collection:
+
+```javascript
+// Memory leak example
+function setupPage() {
+    const largeData = new Array(1000000).fill('user data');
+    const button = document.getElementById('myButton');
+    
+    button.addEventListener('click', function() {
+        // This callback keeps 'largeData' in memory
+        console.log(`Processing ${largeData.length} items`);
+    });
+    
+    // When page changes, button removed but listener still exists
+    // 'largeData' never gets garbage collected
+}
+
+// Fix 1: Remove event listeners
+function setupPageFixed() {
+    const largeData = new Array(1000000).fill('user data');
+    const button = document.getElementById('myButton');
+    
+    function handleClick() {
+        console.log(`Processing ${largeData.length} items`);
+    }
+    
+    button.addEventListener('click', handleClick);
+    
+    // Cleanup function
+    return function cleanup() {
+        button.removeEventListener('click', handleClick);
+    };
+}
+
+// Fix 2: Use AbortController (modern approach)
+function setupPageWithAbort() {
+    const largeData = new Array(1000000).fill('user data');
+    const button = document.getElementById('myButton');
+    const controller = new AbortController();
+    
+    button.addEventListener('click', function() {
+        console.log(`Processing ${largeData.length} items`);
+    }, { signal: controller.signal });
+    
+    // Cleanup all listeners at once
+    return () => controller.abort();
+}
+
+// Fix 3: Avoid capturing large objects
+function setupPageOptimized() {
+    const largeData = new Array(1000000).fill('user data');
+    const button = document.getElementById('myButton');
+    
+    // Extract only what you need
+    const dataLength = largeData.length;
+    
+    button.addEventListener('click', function() {
+        // Only captures 'dataLength', not entire array
+        console.log(`Processing ${dataLength} items`);
+    });
+}
+
+// React/Vue component example (common leak)
+class LeakyComponent {
+    constructor() {
+        this.largeData = new Array(1000000);
+        this.handleResize = this.handleResize.bind(this);
+    }
+    
+    mount() {
+        // Adding listener but not removing
+        window.addEventListener('resize', this.handleResize);
+    }
+    
+    handleResize() {
+        console.log('Resizing with data:', this.largeData.length);
+    }
+    
+    // Missing cleanup method
+}
+
+// Fixed component
+class FixedComponent {
+    constructor() {
+        this.largeData = new Array(1000000);
+        this.handleResize = this.handleResize.bind(this);
+    }
+    
+    mount() {
+        window.addEventListener('resize', this.handleResize);
+    }
+    
+    unmount() {
+        // Proper cleanup
+        window.removeEventListener('resize', this.handleResize);
+        this.largeData = null;
+    }
+    
+    handleResize() {
+        if (this.largeData) {
+            console.log('Resizing with data:', this.largeData.length);
+        }
+    }
+}
+
+// Modern framework patterns
+// React hooks
+function useEventListener(event, handler) {
+    useEffect(() => {
+        document.addEventListener(event, handler);
+        
+        return () => {
+            document.removeEventListener(event, handler);
+        };
+    }, [event, handler]);
+}
+
+// Vue composition API
+function useEventListener(target, event, handler) {
+    onMounted(() => {
+        target.addEventListener(event, handler);
+    });
+    
+    onUnmounted(() => {
+        target.removeEventListener(event, handler);
+    });
+}
+
+// Best practices:
+// 1. Always remove listeners in cleanup
+// 2. Use AbortController for multiple listeners
+// 3. Avoid capturing large objects in callbacks
+// 4. Use weak references when possible
+// 5. Framework lifecycle methods for cleanup
+```
+</details>
+
 **Intermediate: Q1** - How do closures potentially cause memory leaks?
 
+<details>
+<summary>Answer</summary>
+
+Closures can cause memory leaks by retaining references to variables longer than necessary:
+
+```javascript
+// Memory leak: Closure keeps entire scope alive
+function createLeak() {
+    const largeArray = new Array(1000000).fill('data');
+    const anotherLargeArray = new Array(1000000).fill('more data');
+    const smallValue = 42;
+    
+    return function() {
+        // Only uses smallValue, but closure keeps ALL variables
+        console.log(smallValue);
+    };
+    // largeArray and anotherLargeArray never freed
+}
+
+const leakyFunction = createLeak();
+
+// Fix 1: Extract only needed values
+function createFixed1() {
+    const largeArray = new Array(1000000).fill('data');
+    const anotherLargeArray = new Array(1000000).fill('more data');
+    const smallValue = 42;
+    
+    // Process large arrays here, don't capture them
+    const processedValue = largeArray.length + anotherLargeArray.length;
+    
+    return function() {
+        // Only captures smallValue and processedValue
+        console.log(smallValue, processedValue);
+    };
+}
+
+// Fix 2: Null out large variables
+function createFixed2() {
+    let largeArray = new Array(1000000).fill('data');
+    const smallValue = 42;
+    
+    // Process data while available
+    const result = largeArray.reduce((sum, item) => sum + item.length, 0);
+    
+    // Clear reference
+    largeArray = null;
+    
+    return function() {
+        console.log(smallValue, result);
+        // largeArray is null, can be garbage collected
+    };
+}
+
+// Common leak: Timer callbacks with closures
+function setupTimer() {
+    const userData = fetchUserData(); // Large object
+    const config = getConfig();       // Another large object
+    
+    setInterval(() => {
+        // Only needs one property, but keeps entire objects
+        console.log(userData.name);
+    }, 1000);
+}
+
+// Fixed version
+function setupTimerFixed() {
+    const userData = fetchUserData();
+    const config = getConfig();
+    
+    // Extract only needed values
+    const userName = userData.name;
+    
+    const timerId = setInterval(() => {
+        console.log(userName);
+    }, 1000);
+    
+    // Clear timer and references
+    setTimeout(() => {
+        clearInterval(timerId);
+    }, 60000);
+}
+
+// Event handler closures
+function setupEventHandlers() {
+    const cache = new Map(); // Large cache object
+    const settings = loadSettings(); // Large settings
+    
+    document.getElementById('button').addEventListener('click', function() {
+        // Closure captures entire scope
+        const key = this.dataset.key;
+        console.log(cache.get(key));
+    });
+    
+    // When button is removed, cache and settings still in memory
+}
+
+// Fixed with proper scoping
+function setupEventHandlersFixed() {
+    const cache = new Map();
+    const settings = loadSettings();
+    
+    // Create handler with minimal closure
+    const handleClick = createClickHandler(cache);
+    
+    document.getElementById('button').addEventListener('click', handleClick);
+    
+    // Return cleanup function
+    return () => {
+        document.getElementById('button').removeEventListener('click', handleClick);
+        cache.clear(); // Explicit cleanup
+    };
+}
+
+function createClickHandler(cache) {
+    return function(event) {
+        const key = event.target.dataset.key;
+        console.log(cache.get(key));
+    };
+}
+
+// Module pattern leaks
+const LeakyModule = (function() {
+    const massiveData = new Array(1000000);
+    const config = { /* large config */ };
+    
+    return {
+        // This keeps massiveData alive even if not used
+        getConfigValue: function(key) {
+            return config[key];
+        },
+        
+        // This method never uses massiveData but closure keeps it
+        simpleMethod: function() {
+            console.log('Simple operation');
+        }
+    };
+})();
+
+// Fixed module pattern
+const FixedModule = (function() {
+    const massiveData = new Array(1000000);
+    const config = { /* large config */ };
+    
+    // Process massive data immediately and clear it
+    const processedResult = massiveData.reduce((sum, item) => sum + 1, 0);
+    // Clear the reference
+    massiveData = null;
+    
+    return {
+        getConfigValue: function(key) {
+            return config[key];
+        },
+        
+        getProcessedCount: function() {
+            return processedResult; // Uses processed value, not original array
+        }
+    };
+})();
+
+// React component closure leak (common pattern)
+function BadComponent() {
+    const [data, setData] = useState(new Array(1000000));
+    
+    const handleClick = useCallback(() => {
+        // Captures entire 'data' array in closure
+        console.log('Button clicked');
+    }, []); // Empty dependency array but still captures data
+    
+    return <button onClick={handleClick}>Click</button>;
+}
+
+// Fixed React component
+function GoodComponent() {
+    const [data, setData] = useState(new Array(1000000));
+    
+    const handleClick = useCallback(() => {
+        console.log('Button clicked');
+    }, []); // No reference to data
+    
+    // Or if you need data:
+    const handleClickWithData = useCallback(() => {
+        console.log('Data length:', data.length);
+    }, [data.length]); // Only depend on length, not entire array
+    
+    return <button onClick={handleClick}>Click</button>;
+}
+```
+</details>
+
 **Intermediate: Q2** - How do you detect and debug memory leaks in a web application?
+
+<details>
+<summary>Answer</summary>
+
+Use browser dev tools, monitoring techniques, and code analysis to identify memory leaks:
+
+```javascript
+// 1. Chrome DevTools Memory Tab
+// Steps:
+// - Open DevTools → Memory tab
+// - Take heap snapshot before action
+// - Perform suspected leaky operation
+// - Take another snapshot
+// - Compare snapshots for growing objects
+
+// 2. Performance monitoring in code
+class MemoryMonitor {
+    constructor() {
+        this.measurements = [];
+    }
+    
+    measureMemory() {
+        if (performance.memory) {
+            const memory = {
+                used: performance.memory.usedJSHeapSize,
+                total: performance.memory.totalJSHeapSize,
+                limit: performance.memory.jsHeapSizeLimit,
+                timestamp: Date.now()
+            };
+            
+            this.measurements.push(memory);
+            console.log('Memory usage:', memory);
+            
+            return memory;
+        }
+    }
+    
+    checkForLeaks() {
+        if (this.measurements.length < 2) return false;
+        
+        const recent = this.measurements.slice(-5);
+        const growing = recent.every((measurement, index) => {
+            return index === 0 || measurement.used > recent[index - 1].used;
+        });
+        
+        if (growing) {
+            console.warn('Potential memory leak detected!');
+            return true;
+        }
+        return false;
+    }
+}
+
+// Usage
+const monitor = new MemoryMonitor();
+setInterval(() => {
+    monitor.measureMemory();
+    monitor.checkForLeaks();
+}, 5000);
+
+// 3. Automated leak detection
+function detectLeaks() {
+    let baseline = 0;
+    let measurements = 0;
+    
+    const interval = setInterval(() => {
+        if (performance.memory) {
+            const current = performance.memory.usedJSHeapSize;
+            
+            if (measurements === 0) {
+                baseline = current;
+            } else if (measurements > 5) {
+                const increase = current - baseline;
+                const percentIncrease = (increase / baseline) * 100;
+                
+                if (percentIncrease > 50) {
+                    console.error(`Potential leak: ${percentIncrease.toFixed(1)}% increase`);
+                    // Alert development team or log to monitoring service
+                }
+            }
+            
+            measurements++;
+        }
+    }, 10000);
+    
+    // Return cleanup function
+    return () => clearInterval(interval);
+}
+
+// 4. Tracking object creation/destruction
+class LeakTracker {
+    constructor() {
+        this.created = new Map();
+        this.destroyed = new Set();
+    }
+    
+    trackCreation(id, type, size) {
+        this.created.set(id, { type, size, timestamp: Date.now() });
+    }
+    
+    trackDestruction(id) {
+        this.destroyed.add(id);
+    }
+    
+    getLeaks() {
+        const leaks = [];
+        for (const [id, info] of this.created) {
+            if (!this.destroyed.has(id)) {
+                leaks.push({ id, ...info });
+            }
+        }
+        return leaks;
+    }
+    
+    report() {
+        const leaks = this.getLeaks();
+        if (leaks.length > 0) {
+            console.warn('Potential leaks found:', leaks);
+        }
+        return leaks;
+    }
+}
+
+// Usage in classes
+class TrackedComponent {
+    constructor(id) {
+        this.id = id;
+        window.leakTracker?.trackCreation(id, 'Component', 1000);
+    }
+    
+    destroy() {
+        window.leakTracker?.trackDestruction(this.id);
+    }
+}
+
+// 5. WeakMap for tracking without leaks
+const componentRegistry = new WeakMap();
+
+function trackComponent(component, data) {
+    // WeakMap doesn't prevent garbage collection
+    componentRegistry.set(component, data);
+}
+
+// 6. Debugging specific leak patterns
+function debugEventListeners() {
+    const originalAddEventListener = EventTarget.prototype.addEventListener;
+    const originalRemoveEventListener = EventTarget.prototype.removeEventListener;
+    
+    const listenerRegistry = new Map();
+    
+    EventTarget.prototype.addEventListener = function(type, listener, options) {
+        const key = `${this.constructor.name}:${type}`;
+        if (!listenerRegistry.has(key)) {
+            listenerRegistry.set(key, []);
+        }
+        listenerRegistry.get(key).push(listener);
+        
+        console.log(`Added listener: ${key}, Total: ${listenerRegistry.get(key).length}`);
+        return originalAddEventListener.call(this, type, listener, options);
+    };
+    
+    EventTarget.prototype.removeEventListener = function(type, listener, options) {
+        const key = `${this.constructor.name}:${type}`;
+        if (listenerRegistry.has(key)) {
+            const listeners = listenerRegistry.get(key);
+            const index = listeners.indexOf(listener);
+            if (index !== -1) {
+                listeners.splice(index, 1);
+                console.log(`Removed listener: ${key}, Remaining: ${listeners.length}`);
+            }
+        }
+        return originalRemoveEventListener.call(this, type, listener, options);
+    };
+    
+    // Check for orphaned listeners
+    setInterval(() => {
+        for (const [key, listeners] of listenerRegistry) {
+            if (listeners.length > 10) {
+                console.warn(`Potential leak: ${listeners.length} listeners for ${key}`);
+            }
+        }
+    }, 30000);
+}
+
+// 7. Production monitoring
+class ProductionMemoryMonitor {
+    constructor() {
+        this.alertThreshold = 100 * 1024 * 1024; // 100MB
+        this.checkInterval = 60000; // 1 minute
+        this.start();
+    }
+    
+    start() {
+        setInterval(() => {
+            if (performance.memory && performance.memory.usedJSHeapSize > this.alertThreshold) {
+                this.reportLeak();
+            }
+        }, this.checkInterval);
+    }
+    
+    reportLeak() {
+        const memoryInfo = {
+            used: performance.memory.usedJSHeapSize,
+            total: performance.memory.totalJSHeapSize,
+            url: window.location.href,
+            userAgent: navigator.userAgent,
+            timestamp: new Date().toISOString()
+        };
+        
+        // Send to monitoring service
+        fetch('/api/memory-leak-report', {
+            method: 'POST',
+            body: JSON.stringify(memoryInfo),
+            headers: { 'Content-Type': 'application/json' }
+        }).catch(console.error);
+    }
+}
+
+// Tools and techniques:
+// - Chrome DevTools Memory tab
+// - Performance.measureUserAgentSpecificMemory()
+// - Heap snapshots comparison
+// - Performance timeline
+// - Third-party tools: Clinic.js, Memwatch
+```
+</details>
 
 ## Performance optimization techniques
 
 **Beginner: Q1** - What are some basic techniques to optimize JavaScript performance?
 
+<details>
+<summary>Answer</summary>
+
+Basic JavaScript performance optimization techniques:
+
+```javascript
+// 1. Minimize global variable access
+// Slow
+for (let i = 0; i < 1000; i++) {
+    console.log(globalVariable.property);
+}
+
+// Fast - cache global references
+const cached = globalVariable.property;
+for (let i = 0; i < 1000; i++) {
+    console.log(cached);
+}
+
+// 2. Use efficient data structures
+// Slow - array search
+const users = [/*large array*/];
+const user = users.find(u => u.id === targetId);
+
+// Fast - Map for lookups
+const userMap = new Map(users.map(u => [u.id, u]));
+const user = userMap.get(targetId);
+
+// 3. Avoid unnecessary function calls
+// Slow
+const items = getItems();
+for (let i = 0; i < items.length; i++) {
+    if (isValid(items[i])) { // Function called every iteration
+        process(items[i]);
+    }
+}
+
+// Fast - cache function results
+const items = getItems();
+const validItems = items.filter(isValid); // Filter once
+validItems.forEach(process);
+
+// 4. Use const/let instead of var (block scoping)
+// Slower
+for (var i = 0; i < 1000; i++) {
+    var temp = data[i] * 2;
+    results.push(temp);
+}
+
+// Faster
+for (let i = 0; i < 1000; i++) {
+    const temp = data[i] * 2;
+    results.push(temp);
+}
+
+// 5. Optimize object property access
+// Slow - repeated property access
+function processUser(user) {
+    if (user.profile.settings.notifications.email) {
+        sendEmail(user.profile.settings.notifications.email);
+    }
+}
+
+// Fast - destructure once
+function processUser(user) {
+    const { email } = user.profile.settings.notifications;
+    if (email) {
+        sendEmail(email);
+    }
+}
+
+// 6. Use array methods efficiently
+const numbers = [1, 2, 3, 4, 5];
+
+// Slow - multiple iterations
+const doubled = numbers.map(n => n * 2);
+const filtered = doubled.filter(n => n > 4);
+const sum = filtered.reduce((a, b) => a + b, 0);
+
+// Fast - single iteration
+const result = numbers.reduce((acc, n) => {
+    const doubled = n * 2;
+    if (doubled > 4) {
+        acc.sum += doubled;
+        acc.items.push(doubled);
+    }
+    return acc;
+}, { sum: 0, items: [] });
+
+// 7. Debounce expensive operations
+function debounce(func, delay) {
+    let timeoutId;
+    return function(...args) {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(() => func.apply(this, args), delay);
+    };
+}
+
+const expensiveSearch = debounce((query) => {
+    // Expensive API call
+    searchAPI(query);
+}, 300);
+
+// 8. Use requestAnimationFrame for animations
+// Slow - setInterval
+setInterval(() => {
+    element.style.left = position + 'px';
+    position += 1;
+}, 16);
+
+// Fast - requestAnimationFrame
+function animate() {
+    element.style.left = position + 'px';
+    position += 1;
+    requestAnimationFrame(animate);
+}
+animate();
+```
+</details>
+
 **Beginner: Q2** - Why should you minimize DOM manipulation?
+
+<details>
+<summary>Answer</summary>
+
+DOM manipulation is expensive because it triggers browser reflows and repaints:
+
+```javascript
+// SLOW - Multiple DOM manipulations
+function addItems(items) {
+    const container = document.getElementById('container');
+    
+    items.forEach(item => {
+        const div = document.createElement('div');
+        div.textContent = item.text;
+        div.className = item.class;
+        container.appendChild(div); // Causes reflow each time
+    });
+}
+
+// FAST - Batch DOM updates
+function addItemsFast(items) {
+    const container = document.getElementById('container');
+    const fragment = document.createDocumentFragment();
+    
+    items.forEach(item => {
+        const div = document.createElement('div');
+        div.textContent = item.text;
+        div.className = item.class;
+        fragment.appendChild(div); // No reflow
+    });
+    
+    container.appendChild(fragment); // Single reflow
+}
+
+// SLOW - Reading layout properties repeatedly
+function updateElements(elements) {
+    elements.forEach(el => {
+        el.style.left = el.offsetLeft + 10 + 'px'; // Forces layout calculation
+        el.style.top = el.offsetTop + 10 + 'px';   // Forces layout again
+    });
+}
+
+// FAST - Batch reads and writes
+function updateElementsFast(elements) {
+    // Read all values first
+    const positions = elements.map(el => ({
+        element: el,
+        left: el.offsetLeft,
+        top: el.offsetTop
+    }));
+    
+    // Then write all changes
+    positions.forEach(({ element, left, top }) => {
+        element.style.left = left + 10 + 'px';
+        element.style.top = top + 10 + 'px';
+    });
+}
+
+// SLOW - Individual style updates
+function styleElements(elements) {
+    elements.forEach(el => {
+        el.style.color = 'red';        // Repaint
+        el.style.backgroundColor = 'blue'; // Repaint
+        el.style.fontSize = '14px';    // Reflow + repaint
+    });
+}
+
+// FAST - CSS classes or cssText
+function styleElementsFast(elements) {
+    elements.forEach(el => {
+        el.className = 'optimized-style'; // Single repaint
+        // Or use cssText
+        // el.style.cssText = 'color: red; background: blue; font-size: 14px;';
+    });
+}
+
+// SLOW - innerHTML in loops
+function createList(items) {
+    const container = document.getElementById('list');
+    let html = '';
+    
+    items.forEach(item => {
+        html += `<li>${item}</li>`;
+        container.innerHTML = html; // Recreates DOM each time
+    });
+}
+
+// FAST - Build string first, then set innerHTML once
+function createListFast(items) {
+    const container = document.getElementById('list');
+    const html = items.map(item => `<li>${item}</li>`).join('');
+    container.innerHTML = html; // Single DOM update
+}
+
+// Use virtual DOM concepts
+class VirtualDOM {
+    constructor() {
+        this.pendingUpdates = [];
+    }
+    
+    queueUpdate(element, property, value) {
+        this.pendingUpdates.push({ element, property, value });
+    }
+    
+    flush() {
+        // Group updates by element
+        const grouped = this.pendingUpdates.reduce((acc, update) => {
+            if (!acc[update.element]) acc[update.element] = [];
+            acc[update.element].push(update);
+            return acc;
+        }, {});
+        
+        // Apply all updates for each element at once
+        Object.entries(grouped).forEach(([element, updates]) => {
+            updates.forEach(({ property, value }) => {
+                element.style[property] = value;
+            });
+        });
+        
+        this.pendingUpdates = [];
+    }
+}
+
+// Minimize DOM queries
+// SLOW - Query DOM repeatedly
+function updateCards() {
+    for (let i = 0; i < 100; i++) {
+        const card = document.querySelector(`.card[data-id="${i}"]`);
+        if (card) {
+            card.textContent = `Updated ${i}`;
+        }
+    }
+}
+
+// FAST - Query once, cache results
+function updateCardsFast() {
+    const cards = document.querySelectorAll('.card');
+    const cardMap = new Map();
+    
+    cards.forEach(card => {
+        cardMap.set(card.dataset.id, card);
+    });
+    
+    for (let i = 0; i < 100; i++) {
+        const card = cardMap.get(String(i));
+        if (card) {
+            card.textContent = `Updated ${i}`;
+        }
+    }
+}
+
+// Performance impact:
+// - DOM queries: 10-100x slower than JS operations
+// - Layout (reflow): Forces recalculation of positions
+// - Paint (repaint): Visual updates
+// - Composite: Layer composition
+
+// Best practices:
+// 1. Batch DOM operations
+// 2. Use DocumentFragment
+// 3. Cache DOM references
+// 4. Use CSS classes instead of inline styles
+// 5. Minimize layout-triggering properties
+// 6. Use transform/opacity for animations (GPU accelerated)
+```
+</details>
 
 **Beginner: Q3** - How does code minification help with performance?
 
+<details>
+<summary>Answer</summary>
+
+Code minification reduces file size by removing unnecessary characters and optimizing code:
+
+```javascript
+// Original code (before minification)
+function calculateTotal(items, taxRate, discountPercent) {
+    // Calculate subtotal
+    let subtotal = 0;
+    
+    for (let i = 0; i < items.length; i++) {
+        const item = items[i];
+        subtotal += item.price * item.quantity;
+    }
+    
+    // Apply discount
+    const discountAmount = subtotal * (discountPercent / 100);
+    const discountedTotal = subtotal - discountAmount;
+    
+    // Calculate tax
+    const tax = discountedTotal * (taxRate / 100);
+    
+    // Return final total
+    return discountedTotal + tax;
+}
+
+// Minified version (after minification)
+function calculateTotal(t,a,e){let r=0;for(let n=0;n<t.length;n++){const l=t[n];r+=l.price*l.quantity}const n=r*(e/100),l=r-n,c=l*(a/100);return l+c}
+
+// Benefits of minification:
+
+// 1. Reduced file size (30-60% smaller)
+// Original: 485 bytes
+// Minified: 147 bytes (70% reduction)
+
+// 2. Faster download times
+const downloadTime = (fileSize, bandwidth) => {
+    return fileSize / bandwidth;
+};
+
+console.log('Original:', downloadTime(485, 1000)); // 0.485 seconds
+console.log('Minified:', downloadTime(147, 1000)); // 0.147 seconds
+
+// 3. Less bandwidth usage
+const monthlySavings = (originalSize, minifiedSize, requests) => {
+    const savings = (originalSize - minifiedSize) * requests;
+    return savings / 1024 / 1024; // MB saved
+};
+
+console.log('Monthly savings:', monthlySavings(485, 147, 100000)); // ~32 MB
+
+// 4. Improved parsing time
+// Less code to parse = faster JavaScript engine startup
+
+// What minification removes/changes:
+// - Whitespace (spaces, tabs, newlines)
+// - Comments
+// - Variable name shortening
+// - Function name shortening (when safe)
+// - Unnecessary semicolons
+// - Dead code elimination
+
+// Example transformations:
+// Before minification:
+const userData = {
+    firstName: 'John',
+    lastName: 'Doe',
+    email: 'john@example.com'
+};
+
+function getUserFullName() {
+    return userData.firstName + ' ' + userData.lastName;
+}
+
+// After minification:
+const a={firstName:"John",lastName:"Doe",email:"john@example.com"};function getUserFullName(){return a.firstName+" "+a.lastName}
+
+// Advanced optimizations in modern minifiers:
+// 1. Dead code elimination
+if (false) {
+    console.log('This code is removed');
+}
+
+// 2. Constant folding
+const result = 5 * 10; // Becomes: const result = 50;
+
+// 3. Function inlining (for small functions)
+function add(a, b) {
+    return a + b;
+}
+const sum = add(5, 3); // Might become: const sum = 5 + 3;
+
+// Tools for minification:
+// - Terser (most popular)
+// - UglifyJS
+// - Google Closure Compiler
+// - Webpack (built-in optimization)
+// - Rollup
+// - esbuild (fastest)
+
+// Webpack configuration example:
+module.exports = {
+    mode: 'production', // Enables minification
+    optimization: {
+        minimize: true,
+        minimizer: [
+            new TerserPlugin({
+                terserOptions: {
+                    compress: {
+                        drop_console: true, // Remove console.log
+                        drop_debugger: true, // Remove debugger statements
+                    },
+                },
+            }),
+        ],
+    },
+};
+
+// Performance impact:
+// - 30-60% smaller files
+// - Faster downloads (especially mobile)
+// - Reduced parsing time
+// - Lower bandwidth costs
+// - Better Core Web Vitals scores
+
+// Considerations:
+// - Source maps for debugging
+// - Gzip compression works well with minified code
+// - HTTP/2 reduces benefit but still valuable
+// - CDN caching amplifies benefits
+```
+</details>
+
 **Intermediate: Q1** - What is lazy loading and how can it improve performance?
 
+<details>
+<summary>Answer</summary>
+
+Lazy loading defers loading resources until they're actually needed:
+
+```javascript
+// 1. Image lazy loading
+class LazyImageLoader {
+    constructor() {
+        this.imageObserver = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    this.loadImage(entry.target);
+                }
+            });
+        });
+    }
+    
+    observe(img) {
+        this.imageObserver.observe(img);
+    }
+    
+    loadImage(img) {
+        img.src = img.dataset.src;
+        img.classList.add('loaded');
+        this.imageObserver.unobserve(img);
+    }
+}
+
+// HTML: <img data-src="actual-image.jpg" class="lazy-image" />
+
+// 2. Module lazy loading (Dynamic imports)
+async function loadFeature(featureName) {
+    try {
+        switch (featureName) {
+            case 'charts':
+                const { ChartLibrary } = await import('./chartLibrary.js');
+                return new ChartLibrary();
+                
+            case 'editor':
+                const { CodeEditor } = await import('./codeEditor.js');
+                return new CodeEditor();
+                
+            default:
+                throw new Error(`Unknown feature: ${featureName}`);
+        }
+    } catch (error) {
+        console.error('Failed to load feature:', error);
+    }
+}
+
+// Usage
+document.getElementById('chart-btn').addEventListener('click', async () => {
+    const chart = await loadFeature('charts');
+    chart.render('#chart-container');
+});
+
+// 3. Component lazy loading (React example)
+const LazyComponent = React.lazy(() => import('./HeavyComponent'));
+
+function App() {
+    return (
+        <div>
+            <Suspense fallback={<div>Loading...</div>}>
+                <LazyComponent />
+            </Suspense>
+        </div>
+    );
+}
+
+// 4. Data lazy loading (Infinite scroll)
+class InfiniteScroll {
+    constructor(container, loadMoreCallback) {
+        this.container = container;
+        this.loadMore = loadMoreCallback;
+        this.loading = false;
+        this.page = 1;
+        
+        this.setupObserver();
+    }
+    
+    setupObserver() {
+        const sentinel = document.createElement('div');
+        sentinel.className = 'scroll-sentinel';
+        this.container.appendChild(sentinel);
+        
+        const observer = new IntersectionObserver((entries) => {
+            if (entries[0].isIntersecting && !this.loading) {
+                this.loadNextPage();
+            }
+        });
+        
+        observer.observe(sentinel);
+    }
+    
+    async loadNextPage() {
+        this.loading = true;
+        
+        try {
+            const data = await this.loadMore(this.page);
+            this.renderItems(data);
+            this.page++;
+        } catch (error) {
+            console.error('Failed to load more items:', error);
+        } finally {
+            this.loading = false;
+        }
+    }
+    
+    renderItems(items) {
+        const fragment = document.createDocumentFragment();
+        items.forEach(item => {
+            const element = this.createItemElement(item);
+            fragment.appendChild(element);
+        });
+        this.container.appendChild(fragment);
+    }
+}
+
+// 5. Route-based code splitting
+const routes = [
+    {
+        path: '/dashboard',
+        component: () => import('./pages/Dashboard.js')
+    },
+    {
+        path: '/profile',
+        component: () => import('./pages/Profile.js')
+    },
+    {
+        path: '/settings',
+        component: () => import('./pages/Settings.js')
+    }
+];
+
+async function loadRoute(path) {
+    const route = routes.find(r => r.path === path);
+    if (route) {
+        const module = await route.component();
+        return module.default;
+    }
+}
+
+// 6. API data lazy loading
+class DataManager {
+    constructor() {
+        this.cache = new Map();
+        this.loading = new Set();
+    }
+    
+    async getData(id) {
+        // Return cached data immediately
+        if (this.cache.has(id)) {
+            return this.cache.get(id);
+        }
+        
+        // Prevent duplicate requests
+        if (this.loading.has(id)) {
+            return this.waitForLoad(id);
+        }
+        
+        this.loading.add(id);
+        
+        try {
+            const data = await fetch(`/api/data/${id}`).then(r => r.json());
+            this.cache.set(id, data);
+            return data;
+        } finally {
+            this.loading.delete(id);
+        }
+    }
+    
+    waitForLoad(id) {
+        return new Promise(resolve => {
+            const check = () => {
+                if (this.cache.has(id)) {
+                    resolve(this.cache.get(id));
+                } else {
+                    setTimeout(check, 50);
+                }
+            };
+            check();
+        });
+    }
+}
+
+// 7. Virtual scrolling for large lists
+class VirtualList {
+    constructor(container, items, itemHeight) {
+        this.container = container;
+        this.items = items;
+        this.itemHeight = itemHeight;
+        this.visibleCount = Math.ceil(container.clientHeight / itemHeight) + 2;
+        this.startIndex = 0;
+        
+        this.setupScrolling();
+        this.render();
+    }
+    
+    setupScrolling() {
+        this.container.addEventListener('scroll', () => {
+            const newStartIndex = Math.floor(this.container.scrollTop / this.itemHeight);
+            if (newStartIndex !== this.startIndex) {
+                this.startIndex = newStartIndex;
+                this.render();
+            }
+        });
+    }
+    
+    render() {
+        const endIndex = Math.min(this.startIndex + this.visibleCount, this.items.length);
+        const visibleItems = this.items.slice(this.startIndex, endIndex);
+        
+        this.container.innerHTML = '';
+        
+        // Add spacer for items above viewport
+        if (this.startIndex > 0) {
+            const spacer = document.createElement('div');
+            spacer.style.height = `${this.startIndex * this.itemHeight}px`;
+            this.container.appendChild(spacer);
+        }
+        
+        // Render visible items
+        visibleItems.forEach((item, index) => {
+            const element = this.createItemElement(item, this.startIndex + index);
+            this.container.appendChild(element);
+        });
+        
+        // Add spacer for items below viewport
+        const remainingItems = this.items.length - endIndex;
+        if (remainingItems > 0) {
+            const spacer = document.createElement('div');
+            spacer.style.height = `${remainingItems * this.itemHeight}px`;
+            this.container.appendChild(spacer);
+        }
+    }
+}
+
+// Performance benefits:
+// - Faster initial page load
+// - Reduced memory usage
+// - Better Core Web Vitals
+// - Improved user experience
+// - Lower bandwidth usage
+// - Faster time to interactive
+```
+</details>
+
 **Intermediate: Q2** - How do you optimize loops and iterations for better performance?
+
+<details>
+<summary>Answer</summary>
+
+Optimize loops by reducing work inside iterations and choosing efficient patterns:
+
+```javascript
+// 1. Cache array length
+// SLOW - length calculated every iteration
+const items = new Array(10000).fill().map((_, i) => i);
+for (let i = 0; i < items.length; i++) {
+    console.log(items[i]);
+}
+
+// FAST - cache length
+for (let i = 0, len = items.length; i < len; i++) {
+    console.log(items[i]);
+}
+
+// 2. Reverse loops (sometimes faster)
+// FAST - counting down to 0
+for (let i = items.length - 1; i >= 0; i--) {
+    console.log(items[i]);
+}
+
+// 3. Use appropriate loop type
+const data = new Array(100000).fill().map((_, i) => ({ id: i, value: Math.random() }));
+
+// Benchmark different approaches
+console.time('for loop');
+for (let i = 0; i < data.length; i++) {
+    if (data[i].value > 0.5) data[i].processed = true;
+}
+console.timeEnd('for loop');
+
+console.time('for...of');
+for (const item of data) {
+    if (item.value > 0.5) item.processed = true;
+}
+console.timeEnd('for...of');
+
+console.time('forEach');
+data.forEach(item => {
+    if (item.value > 0.5) item.processed = true;
+});
+console.timeEnd('forEach');
+
+// 4. Avoid function calls inside loops
+// SLOW - function called every iteration
+function isEven(n) {
+    return n % 2 === 0;
+}
+
+const numbers = Array.from({length: 100000}, (_, i) => i);
+const evenNumbers = [];
+
+for (const num of numbers) {
+    if (isEven(num)) { // Function call overhead
+        evenNumbers.push(num);
+    }
+}
+
+// FAST - inline logic
+const evenNumbersFast = [];
+for (const num of numbers) {
+    if (num % 2 === 0) { // No function call
+        evenNumbersFast.push(num);
+    }
+}
+
+// 5. Break early when possible
+// SLOW - continues even after finding result
+function findUser(users, targetId) {
+    let found = null;
+    for (const user of users) {
+        if (user.id === targetId) {
+            found = user;
+        }
+    }
+    return found;
+}
+
+// FAST - early return
+function findUserFast(users, targetId) {
+    for (const user of users) {
+        if (user.id === targetId) {
+            return user; // Exit immediately
+        }
+    }
+    return null;
+}
+
+// 6. Minimize DOM operations in loops
+// SLOW - DOM manipulation every iteration
+const container = document.getElementById('container');
+for (let i = 0; i < 1000; i++) {
+    const div = document.createElement('div');
+    div.textContent = `Item ${i}`;
+    container.appendChild(div); // Reflow every time
+}
+
+// FAST - batch DOM operations
+const fragment = document.createDocumentFragment();
+for (let i = 0; i < 1000; i++) {
+    const div = document.createElement('div');
+    div.textContent = `Item ${i}`;
+    fragment.appendChild(div);
+}
+container.appendChild(fragment); // Single reflow
+
+// 7. Use efficient data structures
+// SLOW - array includes for lookups
+const validIds = [1, 5, 10, 15, 20];
+const items = Array.from({length: 10000}, (_, i) => ({ id: i }));
+
+const filtered = items.filter(item => validIds.includes(item.id)); // O(n*m)
+
+// FAST - Set for lookups
+const validIdSet = new Set(validIds);
+const filteredFast = items.filter(item => validIdSet.has(item.id)); // O(n)
+
+// 8. Avoid creating objects/arrays in loops
+// SLOW - creates new objects every iteration
+const results = [];
+for (let i = 0; i < 10000; i++) {
+    results.push({
+        index: i,
+        value: Math.random(),
+        metadata: { created: new Date() } // New object every iteration
+    });
+}
+
+// FAST - reuse objects when possible
+const results2 = [];
+const baseMetadata = { created: new Date() };
+for (let i = 0; i < 10000; i++) {
+    results2.push({
+        index: i,
+        value: Math.random(),
+        metadata: baseMetadata // Shared object
+    });
+}
+
+// 9. Use array methods efficiently
+const largeArray = new Array(100000).fill().map(() => Math.random());
+
+// SLOW - multiple iterations
+const processed = largeArray
+    .map(x => x * 2)
+    .filter(x => x > 1)
+    .map(x => Math.floor(x));
+
+// FAST - single iteration with reduce
+const processedFast = largeArray.reduce((acc, x) => {
+    const doubled = x * 2;
+    if (doubled > 1) {
+        acc.push(Math.floor(doubled));
+    }
+    return acc;
+}, []);
+
+// 10. Loop unrolling for critical paths
+// Normal loop
+function sumArray(arr) {
+    let sum = 0;
+    for (let i = 0; i < arr.length; i++) {
+        sum += arr[i];
+    }
+    return sum;
+}
+
+// Unrolled loop (process multiple items per iteration)
+function sumArrayUnrolled(arr) {
+    let sum = 0;
+    let i = 0;
+    
+    // Process 4 items at once
+    for (; i < arr.length - 3; i += 4) {
+        sum += arr[i] + arr[i + 1] + arr[i + 2] + arr[i + 3];
+    }
+    
+    // Handle remaining items
+    for (; i < arr.length; i++) {
+        sum += arr[i];
+    }
+    
+    return sum;
+}
+
+// 11. Use TypedArrays for numeric operations
+// SLOW - regular array
+const regularArray = new Array(100000).fill().map(() => Math.random());
+let sum1 = 0;
+for (let i = 0; i < regularArray.length; i++) {
+    sum1 += regularArray[i];
+}
+
+// FAST - TypedArray
+const typedArray = new Float64Array(100000);
+for (let i = 0; i < typedArray.length; i++) {
+    typedArray[i] = Math.random();
+}
+
+let sum2 = 0;
+for (let i = 0; i < typedArray.length; i++) {
+    sum2 += typedArray[i]; // Faster numeric operations
+}
+
+// 12. Benchmark and profile
+function benchmarkLoop(name, fn, iterations = 1000) {
+    console.time(name);
+    for (let i = 0; i < iterations; i++) {
+        fn();
+    }
+    console.timeEnd(name);
+}
+
+// Test different approaches
+benchmarkLoop('forEach', () => data.forEach(item => item.value *= 2));
+benchmarkLoop('for loop', () => {
+    for (let i = 0; i < data.length; i++) {
+        data[i].value *= 2;
+    }
+});
+benchmarkLoop('for...of', () => {
+    for (const item of data) {
+        item.value *= 2;
+    }
+});
+
+// Performance considerations:
+// - V8 engine optimizations
+// - JIT compilation patterns
+// - Memory allocation patterns
+// - Cache locality
+// - Branch prediction
+```
+</details>
