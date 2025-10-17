@@ -4169,6 +4169,41 @@ console.log(obj.getName());
 
 **Intermediate: Q2** - When should you use arrow functions and when should you avoid them?
 
+<details>
+<summary>Answer</summary>
+
+**Use arrow functions when:**
+- Writing short, one-line functions
+- Callbacks and array methods
+- When you want to preserve lexical `this`
+
+**Avoid arrow functions when:**
+- Defining object methods (loses `this` context)
+- Need `arguments` object
+- Constructor functions
+- Event handlers where you need element reference
+
+```javascript
+// Good uses
+const numbers = [1, 2, 3];
+const doubled = numbers.map(n => n * 2);
+
+setTimeout(() => console.log('Hello'), 1000);
+
+// Avoid for object methods
+const obj = {
+    name: 'John',
+    getName: () => this.name // Wrong - undefined
+};
+
+// Use regular function instead
+const obj2 = {
+    name: 'John',
+    getName() { return this.name; } // Correct
+};
+```
+</details>
+
 ## Default/rest/spread parameters
 
 **Beginner: Q1** - How do you set default values for function parameters in ES6?
@@ -8541,6 +8576,34 @@ console.log('sync 2');
 </details>
 
 **Intermediate: Q2** - How does the event loop process microtasks and macrotasks?
+
+<details>
+<summary>Answer</summary>
+
+The event loop processes microtasks completely before moving to the next macrotask:
+
+**Processing order:**
+1. Execute all synchronous code
+2. Process ALL microtasks in queue
+3. Process ONE macrotask  
+4. Repeat steps 2-3
+
+**Microtasks:** `Promise.then()`, `queueMicrotask()`, `MutationObserver`
+**Macrotasks:** `setTimeout()`, `setInterval()`, `setImmediate()`, I/O
+
+```javascript
+console.log('1');
+
+setTimeout(() => console.log('2'), 0); // Macrotask
+
+Promise.resolve().then(() => console.log('3')); // Microtask
+
+console.log('4');
+
+// Output: 1, 4, 3, 2
+// Microtask (3) runs before macrotask (2)
+```
+</details>
 
 ## setTimeout, setInterval
 
