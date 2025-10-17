@@ -4912,9 +4912,219 @@ export default function createApp() {}
 
 **Beginner: Q1** - How do you create a class in ES6? How do you create an instance?
 
+<details>
+<summary>Answer</summary>
+
+Use `class` keyword to define a class and `new` to create instances:
+
+```javascript
+// Define a class
+class Person {
+    constructor(name, age) {
+        this.name = name;
+        this.age = age;
+    }
+    
+    greet() {
+        return `Hello, I'm ${this.name}`;
+    }
+    
+    getAge() {
+        return this.age;
+    }
+    
+    // Static method
+    static species() {
+        return 'Homo sapiens';
+    }
+}
+
+// Create instances
+const person1 = new Person('Alice', 30);
+const person2 = new Person('Bob', 25);
+
+console.log(person1.greet()); // "Hello, I'm Alice"
+console.log(person2.getAge()); // 25
+console.log(Person.species()); // "Homo sapiens"
+
+// Class with getters and setters
+class Circle {
+    constructor(radius) {
+        this._radius = radius;
+    }
+    
+    get radius() {
+        return this._radius;
+    }
+    
+    set radius(value) {
+        if (value <= 0) throw new Error('Radius must be positive');
+        this._radius = value;
+    }
+    
+    get area() {
+        return Math.PI * this._radius ** 2;
+    }
+}
+
+const circle = new Circle(5);
+console.log(circle.area); // 78.54
+circle.radius = 10;
+console.log(circle.area); // 314.16
+```
+</details>
+
 **Beginner: Q2** - How do you implement inheritance using the `extends` keyword?
 
+<details>
+<summary>Answer</summary>
+
+Use `extends` to create a subclass that inherits from a parent class:
+
+```javascript
+// Parent class
+class Animal {
+    constructor(name, type) {
+        this.name = name;
+        this.type = type;
+    }
+    
+    speak() {
+        return `${this.name} makes a sound`;
+    }
+    
+    getInfo() {
+        return `${this.name} is a ${this.type}`;
+    }
+}
+
+// Child class extends parent
+class Dog extends Animal {
+    constructor(name, breed) {
+        super(name, 'dog'); // Call parent constructor
+        this.breed = breed;
+    }
+    
+    speak() {
+        return `${this.name} barks: Woof!`;
+    }
+    
+    wagTail() {
+        return `${this.name} wags tail`;
+    }
+}
+
+// Another child class
+class Cat extends Animal {
+    constructor(name, indoor = true) {
+        super(name, 'cat');
+        this.indoor = indoor;
+    }
+    
+    speak() {
+        return `${this.name} meows: Meow!`;
+    }
+    
+    purr() {
+        return `${this.name} purrs contentedly`;
+    }
+}
+
+// Usage
+const dog = new Dog('Buddy', 'Golden Retriever');
+const cat = new Cat('Whiskers', true);
+
+console.log(dog.speak()); // "Buddy barks: Woof!"
+console.log(dog.getInfo()); // "Buddy is a dog" (inherited)
+console.log(dog.wagTail()); // "Buddy wags tail"
+
+console.log(cat.speak()); // "Whiskers meows: Meow!"
+console.log(cat.purr()); // "Whiskers purrs contentedly"
+
+// instanceof checks
+console.log(dog instanceof Dog); // true
+console.log(dog instanceof Animal); // true
+console.log(cat instanceof Dog); // false
+```
+</details>
+
 **Beginner: Q3** - What is the `super` keyword used for?
+
+<details>
+<summary>Answer</summary>
+
+`super` is used to call parent class constructor and methods:
+
+```javascript
+class Vehicle {
+    constructor(brand, model) {
+        this.brand = brand;
+        this.model = model;
+    }
+    
+    start() {
+        return `${this.brand} ${this.model} is starting`;
+    }
+    
+    getInfo() {
+        return `Vehicle: ${this.brand} ${this.model}`;
+    }
+}
+
+class Car extends Vehicle {
+    constructor(brand, model, doors) {
+        // 1. Call parent constructor
+        super(brand, model); // Must be first in constructor
+        this.doors = doors;
+    }
+    
+    start() {
+        // 2. Call parent method and extend it
+        const parentStart = super.start();
+        return `${parentStart} with ${this.doors} doors`;
+    }
+    
+    getInfo() {
+        // 3. Override parent method using super
+        const parentInfo = super.getInfo();
+        return `${parentInfo}, Doors: ${this.doors}`;
+    }
+}
+
+const car = new Car('Toyota', 'Camry', 4);
+console.log(car.start()); // "Toyota Camry is starting with 4 doors"
+console.log(car.getInfo()); // "Vehicle: Toyota Camry, Doors: 4"
+
+// Super in static methods
+class MathUtils {
+    static add(a, b) {
+        return a + b;
+    }
+}
+
+class AdvancedMath extends MathUtils {
+    static add(a, b) {
+        const result = super.add(a, b); // Call parent static method
+        console.log(`Adding ${a} + ${b} = ${result}`);
+        return result;
+    }
+    
+    static multiply(a, b) {
+        return a * b;
+    }
+}
+
+AdvancedMath.add(5, 3); // "Adding 5 + 3 = 8"
+
+// Important: super() must be called before using 'this'
+class BadExample extends Vehicle {
+    constructor(brand) {
+        this.brand = brand; // Error: Must call super() first
+        super(brand, 'Unknown');
+    }
+}
+```
+</details>
 
 **Intermediate: Q1** - What will be the output of this code?
 ```javascript
@@ -4937,15 +5147,403 @@ const dog = new Dog('Buddy');
 console.log(dog.speak());
 ```
 
+<details>
+<summary>Answer</summary>
+
+Output: `"Buddy makes a sound - Woof!"`
+
+Explanation:
+
+```javascript
+class Animal {
+    constructor(name) {
+        this.name = name; // Sets this.name = 'Buddy'
+    }
+    speak() {
+        return `${this.name} makes a sound`; // "Buddy makes a sound"
+    }
+}
+
+class Dog extends Animal {
+    speak() {
+        // super.speak() calls parent's speak method
+        // Returns: "Buddy makes a sound"
+        // Then concatenates with " - Woof!"
+        return `${super.speak()} - Woof!`;
+    }
+}
+
+const dog = new Dog('Buddy');
+// 1. new Dog('Buddy') calls Animal constructor with 'Buddy'
+// 2. dog.speak() calls Dog's speak method
+// 3. super.speak() returns "Buddy makes a sound"
+// 4. Final result: "Buddy makes a sound - Woof!"
+console.log(dog.speak()); // "Buddy makes a sound - Woof!"
+
+// Method resolution order:
+// 1. Look for speak() in Dog class -> Found
+// 2. Inside Dog.speak(), super.speak() looks in Animal class
+// 3. Animal.speak() uses this.name (which is 'Buddy')
+// 4. Returns combined result
+
+// If Dog didn't override speak():
+class QuietDog extends Animal {}
+const quietDog = new QuietDog('Rex');
+console.log(quietDog.speak()); // "Rex makes a sound" (uses Animal's method)
+```
+</details>
+
 **Intermediate: Q2** - How do private fields work in ES6 classes?
+
+<details>
+<summary>Answer</summary>
+
+Private fields use `#` prefix and are only accessible within the class:
+
+```javascript
+class BankAccount {
+    // Private fields
+    #balance = 0;
+    #accountNumber;
+    
+    // Private method
+    #generateAccountNumber() {
+        return Math.random().toString(36).substr(2, 9);
+    }
+    
+    constructor(initialBalance) {
+        this.#balance = initialBalance;
+        this.#accountNumber = this.#generateAccountNumber();
+    }
+    
+    // Public methods to access private fields
+    deposit(amount) {
+        if (amount > 0) {
+            this.#balance += amount;
+            return this.#balance;
+        }
+        throw new Error('Amount must be positive');
+    }
+    
+    withdraw(amount) {
+        if (amount > 0 && amount <= this.#balance) {
+            this.#balance -= amount;
+            return this.#balance;
+        }
+        throw new Error('Insufficient funds or invalid amount');
+    }
+    
+    getBalance() {
+        return this.#balance;
+    }
+    
+    getAccountNumber() {
+        return this.#accountNumber;
+    }
+    
+    // Private static field
+    static #bankName = 'SecureBank';
+    
+    static getBankName() {
+        return this.#bankName;
+    }
+}
+
+const account = new BankAccount(1000);
+
+console.log(account.getBalance()); // 1000
+account.deposit(500);
+console.log(account.getBalance()); // 1500
+
+// Private fields are not accessible from outside
+// console.log(account.#balance); // SyntaxError
+// account.#generateAccountNumber(); // SyntaxError
+
+// Even with inheritance, private fields remain private
+class SavingsAccount extends BankAccount {
+    constructor(initialBalance, interestRate) {
+        super(initialBalance);
+        this.interestRate = interestRate;
+    }
+    
+    addInterest() {
+        // Cannot directly access #balance
+        // const interest = this.#balance * this.interestRate; // Error
+        
+        // Must use public methods
+        const currentBalance = this.getBalance();
+        const interest = currentBalance * this.interestRate;
+        this.deposit(interest);
+    }
+}
+
+// Private fields vs conventions
+class OldStyle {
+    constructor() {
+        this._private = 'convention'; // Not truly private
+    }
+}
+
+class NewStyle {
+    #private = 'truly private';
+    
+    getPrivate() {
+        return this.#private;
+    }
+}
+
+const old = new OldStyle();
+console.log(old._private); // 'convention' (accessible)
+
+const newObj = new NewStyle();
+// console.log(newObj.#private); // SyntaxError
+console.log(newObj.getPrivate()); // 'truly private'
+```
+</details>
 
 ## Async/await
 
 **Beginner: Q1** - What is `async/await` and how is it used?
 
+<details>
+<summary>Answer</summary>
+
+`async/await` provides a cleaner way to work with Promises, making asynchronous code look synchronous:
+
+```javascript
+// Promise-based approach
+function fetchUserData() {
+    return fetch('/api/user')
+        .then(response => response.json())
+        .then(data => {
+            console.log('User data:', data);
+            return data;
+        })
+        .catch(error => {
+            console.error('Error:', error);
+        });
+}
+
+// async/await approach
+async function fetchUserDataAsync() {
+    try {
+        const response = await fetch('/api/user');
+        const data = await response.json();
+        console.log('User data:', data);
+        return data;
+    } catch (error) {
+        console.error('Error:', error);
+    }
+}
+
+// Basic async function
+async function simpleExample() {
+    // await pauses execution until Promise resolves
+    const result = await Promise.resolve('Hello');
+    console.log(result); // "Hello"
+    
+    // Can await any Promise-returning function
+    const data = await fetch('/api/data');
+    return data;
+}
+
+// Async functions always return a Promise
+async function returnsPromise() {
+    return 'This becomes a resolved Promise';
+}
+
+returnsPromise().then(value => console.log(value)); // "This becomes a resolved Promise"
+
+// Multiple awaits
+async function sequential() {
+    const first = await delay(1000);  // Wait 1 second
+    const second = await delay(500);  // Wait 0.5 second
+    return [first, second];
+}
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+```
+</details>
+
 **Beginner: Q2** - How do you handle errors in async/await?
 
+<details>
+<summary>Answer</summary>
+
+Use `try/catch` blocks to handle errors in async/await:
+
+```javascript
+// Basic error handling
+async function fetchData() {
+    try {
+        const response = await fetch('/api/data');
+        
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        console.error('Failed to fetch data:', error.message);
+        return null; // or throw error again
+    }
+}
+
+// Handling multiple operations
+async function processUserData(userId) {
+    try {
+        // Multiple await operations
+        const user = await fetchUser(userId);
+        const posts = await fetchUserPosts(userId);
+        const profile = await updateUserProfile(user);
+        
+        return { user: profile, posts };
+    } catch (error) {
+        // Catches errors from any of the await operations
+        console.error('Error processing user data:', error);
+        throw error; // Re-throw if needed
+    }
+}
+
+// Specific error handling
+async function robustFetch(url) {
+    try {
+        const response = await fetch(url);
+        const data = await response.json();
+        return data;
+    } catch (error) {
+        if (error instanceof TypeError) {
+            console.error('Network error:', error.message);
+        } else if (error instanceof SyntaxError) {
+            console.error('JSON parsing error:', error.message);
+        } else {
+            console.error('Unknown error:', error.message);
+        }
+        
+        // Return default value or re-throw
+        return { error: 'Failed to fetch data' };
+    }
+}
+
+// Error handling with finally
+async function withCleanup() {
+    let resource = null;
+    
+    try {
+        resource = await acquireResource();
+        const result = await processResource(resource);
+        return result;
+    } catch (error) {
+        console.error('Processing failed:', error);
+        return null;
+    } finally {
+        // Always runs, even if error occurs
+        if (resource) {
+            await cleanupResource(resource);
+        }
+    }
+}
+
+// Multiple error sources
+async function complexOperation() {
+    try {
+        const step1 = await operation1();
+        const step2 = await operation2(step1);
+        const step3 = await operation3(step2);
+        return step3;
+    } catch (error) {
+        // Handle different types of errors
+        switch (error.code) {
+            case 'NETWORK_ERROR':
+                return handleNetworkError(error);
+            case 'VALIDATION_ERROR':
+                return handleValidationError(error);
+            default:
+                throw error; // Unknown error, re-throw
+        }
+    }
+}
+```
+</details>
+
 **Beginner: Q3** - Can you use `await` without `async`?
+
+<details>
+<summary>Answer</summary>
+
+No, `await` can only be used inside `async` functions (with one exception):
+
+```javascript
+// ❌ This will cause a SyntaxError
+function regularFunction() {
+    const result = await fetch('/api/data'); // SyntaxError
+    return result;
+}
+
+// ✅ Correct usage
+async function asyncFunction() {
+    const result = await fetch('/api/data'); // Works
+    return result;
+}
+
+// ❌ Cannot use await in global scope (older environments)
+// const data = await fetch('/api/data'); // SyntaxError
+
+// ✅ Wrap in async IIFE
+(async () => {
+    const data = await fetch('/api/data');
+    console.log(data);
+})();
+
+// ✅ Or use in async function
+async function main() {
+    const data = await fetch('/api/data');
+    console.log(data);
+}
+main();
+
+// Exception: Top-level await (ES2022 in modules)
+// ✅ Works in ES modules with top-level await support
+// main.js (with "type": "module" in package.json)
+const data = await fetch('/api/data'); // Works in modern environments
+
+// Class methods can be async
+class DataManager {
+    async fetchData() {
+        return await fetch('/api/data'); // Works
+    }
+    
+    regularMethod() {
+        // return await fetch('/api/data'); // SyntaxError
+        return fetch('/api/data'); // Must return Promise directly
+    }
+}
+
+// Arrow functions can be async
+const asyncArrow = async () => {
+    return await somePromise(); // Works
+};
+
+// Callback functions can be async
+array.map(async (item) => {
+    return await processItem(item); // Works, but be careful!
+});
+
+// Note: Be careful with async callbacks
+// This creates an array of Promises, not resolved values
+const results = array.map(async (item) => await processItem(item));
+// To wait for all: await Promise.all(results)
+
+// Event handlers can be async
+button.addEventListener('click', async (event) => {
+    const data = await fetch('/api/data'); // Works
+    console.log(data);
+});
+```
+</details>
 
 **Intermediate: Q1** - What will be the output of this code?
 ```javascript
@@ -4959,7 +5557,194 @@ test();
 console.log('4');
 ```
 
+<details>
+<summary>Answer</summary>
+
+Output:
+```
+3
+1
+4
+2
+```
+
+Explanation:
+
+```javascript
+async function test() {
+    console.log('1');        // Executes immediately
+    await Promise.resolve(); // Pauses here, goes to event loop
+    console.log('2');        // Executes later (microtask)
+}
+
+console.log('3');    // 1. First (synchronous)
+test();              // 2. Calls test(), logs '1', then pauses at await
+console.log('4');    // 3. Third (synchronous, continues after test() pauses)
+                     // 4. '2' logs later when microtask executes
+
+// Step-by-step execution:
+// 1. console.log('3') - synchronous, executes immediately
+// 2. test() is called:
+//    - console.log('1') executes immediately
+//    - await Promise.resolve() pauses function, returns control
+// 3. console.log('4') - synchronous, executes immediately
+// 4. Event loop processes microtasks:
+//    - Promise.resolve() completes
+//    - Execution resumes in test() after await
+//    - console.log('2') executes
+
+// Compare with non-async version:
+function testSync() {
+    console.log('1');
+    // No await, so continues immediately
+    console.log('2');
+}
+
+console.log('3');
+testSync();      // Logs '1' then '2' immediately
+console.log('4');
+// Output would be: 3, 1, 2, 4
+
+// The await creates an asynchronous boundary
+// Even though Promise.resolve() resolves immediately,
+// the await still schedules the continuation as a microtask
+```
+</details>
+
 **Intermediate: Q2** - How do you handle multiple async operations concurrently with async/await?
+
+<details>
+<summary>Answer</summary>
+
+Use `Promise.all()`, `Promise.allSettled()`, or `Promise.race()` with async/await:
+
+```javascript
+// Sequential execution (slow)
+async function sequential() {
+    const user = await fetchUser(1);        // Wait 1 second
+    const posts = await fetchPosts(1);      // Wait another 1 second
+    const comments = await fetchComments(1); // Wait another 1 second
+    // Total: ~3 seconds
+    return { user, posts, comments };
+}
+
+// Concurrent execution (fast)
+async function concurrent() {
+    // Start all operations simultaneously
+    const userPromise = fetchUser(1);
+    const postsPromise = fetchPosts(1);
+    const commentsPromise = fetchComments(1);
+    
+    // Wait for all to complete
+    const [user, posts, comments] = await Promise.all([
+        userPromise,
+        postsPromise,
+        commentsPromise
+    ]);
+    // Total: ~1 second (fastest operation)
+    return { user, posts, comments };
+}
+
+// Using Promise.all with async/await
+async function fetchAllData() {
+    try {
+        const results = await Promise.all([
+            fetch('/api/users').then(r => r.json()),
+            fetch('/api/posts').then(r => r.json()),
+            fetch('/api/comments').then(r => r.json())
+        ]);
+        
+        const [users, posts, comments] = results;
+        return { users, posts, comments };
+    } catch (error) {
+        // If any request fails, this catch block runs
+        console.error('One or more requests failed:', error);
+        throw error;
+    }
+}
+
+// Promise.allSettled - doesn't fail if one operation fails
+async function fetchAllDataSafely() {
+    const results = await Promise.allSettled([
+        fetchUser(1),
+        fetchPosts(1),
+        fetchComments(1)
+    ]);
+    
+    // Check results individually
+    const user = results[0].status === 'fulfilled' ? results[0].value : null;
+    const posts = results[1].status === 'fulfilled' ? results[1].value : [];
+    const comments = results[2].status === 'fulfilled' ? results[2].value : [];
+    
+    return { user, posts, comments };
+}
+
+// Promise.race - returns first completed (resolved or rejected)
+async function fetchWithTimeout() {
+    try {
+        const result = await Promise.race([
+            fetchUser(1),
+            new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Timeout')), 5000)
+            )
+        ]);
+        return result;
+    } catch (error) {
+        if (error.message === 'Timeout') {
+            console.error('Request timed out');
+        }
+        throw error;
+    }
+}
+
+// Mixed approach - some sequential, some concurrent
+async function optimizedFetch(userId) {
+    // First fetch user data
+    const user = await fetchUser(userId);
+    
+    // Then fetch user-specific data concurrently
+    const [posts, profile, notifications] = await Promise.all([
+        fetchUserPosts(user.id),
+        fetchUserProfile(user.id),
+        fetchUserNotifications(user.id)
+    ]);
+    
+    return { user, posts, profile, notifications };
+}
+
+// Batching with concurrency limit
+async function processBatch(items, batchSize = 3) {
+    const results = [];
+    
+    for (let i = 0; i < items.length; i += batchSize) {
+        const batch = items.slice(i, i + batchSize);
+        const batchResults = await Promise.all(
+            batch.map(item => processItem(item))
+        );
+        results.push(...batchResults);
+    }
+    
+    return results;
+}
+
+// Error handling with concurrent operations
+async function robustConcurrentFetch() {
+    const operations = [
+        fetchUser(1).catch(err => ({ error: 'User fetch failed', details: err })),
+        fetchPosts(1).catch(err => ({ error: 'Posts fetch failed', details: err })),
+        fetchComments(1).catch(err => ({ error: 'Comments fetch failed', details: err }))
+    ];
+    
+    const results = await Promise.all(operations);
+    
+    // Filter out errors and successful results
+    const successful = results.filter(result => !result.error);
+    const failed = results.filter(result => result.error);
+    
+    return { successful, failed };
+}
+```
+</details>
 
 ## Promises
 
