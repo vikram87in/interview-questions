@@ -19320,37 +19320,596 @@ fetch('/api/data')
 
 **Beginner: Q1** - How do you create and throw a custom error?
 
+<details>
+<summary>Answer</summary>
+
+Create custom errors by extending Error class or using Error constructor:
+
+```javascript
+// Method 1: Throw new Error with custom message
+function validateAge(age) {
+    if (age < 0) {
+        throw new Error('Age cannot be negative');
+    }
+    if (age > 150) {
+        throw new Error('Age seems unrealistic');
+    }
+}
+
+// Method 2: Create custom error class
+class ValidationError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'ValidationError';
+    }
+}
+
+function validateEmail(email) {
+    if (!email.includes('@')) {
+        throw new ValidationError('Invalid email format');
+    }
+}
+```
+</details>
+
 **Beginner: Q2** - How do you extend the built-in Error class?
+
+<details>
+<summary>Answer</summary>
+
+Use class syntax to extend Error:
+
+```javascript
+class CustomError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'CustomError';
+    }
+}
+
+class ValidationError extends Error {
+    constructor(message, field) {
+        super(message);
+        this.name = 'ValidationError';
+        this.field = field;
+    }
+}
+
+// Usage
+try {
+    throw new ValidationError('Invalid input', 'email');
+} catch (error) {
+    console.log(error.name); // 'ValidationError'
+    console.log(error.field); // 'email'
+    console.log(error.message); // 'Invalid input'
+}
+```
+</details>
 
 **Beginner: Q3** - What properties should a custom error have?
 
+<details>
+<summary>Answer</summary>
+
+Essential properties: `name`, `message`, and `stack`:
+
+```javascript
+class CustomError extends Error {
+    constructor(message, code = 'CUSTOM_ERROR') {
+        super(message);
+        this.name = 'CustomError';    // Error type
+        this.code = code;             // Error code
+        this.timestamp = new Date();  // When error occurred
+        
+        // Maintains proper stack trace
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, CustomError);
+        }
+    }
+}
+
+// Usage
+const error = new CustomError('Something went wrong', 'AUTH_FAILED');
+console.log(error.name);      // 'CustomError'
+console.log(error.message);   // 'Something went wrong'
+console.log(error.code);      // 'AUTH_FAILED'
+console.log(error.stack);     // Stack trace
+```
+</details>
+
 **Intermediate: Q1** - How do you create different types of custom errors with specific handling?
 
+<details>
+<summary>Answer</summary>
+
+Create error hierarchy with specific error types:
+
+```javascript
+// Base custom error
+class AppError extends Error {
+    constructor(message, statusCode = 500) {
+        super(message);
+        this.name = 'AppError';
+        this.statusCode = statusCode;
+        this.isOperational = true;
+    }
+}
+
+// Specific error types
+class ValidationError extends AppError {
+    constructor(message, field) {
+        super(message, 400);
+        this.name = 'ValidationError';
+        this.field = field;
+    }
+}
+
+class NotFoundError extends AppError {
+    constructor(resource) {
+        super(`${resource} not found`, 404);
+        this.name = 'NotFoundError';
+        this.resource = resource;
+    }
+}
+
+class AuthenticationError extends AppError {
+    constructor(message = 'Authentication required') {
+        super(message, 401);
+        this.name = 'AuthenticationError';
+    }
+}
+
+// Error handling with specific types
+function handleError(error) {
+    if (error instanceof ValidationError) {
+        console.log(`Validation failed for ${error.field}: ${error.message}`);
+    } else if (error instanceof NotFoundError) {
+        console.log(`Resource not found: ${error.resource}`);
+    } else if (error instanceof AuthenticationError) {
+        console.log('Please login to continue');
+    } else {
+        console.log('Unexpected error:', error.message);
+    }
+}
+```
+</details>
+
 **Intermediate: Q2** - How do you preserve stack traces in custom errors?
+
+<details>
+<summary>Answer</summary>
+
+Use `Error.captureStackTrace()` and proper inheritance:
+
+```javascript
+class CustomError extends Error {
+    constructor(message) {
+        super(message);
+        this.name = 'CustomError';
+        
+        // Preserve stack trace (V8 engines)
+        if (Error.captureStackTrace) {
+            Error.captureStackTrace(this, CustomError);
+        }
+    }
+}
+
+// For wrapping other errors
+class WrappedError extends Error {
+    constructor(message, originalError) {
+        super(message);
+        this.name = 'WrappedError';
+        this.originalError = originalError;
+        
+        // Preserve original stack trace
+        if (originalError && originalError.stack) {
+            this.stack = `${this.stack}\nCaused by: ${originalError.stack}`;
+        }
+    }
+}
+
+// Usage
+try {
+    JSON.parse('invalid json');
+} catch (originalError) {
+    throw new WrappedError('Failed to parse config', originalError);
+}
+```
+</details>
 
 ## Error objects
 
 **Beginner: Q1** - What properties does an Error object have?
 
+<details>
+<summary>Answer</summary>
+
+Error objects have three main properties:
+
+```javascript
+try {
+    throw new Error('Something went wrong');
+} catch (error) {
+    console.log(error.name);     // 'Error'
+    console.log(error.message);  // 'Something went wrong'
+    console.log(error.stack);    // Stack trace string
+}
+
+// Additional properties in some environments
+console.log(error.fileName);   // File where error occurred (Firefox)
+console.log(error.lineNumber); // Line number (Firefox)
+console.log(error.columnNumber); // Column number (Firefox)
+```
+</details>
+
 **Beginner: Q2** - How do you access the error message and stack trace?
+
+<details>
+<summary>Answer</summary>
+
+Access via `message` and `stack` properties:
+
+```javascript
+function problematicFunction() {
+    throw new Error('Database connection failed');
+}
+
+try {
+    problematicFunction();
+} catch (error) {
+    // Error message
+    console.log('Error message:', error.message);
+    
+    // Stack trace
+    console.log('Stack trace:', error.stack);
+    
+    // Convert to string
+    console.log('Error string:', error.toString());
+}
+
+// Stack trace shows call hierarchy
+// Error: Database connection failed
+//     at problematicFunction (file.js:2:11)
+//     at Object.<anonymous> (file.js:6:5)
+```
+</details>
 
 **Beginner: Q3** - What are the different types of built-in error objects?
 
+<details>
+<summary>Answer</summary>
+
+JavaScript has several built-in error types:
+
+```javascript
+// Generic Error
+throw new Error('Generic error');
+
+// Syntax Error
+try {
+    eval('function() {'); // Missing closing brace
+} catch (e) {
+    console.log(e instanceof SyntaxError); // true
+}
+
+// Reference Error
+try {
+    console.log(undefinedVariable);
+} catch (e) {
+    console.log(e instanceof ReferenceError); // true
+}
+
+// Type Error
+try {
+    null.someMethod();
+} catch (e) {
+    console.log(e instanceof TypeError); // true
+}
+
+// Range Error
+try {
+    new Array(-1);
+} catch (e) {
+    console.log(e instanceof RangeError); // true
+}
+
+// URI Error
+try {
+    decodeURIComponent('%');
+} catch (e) {
+    console.log(e instanceof URIError); // true
+}
+```
+</details>
+
 **Intermediate: Q1** - How do you parse and analyze stack traces programmatically?
 
+<details>
+<summary>Answer</summary>
+
+Parse stack traces using string methods or libraries:
+
+```javascript
+function parseStackTrace(error) {
+    const stackLines = error.stack.split('\n');
+    const parsed = [];
+    
+    for (const line of stackLines) {
+        // Match patterns like "at functionName (file:line:column)"
+        const match = line.match(/at\s+(.+?)\s+\((.+):(\d+):(\d+)\)/);
+        if (match) {
+            parsed.push({
+                function: match[1],
+                file: match[2],
+                line: parseInt(match[3]),
+                column: parseInt(match[4])
+            });
+        }
+    }
+    
+    return parsed;
+}
+
+function getCallerInfo() {
+    const error = new Error();
+    const parsed = parseStackTrace(error);
+    return parsed[1]; // Skip current function
+}
+
+// Usage
+function myFunction() {
+    const caller = getCallerInfo();
+    console.log(`Called from: ${caller.function} at line ${caller.line}`);
+}
+
+myFunction(); // Shows caller information
+```
+</details>
+
 **Intermediate: Q2** - How do different browsers handle Error objects differently?
+
+<details>
+<summary>Answer</summary>
+
+Browser differences in Error object properties and stack traces:
+
+```javascript
+function testErrorDifferences() {
+    try {
+        throw new Error('Test error');
+    } catch (error) {
+        console.log('Common properties:');
+        console.log('name:', error.name);
+        console.log('message:', error.message);
+        console.log('stack:', !!error.stack);
+        
+        // Firefox-specific
+        if ('fileName' in error) {
+            console.log('fileName (Firefox):', error.fileName);
+            console.log('lineNumber (Firefox):', error.lineNumber);
+            console.log('columnNumber (Firefox):', error.columnNumber);
+        }
+        
+        // V8 (Chrome/Node.js) specific
+        if (Error.captureStackTrace) {
+            console.log('V8 engine detected');
+        }
+        
+        // Stack trace format varies
+        // Chrome: "at functionName (file:line:column)"
+        // Firefox: "functionName@file:line:column"
+        // Safari: "functionName@file:line:column"
+    }
+}
+
+// Cross-browser error reporting
+function reportError(error) {
+    const report = {
+        message: error.message,
+        name: error.name,
+        stack: error.stack,
+        userAgent: navigator.userAgent,
+        timestamp: new Date().toISOString()
+    };
+    
+    // Send to logging service
+    console.log('Error report:', report);
+}
+```
+</details>
 
 ## Creating regex (/pattern/ vs new RegExp)
 
 **Beginner: Q1** - What are the two ways to create a regular expression in JavaScript?
 
+<details>
+<summary>Answer</summary>
+
+Two main ways to create regex in JavaScript:
+
+```javascript
+// 1. Literal notation (compile-time)
+const regex1 = /pattern/flags;
+const emailRegex = /^\w+@\w+\.\w+$/i;
+
+// 2. RegExp constructor (runtime)
+const regex2 = new RegExp('pattern', 'flags');
+const dynamicRegex = new RegExp('^' + userInput + '$', 'i');
+
+// Examples
+const phonePattern = /^\d{3}-\d{3}-\d{4}$/;
+const phonePattern2 = new RegExp('^\\d{3}-\\d{3}-\\d{4}$');
+
+// Note: Constructor requires double escaping
+const literalSlash = /\//;
+const constructorSlash = new RegExp('\\/');
+```
+</details>
+
 **Beginner: Q2** - When would you use `new RegExp()` instead of literal syntax?
+
+<details>
+<summary>Answer</summary>
+
+Use `new RegExp()` for dynamic patterns:
+
+```javascript
+// Dynamic patterns from variables
+const searchTerm = userInput;
+const flags = 'gi';
+const dynamicRegex = new RegExp(searchTerm, flags);
+
+// Building patterns programmatically
+function createValidator(field, rule) {
+    const patterns = {
+        email: '\\w+@\\w+\\.\\w+',
+        phone: '\\d{3}-\\d{3}-\\d{4}',
+        zipCode: '\\d{5}(-\\d{4})?'
+    };
+    return new RegExp(patterns[field], rule.flags);
+}
+
+// Escaping user input
+function escapeRegex(string) {
+    return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+const userPattern = escapeRegex(userInput);
+const safeRegex = new RegExp(userPattern, 'i');
+```
+</details>
 
 **Beginner: Q3** - How do you add flags to a regular expression?
 
+<details>
+<summary>Answer</summary>
+
+Add flags after the closing slash or as second parameter:
+
+```javascript
+// Literal syntax - flags after closing /
+const caseInsensitive = /pattern/i;
+const globalMultiline = /pattern/gm;
+const allFlags = /pattern/gimuy;
+
+// Constructor syntax - second parameter
+const regex1 = new RegExp('pattern', 'i');
+const regex2 = new RegExp('pattern', 'gm');
+
+// Common flags
+const flags = {
+    g: 'global',      // Find all matches
+    i: 'ignoreCase',  // Case insensitive
+    m: 'multiline',   // ^ and $ match line breaks
+    u: 'unicode',     // Unicode support
+    y: 'sticky',      // Match from lastIndex
+    s: 'dotAll'       // . matches newlines
+};
+
+// Examples
+const email = /\w+@\w+\.\w+/i;           // Case insensitive
+const words = /\b\w+\b/g;                // Global match
+const lines = /^.+$/gm;                  // Multiline
+```
+</details>
+
 **Intermediate: Q1** - What's the difference between these two regex creations in terms of performance?
 
+<details>
+<summary>Answer</summary>
+
+Literal notation is faster than constructor:
+
+```javascript
+// Performance comparison
+const iterations = 1000000;
+const testString = 'test@example.com';
+
+// Literal (faster) - compiled at parse time
+console.time('Literal');
+for (let i = 0; i < iterations; i++) {
+    /\w+@\w+\.\w+/.test(testString);
+}
+console.timeEnd('Literal');
+
+// Constructor (slower) - compiled at runtime
+console.time('Constructor');
+for (let i = 0; i < iterations; i++) {
+    new RegExp('\\w+@\\w+\\.\\w+').test(testString);
+}
+console.timeEnd('Constructor');
+
+// Cached constructor (better)
+const cachedRegex = new RegExp('\\w+@\\w+\\.\\w+');
+console.time('Cached');
+for (let i = 0; i < iterations; i++) {
+    cachedRegex.test(testString);
+}
+console.timeEnd('Cached');
+
+// Best practice: cache dynamic regex
+const regexCache = new Map();
+function getRegex(pattern, flags) {
+    const key = pattern + flags;
+    if (!regexCache.has(key)) {
+        regexCache.set(key, new RegExp(pattern, flags));
+    }
+    return regexCache.get(key);
+}
+```
+</details>
+
 **Intermediate: Q2** - How do you create a regex with dynamic patterns?
+
+<details>
+<summary>Answer</summary>
+
+Safely build regex from user input:
+
+```javascript
+function createSearchRegex(userInput, options = {}) {
+    // Escape special characters
+    const escaped = userInput.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    
+    // Build pattern based on options
+    let pattern = escaped;
+    
+    if (options.wholeWord) {
+        pattern = `\\b${pattern}\\b`;
+    }
+    
+    if (options.startsWith) {
+        pattern = `^${pattern}`;
+    }
+    
+    if (options.endsWith) {
+        pattern = `${pattern}$`;
+    }
+    
+    // Build flags
+    let flags = '';
+    if (options.caseInsensitive) flags += 'i';
+    if (options.global) flags += 'g';
+    if (options.multiline) flags += 'm';
+    
+    return new RegExp(pattern, flags);
+}
+
+// Usage
+const searchTerm = 'user@example.com';
+const emailRegex = createSearchRegex(searchTerm, { 
+    caseInsensitive: true,
+    wholeWord: true 
+});
+
+// Multiple patterns
+function createValidator(rules) {
+    const patterns = rules.map(rule => `(${rule.pattern})`);
+    const combined = patterns.join('|');
+    return new RegExp(combined, 'i');
+}
+```
+</details>
 
 ## Common regex methods (test, match, replace)
 
